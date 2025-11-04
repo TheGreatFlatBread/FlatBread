@@ -133,5 +133,6 @@ iOSInjectionProject/
 
 # End of https://www.toptal.com/developers/gitignore/api/swift,xcode,macos,swiftpackagemanager
 
-# FlatBread
-*.xcconfig
+# FlatBread - Secrets
+secrets.xcconfig
+!secrets.xcconfig.example
