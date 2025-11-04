@@ -1,0 +1,61 @@
+name: ⚙️ 기능 개발
+description: 새로운 기능이나 모듈을 구현할 때 사용하세요
+title: "[Feature] "
+labels: ["feature"]
+
+body:
+  - type: textarea
+    id: feature-purpose
+    attributes:
+      label: 🧭 목적
+      description: 어떤 기능을 구현하기 위한 이슈인지 설명해주세요
+      placeholder: ex. 로그인 API 연동 / 러닝 기록 저장 로직 구현
+    validations:
+      required: true
+
+  - type: textarea
+    id: feature-tasks
+    attributes:
+      label: 🧱 작업 내용
+      description: 구체적인 작업 항목을 체크리스트로 작성해주세요
+      placeholder: |
+        - [ ] Repository / UseCase 정의
+        - [ ] ViewModel 및 로직 구현
+        - [ ] API 연동 및 예외 처리
+        - [ ] 단위 테스트 작성
+      value: |
+        - [ ] Repository / UseCase 정의
+        - [ ] ViewModel 및 로직 구현
+        - [ ] API 연동 및 예외 처리
+        - [ ] 단위 테스트 작성
+    validations:
+      required: true
+
+  - type: input
+    id: related-issue
+    attributes:
+      label: 🔗 관련 이슈 (선택)
+      description: 관련된 이슈가 있다면 번호를 적어주세요
+      placeholder: "ex. #14"
+    validations:
+      required: false
+
+  - type: textarea
+    id: related-view
+    attributes:
+      label: 📱 영향받는 화면 (선택)
+      description: 작업하는 사항에 영향을 받는 View(화면)를 적어주세요
+      placeholder: ex. HomeView, ProfileView
+    validations:
+      required: false
+
+  - type: textarea
+    id: reference
+    attributes:
+      label: 🧩 참고 자료 (선택)
+      description: 관련 문서, API 명세, 디자인 시안 등이 있다면 첨부해주세요
+      placeholder: |
+        - API 문서: https://...
+        - 참고 링크: https://...
+    validations:
+      required: false

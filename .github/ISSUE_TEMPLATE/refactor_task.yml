@@ -1,0 +1,73 @@
+name: ♻️ 리팩토링
+description: 구조 개선이나 코드 정리, 테스트 개선 시 사용하세요
+title: "[Refactor] "
+labels: ["refactor"]
+
+body:
+  - type: textarea
+    id: refactor-purpose
+    attributes:
+      label: 🧭 목적
+      description: 어떤 부분의 구조를 개선하려는지 설명해주세요
+      placeholder: ex. CoreData Repository 구조 단순화 / Reactor State 최소화
+    validations:
+      required: true
+
+  - type: textarea
+    id: refactor-changes
+    attributes:
+      label: 🧱 변경 내용
+      description: 리팩토링할 범위를 구체적으로 작성해주세요
+      placeholder: |
+        - [ ] 불필요한 의존성 제거
+        - [ ] 중복 로직 분리
+        - [ ] 네이밍 및 디렉토리 구조 정리
+        - [ ] 단위 테스트 정리
+      value: |
+        - [ ] 불필요한 의존성 제거
+        - [ ] 중복 로직 분리
+        - [ ] 네이밍 및 디렉토리 구조 정리
+        - [ ] 단위 테스트 정리
+    validations:
+      required: true
+
+  - type: dropdown
+    id: refactor-scope
+    attributes:
+      label: 📦 영향 범위
+      description: 리팩토링이 영향을 주는 주요 모듈을 선택해주세요
+      multiple: true
+      options:
+        - Core/DI
+        - Core/Network
+        - Core/Utils
+        - Core/Extensions
+        - Core/Persistence
+        - Core/Services
+        - DesignSystem
+        - Features
+        - Shared
+        - 전체
+    validations:
+      required: false
+
+  - type: input
+    id: related-issue
+    attributes:
+      label: 🔗 관련 이슈 (선택)
+      description: 관련된 이슈가 있다면 번호를 적어주세요
+      placeholder: "ex. #14"
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: 💬 참고 사항
+      description: 리뷰 시 주의할 점이나 TODO가 있다면 작성해주세요
+      placeholder: |
+        - Breaking changes 여부
+        - 마이그레이션 필요 사항
+        - 테스트 영향 범위
+    validations:
+      required: false
