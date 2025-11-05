@@ -14,7 +14,24 @@
 		FE6110362EB9D553006E4243 /* Exceptions for "FlatBread" folder in "FlatBread" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Info.plist,
+				Core/DI/.gitkeep,
+				Core/Extensions/.gitkeep,
+				Core/Network/.gitkeep,
+				Core/Persistence/.gitkeep,
+				Core/Services/.gitkeep,
+				Core/Utils/.gitkeep,
+				DesignSystem/Components/.gitkeep,
+				DesignSystem/Modifiers/.gitkeep,
+				DesignSystem/Styles/.gitkeep,
+				Features/Auth/.gitkeep,
+				Features/Chat/.gitkeep,
+				Features/Home/.gitkeep,
+				Features/Profile/.gitkeep,
+				Resources/Info.plist,
+				Shared/Errors/.gitkeep,
+				Shared/Mappers/.gitkeep,
+				Shared/Models/.gitkeep,
+				Shared/Protocols/.gitkeep,
 			);
 			target = FE6110262EB9D4AD006E4243 /* FlatBread */;
 		};
@@ -140,6 +157,8 @@
 /* Begin XCBuildConfiguration section */
 		FE6110302EB9D4AE006E4243 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = FE6110292EB9D4AD006E4243 /* FlatBread */;
+			baseConfigurationReferenceRelativePath = Configs/secrets.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -203,6 +222,8 @@
 		};
 		FE6110312EB9D4AE006E4243 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReferenceAnchor = FE6110292EB9D4AD006E4243 /* FlatBread */;
+			baseConfigurationReferenceRelativePath = Configs/secrets.xcconfig;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
@@ -266,7 +287,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FlatBread/Info.plist;
+				INFOPLIST_FILE = FlatBread/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FlatBread;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -306,7 +327,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = FlatBread/Info.plist;
+				INFOPLIST_FILE = FlatBread/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FlatBread;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
