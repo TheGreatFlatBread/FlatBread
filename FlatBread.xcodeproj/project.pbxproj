@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 4E037CE72EBC4CFC00965D62 /* NMapsMap */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		FE6110272EB9D4AD006E4243 /* FlatBread.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlatBread.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -53,6 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -95,6 +100,7 @@
 			);
 			name = FlatBread;
 			packageProductDependencies = (
+				4E037CE72EBC4CFC00965D62 /* NMapsMap */,
 			);
 			productName = FlatBread;
 			productReference = FE6110272EB9D4AD006E4243 /* FlatBread.app */;
@@ -124,6 +130,9 @@
 			);
 			mainGroup = FE61101E2EB9D4AD006E4243;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FE6110282EB9D4AD006E4243 /* Products */;
 			projectDirPath = "";
@@ -380,6 +389,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/navermaps/SPM-NMapsMap.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.23.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		4E037CE72EBC4CFC00965D62 /* NMapsMap */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
+			productName = NMapsMap;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = FE61101F2EB9D4AD006E4243 /* Project object */;
 }
