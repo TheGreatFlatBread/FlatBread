@@ -1,8 +1,0 @@
-blank_issues_enabled: false
-contact_links:
-  - name: 💬 질문 및 논의
-    url: https://github.com/your-repo/discussions
-    about: 기술적인 질문이나 아이디어 논의는 Discussions를 이용해주세요.
-  - name: 📚 문서 및 가이드
-    url: https://github.com/your-repo/wiki
-    about: 프로젝트 문서와 개발 가이드는 Wiki를 참고해주세요.
