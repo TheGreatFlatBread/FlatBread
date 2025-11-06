@@ -11,7 +11,6 @@ import Alamofire
 enum APIHeader {
     case accessToken
     case apiKey
-    case contentType
     case applicationJSON
     case multipartForm
     case productID
