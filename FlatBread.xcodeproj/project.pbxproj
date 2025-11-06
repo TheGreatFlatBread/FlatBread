@@ -15,7 +15,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		FE6110362EB9D553006E4243 /* Exceptions for "FlatBread" folder in "FlatBread" target */ = {
+		179F94712EBCA0100057F5D8 /* Exceptions for "FlatBread" folder in "FlatBread" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/DI/.gitkeep,
@@ -44,7 +44,7 @@
 		FE6110292EB9D4AD006E4243 /* FlatBread */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				FE6110362EB9D553006E4243 /* Exceptions for "FlatBread" folder in "FlatBread" target */,
+				179F94712EBCA0100057F5D8 /* Exceptions for "FlatBread" folder in "FlatBread" target */,
 			);
 			path = FlatBread;
 			sourceTree = "<group>";
