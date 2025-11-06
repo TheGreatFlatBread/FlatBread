@@ -1,0 +1,35 @@
+name: 📝 일반 작업
+description: 기능 개발, 리팩토링, UI 작업 등 일반적인 작업에 사용하세요
+title: "[Task] "
+labels: ["task"]
+
+body:
+  - type: textarea
+    id: task-description
+    attributes:
+      label: 작업 설명
+      description: 무엇을 구현/개선할 것인지 설명해주세요
+      placeholder: ex. 로그인 API 연동 / 홈 화면 UI 구현
+    validations:
+      required: true
+
+  - type: textarea
+    id: task-details
+    attributes:
+      label: 작업 내용
+      description: 구체적인 작업 항목을 작성해주세요
+      placeholder: |
+        - [ ] 첫 번째 작업
+        - [ ] 두 번째 작업
+        - [ ] 세 번째 작업
+    validations:
+      required: false
+
+  - type: input
+    id: related-issue
+    attributes:
+      label: 관련 이슈
+      description: 관련된 이슈가 있다면 번호를 적어주세요
+      placeholder: "ex. #14"
+    validations:
+      required: false
