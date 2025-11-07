@@ -8,7 +8,7 @@
 import Foundation
 import Alamofire
 
-enum MultipartRouter: URLRequestConvertible {
+enum MultipartRouter: MultipartAPIRouter {
     case updateProfile(request: UserProfileUpdateDTO)
     case uploadImages(request: ImageUploadRequestDTO)
     case uploadVideos(request: VideoUploadRequestDTO)
@@ -16,12 +16,12 @@ enum MultipartRouter: URLRequestConvertible {
     var baseURL: URL {
         switch self {
         case .updateProfile:
-            guard let url = URL(string: APIConfig.baseURL + "/users") else {
+            guard let url = URL(string: APIConfig.baseURL + "/users/") else {
                 assert(false, "is not valid User URL")
             }
             return url
         case .uploadImages, .uploadVideos:
-            guard let url = URL(string: APIConfig.baseURL + "/posts") else {
+            guard let url = URL(string: APIConfig.baseURL + "/posts/") else {
                 assert(false, "is not valid Posts URL")
             }
             return url

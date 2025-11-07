@@ -8,7 +8,7 @@
 import Foundation
 import Alamofire
 
-enum UserRouter: URLRequestConvertible {
+enum UserRouter: APIRouter {
     
     static let encoder = JSONEncoder()
     

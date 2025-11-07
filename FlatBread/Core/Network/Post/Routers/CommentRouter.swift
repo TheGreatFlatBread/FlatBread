@@ -8,7 +8,7 @@
 import Foundation
 import Alamofire
 
-enum CommentRouter: URLRequestConvertible {
+enum CommentRouter: APIRouter {
     static let encoder = JSONEncoder()
     
     case getCommentList(postID: String)
@@ -18,7 +18,7 @@ enum CommentRouter: URLRequestConvertible {
     case writeSubComment(postID: String, commentID: String, content: String)
 
     var baseURL: URL {
-        if let url = URL(string: APIConfig.baseURL + "/posts") {
+        if let url = URL(string: APIConfig.baseURL + "/posts/") {
             return url
         } else {
             assert(false, "is not valid User URL")
@@ -77,7 +77,7 @@ enum CommentRouter: URLRequestConvertible {
     func asURLRequest() throws -> URLRequest {
         var components = URLComponents(string: self.baseURL.appendingPathComponent(self.path).absoluteString)!
         if let query = self.query {
-            components.queryItems = self.query
+            components.queryItems = query
         }
         guard let url = components.url else {
             throw URLError(.badURL)

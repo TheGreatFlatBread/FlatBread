@@ -8,7 +8,7 @@
 import Foundation
 import Alamofire
 
-enum PostRouter: URLRequestConvertible {
+enum PostRouter: APIRouter {
     static let encoder = JSONEncoder()
     
     case uploadPost(request: PostUploadRequestDTO)

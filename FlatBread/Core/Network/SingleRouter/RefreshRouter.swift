@@ -8,7 +8,17 @@
 import Foundation
 import Alamofire
 
-struct RefreshRouter: URLRequestConvertible {
+struct RefreshRouter: APIRouter {
+    var method: HTTPMethod = .post
+    
+    var headers: HTTPHeaders = HTTPHeaders(
+        [
+            APIHeader.applicationJSON,
+            APIHeader.apiKey,
+            APIHeader.productID,
+        ].map(\.httpHeader)
+    )
+    
     let refreshToken: String
     var baseURL: URL {
         URL(string: APIConfig.baseURL)!
@@ -23,14 +33,8 @@ struct RefreshRouter: URLRequestConvertible {
     
     func asURLRequest() throws -> URLRequest {
         var request = URLRequest(url: baseURL)
-        request.method = .post
-        var headers = HTTPHeaders(
-            [
-                APIHeader.applicationJSON,
-                APIHeader.apiKey,
-                APIHeader.productID,
-            ].map(\.httpHeader)
-        )
+        request.method = self.method
+        var headers = self.headers
         headers.add(HTTPHeader(name: "RefreshToken", value: refreshToken))
         request.headers = headers
         return request
