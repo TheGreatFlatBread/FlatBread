@@ -24,6 +24,7 @@ enum PostRouter: APIRouter {
     case searchHashTagList(next: String, limit: String, category: [String], hashTag: String)
     case searchFollowFeedList(next: String, limit: String, category: [String])
     case searchGeolocationPostList(category: [String], longitude: String, latitude: String, order_by: GeoSortBy = .distance, sort_by: SortBy = .asc)
+    case searchPostTitle(title: String, category: [String])
 
     enum GeoSortBy: String {
         case distance
@@ -72,6 +73,7 @@ enum PostRouter: APIRouter {
         case .searchHashTagList: "hashTags"
         case .searchFollowFeedList: "feed"
         case .searchGeolocationPostList: "geolocation"
+        case .searchPostTitle: "search"
         }
     }
     
@@ -109,6 +111,11 @@ enum PostRouter: APIRouter {
                     URLQueryItem(name: "latitude", value: latitude),
                     URLQueryItem(name: "order_by", value: order_by.rawValue),
                     URLQueryItem(name: "sort_by", value: sort_by.rawValue)]
+            + category.map {
+                URLQueryItem(name: "category", value: $0)
+            }
+        case .searchPostTitle(let title, let category):
+            return [URLQueryItem(name: "title", value: title)]
             + category.map {
                 URLQueryItem(name: "category", value: $0)
             }
