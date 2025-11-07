@@ -31,8 +31,8 @@ struct PostResponseDTO: Decodable {
     let createdAt: String?
     let creator: CreatorResponseDTO?
     let files: [String]
-    let likesV1: [String]
-    let likesV2: [String]
+    let likes: [String]
+    let likes2: [String]
     let buyers: [String]
     let hashTags: [String]
     let comment_count: Int?
