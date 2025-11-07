@@ -7,12 +7,12 @@
 
 import Foundation
 
-struct PostListResponseDTO: Decodable {
+struct PostListResponseDTO {
     let data: [PostResponseDTO]
     let next_cursor: String
 }
 
-struct PostResponseDTO: Decodable {
+struct PostResponseDTO {
     let post_id: String?
     let category: String?
     let title: String?
@@ -40,13 +40,18 @@ struct PostResponseDTO: Decodable {
     let distance: Double?
 }
 
-struct CreatorResponseDTO: Decodable {
+struct CreatorResponseDTO {
     let user_id: String?
     let nick: String?
     let profileImage: String?
 }
 
-struct GeoLocationResponseDTO: Decodable {
+struct GeoLocationResponseDTO {
     let longitude: Double?
     let latitude: Double?
 }
+
+nonisolated extension PostResponseDTO: Decodable { }
+nonisolated extension PostListResponseDTO: Decodable { }
+nonisolated extension CreatorResponseDTO: Decodable { }
+nonisolated extension GeoLocationResponseDTO: Decodable { }

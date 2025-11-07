@@ -9,7 +9,7 @@ import Foundation
 
 
 // MARK: 다른사람 과 내 프로필 구조는 같은 구조로 받아온다.
-struct UserProfileResponseDTO: Decodable {
+struct UserProfileResponseDTO {
     let userID: String?
     let email: String?
     let nick: String?
@@ -32,3 +32,5 @@ struct UserProfileResponseDTO: Decodable {
         case postIDList = "posts"
     }
 }
+
+nonisolated extension UserProfileResponseDTO: Decodable { }

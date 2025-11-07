@@ -8,9 +8,11 @@
 import Foundation
 
 
-struct FollowResponseDTO: Decodable {
+struct FollowResponseDTO {
     let followStatus: Bool?
     enum CodingKeys: String, CodingKey {
         case followStatus = "follow_status"
     }
 }
+
+nonisolated extension FollowResponseDTO: Decodable { }
