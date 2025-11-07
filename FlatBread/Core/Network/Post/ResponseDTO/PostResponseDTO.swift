@@ -13,40 +13,40 @@ struct PostListResponseDTO: Decodable {
 }
 
 struct PostResponseDTO: Decodable {
-    var post_id: String?
-    var category: String?
-    var title: String?
-    var price: Int?
-    var content: String?
-    var value1: String?
-    var value2: String?
-    var value3: String?
-    var value4: String?
-    var value5: String?
-    var value6: String?
-    var value7: String?
-    var value8: String?
-    var value9: String?
-    var value10: String?
-    var createdAt: String?
-    var creator: CreatorResponseDTO?
-    var files: [String]
-    var likesV1: [String]
-    var likesV2: [String]
-    var buyers: [String]
-    var hashTags: [String]
-    var comment_count: Int?
-    var geolocation: GeoLocationResponseDTO?
-    var distance: Double?
+    let post_id: String?
+    let category: String?
+    let title: String?
+    let price: Int?
+    let content: String?
+    let value1: String?
+    let value2: String?
+    let value3: String?
+    let value4: String?
+    let value5: String?
+    let value6: String?
+    let value7: String?
+    let value8: String?
+    let value9: String?
+    let value10: String?
+    let createdAt: String?
+    let creator: CreatorResponseDTO?
+    let files: [String]
+    let likesV1: [String]
+    let likesV2: [String]
+    let buyers: [String]
+    let hashTags: [String]
+    let comment_count: Int?
+    let geolocation: GeoLocationResponseDTO?
+    let distance: Double?
 }
 
 struct CreatorResponseDTO: Decodable {
-    var user_id: String?
-    var nick: String?
-    var profileImage: String?
+    let user_id: String?
+    let nick: String?
+    let profileImage: String?
 }
 
 struct GeoLocationResponseDTO: Decodable {
-    var longitude: Double?
-    var latitude: Double?
+    let longitude: Double?
+    let latitude: Double?
 }
