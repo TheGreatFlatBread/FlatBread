@@ -27,4 +27,4 @@ struct PostUploadRequestDTO {
     var latitude: Double
 }
 
-nonisolated extension PostUploadRequestDTO: Encodable { }
+extension PostUploadRequestDTO: Encodable { }

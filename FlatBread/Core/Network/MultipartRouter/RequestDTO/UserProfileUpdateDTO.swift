@@ -20,4 +20,4 @@ struct UserProfileUpdateDTO {
     let info5: String?
 }
 
-nonisolated extension UserProfileUpdateDTO: Encodable { }
+extension UserProfileUpdateDTO: Encodable { }

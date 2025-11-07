@@ -21,4 +21,4 @@ struct UserSignUpRequestDTO {
     var info5: String?
 }
 
-nonisolated extension UserSignUpRequestDTO: Encodable { } 
+extension UserSignUpRequestDTO: Encodable { } 
