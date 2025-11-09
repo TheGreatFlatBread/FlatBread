@@ -11,19 +11,20 @@ import NMapsGeometry
 
 struct MainMapView: View {
     
-    @State var coordinate: NMGLatLng = .init(lat: 37.517677, lng: 126.886442)
-    @State private var activeMeetingId: Int? = nil
+    @State private var coordinate: NMGLatLng
     @State private var searchText: String = ""
-    @State private var meetings: [MoimInMainMap] = []
-    @State private var markers: [NMFMarker] = []
+    @State private var moims: [MoimInMainMap] = []
+    @State private var markers: [MoimMarker] = []
+    @State private var focusingPlaceID: String? = nil
+    
+    init(initialPosition: NMGLatLng = .init(lat: 37.517677, lng: 126.886442)) {
+        self.coordinate = initialPosition
+    }
     
     var body: some View {
         ScrollViewReader { scrollViewProxy in
             ZStack {
-                NaverMapView(
-                    coordinate: $coordinate,
-                    markers: $markers
-                )
+                NaverMapView(coordinate: $coordinate, markers: $markers, focusingPlaceID: $focusingPlaceID)
                 .ignoresSafeArea(.all)
                 
                 VStack {
@@ -47,10 +48,10 @@ struct MainMapView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
-                            ForEach(meetings) { meeting in
+                            ForEach(moims) { meeting in
                                 MeetingCardView(
                                     meeting: meeting,
-                                    isActive: activeMeetingId == meeting.id
+                                    isFocusing: focusingPlaceID == meeting.id
                                 )
                                 .onTapGesture {
                                     handleCardClick(meetingId: meeting.id)
@@ -60,41 +61,38 @@ struct MainMapView: View {
                         }
                         .padding(.horizontal)
                         .padding(.bottom, 30)
+                        .padding(.top, 1.5)
                     }
-                    .background(Color.clear)
+                    .background(.clear)
+                    .onChange(of: focusingPlaceID) { _, newValue in
+                        guard let currentPlaceID  = newValue else { return }
+                        withAnimation {
+                            scrollViewProxy.scrollTo(currentPlaceID, anchor: .center)
+                        }
+                    }
                 }
             }
         }
         .onAppear {
-            meetings = MoimInMainMap.makeSample()
-            markers = meetings.map({
-                return NMFMarker(position: NMGLatLng(from: $0.location))
+            moims = MoimInMainMap.makeSample()
+            markers = moims.map({
+                return MoimMarker(id: $0.id, position: NMGLatLng(from: $0.location))
             })
         }
     }
     
-    func handleMarkerClick(meetingId: Int, proxy: ScrollViewProxy) {
-        activeMeetingId = meetingId
-        if let selectedPosition = meetings.filter({ $0.id == meetingId }).first {
+    func handleCardClick(meetingId: String) {
+        if let selectedPosition = moims.filter({ $0.id == meetingId }).first {
+            focusingPlaceID = meetingId
             coordinate = NMGLatLng(from: selectedPosition.location)
         }
-        
-        withAnimation(.smooth) {
-            proxy.scrollTo(meetingId, anchor: .center)
-        }
-    }
-    
-    func handleCardClick(meetingId: Int) {
-        if let selectedPosition = meetings.filter({ $0.id == meetingId }).first {
-            coordinate = NMGLatLng(from: selectedPosition.location)
-        }
-        activeMeetingId = meetingId
+        focusingPlaceID = meetingId
     }
 }
 
 struct MeetingCardView: View {
     let meeting: MoimInMainMap
-    let isActive: Bool
+    let isFocusing: Bool
     
     var body: some View {
         ZStack(alignment: .bottomLeading) {
@@ -116,17 +114,17 @@ struct MeetingCardView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(meeting.category)
-                        .font(.caption)
+                        .font(.system(size: 13))
                         .fontWeight(.semibold)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Color.blue.opacity(0.8))
+                        .background(.brown.opacity(0.8))
                         .cornerRadius(8)
                     
                     Spacer()
                     
                     Text("\(meeting.currentMembers)/\(meeting.maxMembers)명")
-                        .font(.caption)
+                        .font(.system(size: 13))
                         .fontWeight(.semibold)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -135,7 +133,7 @@ struct MeetingCardView: View {
                 }
                 
                 Text(meeting.name)
-                    .font(.title3)
+                    .font(.system(size: 19))
                     .fontWeight(.bold)
                 
                 HStack {
@@ -143,7 +141,7 @@ struct MeetingCardView: View {
                     Spacer()
                     Text("몇km떨어짐?")
                 }
-                .font(.subheadline)
+                .font(.system(size: 13))
                 .opacity(0.8)
             }
             .padding()
@@ -151,12 +149,11 @@ struct MeetingCardView: View {
         }
         .frame(width: 300, height: 200)
         .cornerRadius(16)
-        .shadow(radius: 8)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(isActive ? Color.blue : Color.clear, lineWidth: 3)
+                .stroke(isFocusing ? .yellow : Color.clear, lineWidth: 3)
         )
-        .animation(.default, value: isActive)
+        .animation(.default, value: isFocusing)
     }
 }
 

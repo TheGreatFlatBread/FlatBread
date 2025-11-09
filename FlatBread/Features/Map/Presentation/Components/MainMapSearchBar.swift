@@ -22,7 +22,6 @@ struct MainMapSearchBar: View {
         .cornerRadius(.infinity)
         .shadow(radius: 8)
         .padding(.horizontal)
-        .padding(.top, 50)
     }
 }
 

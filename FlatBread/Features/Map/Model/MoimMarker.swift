@@ -16,6 +16,7 @@ final class MoimMarker: NMFMarker {
         self.id = id
         super.init()
         self.position = position
+        self.iconImage = NMF_MARKER_IMAGE_YELLOW
     }
     
 }
