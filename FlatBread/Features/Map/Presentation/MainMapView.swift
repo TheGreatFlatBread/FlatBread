@@ -13,7 +13,7 @@ struct MainMapView: View {
     
     @State private var coordinate: NMGLatLng
     @State private var searchText: String = ""
-    @State private var moims: [MoimInMainMap] = []
+    @State private var moims: [Moim] = []
     @State private var markers: [MoimMarker] = []
     @State private var focusingPlaceID: String? = nil
     
@@ -74,7 +74,7 @@ struct MainMapView: View {
             }
         }
         .onAppear {
-            moims = MoimInMainMap.makeSample()
+            moims = Moim.makeSample()
             markers = moims.map({
                 return MoimMarker(id: $0.id, position: NMGLatLng(from: $0.location))
             })

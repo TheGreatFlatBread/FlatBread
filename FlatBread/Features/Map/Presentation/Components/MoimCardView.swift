@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MoimCardView: View {
-    let moim: MoimInMainMap
+    let moim: Moim
     let isFocusing: Bool
     
     var body: some View {
@@ -78,7 +78,7 @@ struct MoimCardView: View {
 import CoreLocation
 
 #Preview {
-    let seSACMoim = MoimInMainMap(
+    let seSACMoim = Moim(
         id: "1",
         name: "새싹에서 공부하는 모임",
         category: "공부",
