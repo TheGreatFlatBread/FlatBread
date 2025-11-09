@@ -48,15 +48,15 @@ struct MainMapView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
-                            ForEach(moims) { meeting in
-                                MeetingCardView(
-                                    meeting: meeting,
-                                    isFocusing: focusingPlaceID == meeting.id
+                            ForEach(moims) { moim in
+                                MoimCardView(
+                                    moim: moim,
+                                    isFocusing: focusingPlaceID == moim.id
                                 )
                                 .onTapGesture {
-                                    handleCardClick(meetingId: meeting.id)
+                                    handleCardClick(moimID: moim.id)
                                 }
-                                .id(meeting.id)
+                                .id(moim.id)
                             }
                         }
                         .padding(.horizontal)
@@ -81,79 +81,12 @@ struct MainMapView: View {
         }
     }
     
-    func handleCardClick(meetingId: String) {
-        if let selectedPosition = moims.filter({ $0.id == meetingId }).first {
-            focusingPlaceID = meetingId
+    func handleCardClick(moimID: String) {
+        if let selectedPosition = moims.filter({ $0.id == moimID }).first {
+            focusingPlaceID = moimID
             coordinate = NMGLatLng(from: selectedPosition.location)
         }
-        focusingPlaceID = meetingId
-    }
-}
-
-struct MeetingCardView: View {
-    let meeting: MoimInMainMap
-    let isFocusing: Bool
-    
-    var body: some View {
-        ZStack(alignment: .bottomLeading) {
-            AsyncImage(url: URL(string: meeting.imageUrl)) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Color.gray.opacity(0.5)
-            }
-            .frame(width: 300, height: 200)
-            
-            LinearGradient(
-                colors: [.clear, .black],
-                startPoint: .center,
-                endPoint: .bottom
-            )
-            
-            VStack(alignment: .leading, spacing: 6) {
-                HStack {
-                    Text(meeting.category)
-                        .font(.system(size: 13))
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(.brown.opacity(0.8))
-                        .cornerRadius(8)
-                    
-                    Spacer()
-                    
-                    Text("\(meeting.currentMembers)/\(meeting.maxMembers)명")
-                        .font(.system(size: 13))
-                        .fontWeight(.semibold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.black.opacity(0.6))
-                        .cornerRadius(8)
-                }
-                
-                Text(meeting.name)
-                    .font(.system(size: 19))
-                    .fontWeight(.bold)
-                
-                HStack {
-                    Text("위치가 들어감")
-                    Spacer()
-                    Text("몇km떨어짐?")
-                }
-                .font(.system(size: 13))
-                .opacity(0.8)
-            }
-            .padding()
-            .foregroundColor(.white)
-        }
-        .frame(width: 300, height: 200)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(isFocusing ? .yellow : Color.clear, lineWidth: 3)
-        )
-        .animation(.default, value: isFocusing)
+        focusingPlaceID = moimID
     }
 }
 
