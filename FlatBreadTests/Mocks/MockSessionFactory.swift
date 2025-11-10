@@ -10,13 +10,13 @@ import Alamofire
 @testable import FlatBread
 
 final class MockSessionFactory {
-    
+
     var tokenCoordinator: TokenRefreshCoordinator
     var tokenStorage: MockTokenStorage
     var session: Session
-    
-    init(accessToken: String, refreshToken: String) {
-        let mainSession = Self.createMockSession()
+
+    init(accessToken: String, refreshToken: String, protocolClass: URLProtocol.Type) {
+        let mainSession = Self.createMockSession(protocolClass: protocolClass)
         self.tokenStorage = MockTokenStorage(accessToken: accessToken, refreshToken: refreshToken)
         self.tokenCoordinator = TokenRefreshCoordinator(
             tokenStorage: tokenStorage,
@@ -24,13 +24,13 @@ final class MockSessionFactory {
         )
         self.session = mainSession
     }
-    
-    static func createMockSession() -> Session {
+
+    static func createMockSession(protocolClass: URLProtocol.Type) -> Session {
         let configuration = URLSessionConfiguration.af.ephemeral
-        configuration.protocolClasses = [MockURLProtocol.self]
+        configuration.protocolClasses = [protocolClass]
         return Session(configuration: configuration)
     }
-    
+
     func makeNetworkService() -> AsyncNetworkService {
         DefaultNetworkService(
             session: session,
