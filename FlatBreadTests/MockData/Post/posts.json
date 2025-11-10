@@ -1,0 +1,55 @@
+{
+    "data" : [
+        {
+          "post_id": "post_id",
+          "category": "study",
+          "title": "같이 프로젝트 하실분",
+          "price": 100,
+          "content": "할수 있다! #범계역 #스타벅스 #iOS #swift #⭐️",
+          "value1": "false",
+          "value2": "10",
+          "value3": "3시간",
+          "value4": "미정",
+          "value5": "프로젝트 같이 하실 분",
+          "value6": "추가 정보 6",
+          "value7": "추가 정보 7",
+          "value8": "추가 정보 8",
+          "value9": "추가 정보 9",
+          "value10": "추가 정보 10",
+          "createdAt": "9999-10-19T03:05:03.422Z",
+          "creator": {
+            "user_id": "user_id",
+            "nick": "hwan",
+            "profileImage": "star.png"
+          },
+          "files": [
+            "star.png"
+          ],
+          "likes": [
+            "6519aa6932b0964405117d97",
+            "6519aa6932b0964405117d97"
+          ],
+          "likes2": [
+            "6519aa6932b0964405117d97",
+            "6519aa6932b0964405117d97"
+          ],
+          "buyers": [
+            "6519aa6932b0964405117d97"
+          ],
+          "hashTags": [
+              "#범계역",
+              "#스타벅스",
+              "#iOS",
+              "#swift",
+              "#⭐️"
+          ],
+          "comment_count": 5,
+          "geolocation": {
+            "longitude": 126.886417,
+            "latitude": 37.517682
+          },
+          "distance": 75.42775857964551
+        }
+    ],
+    "next_cursor": "655659b83913fe98de4b82d2"
+}
