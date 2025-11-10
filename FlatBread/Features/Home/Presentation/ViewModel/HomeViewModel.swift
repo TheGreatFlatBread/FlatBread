@@ -9,6 +9,29 @@ import SwiftUI
 import Combine
 
 final class HomeViewModel: ObservableObject {
+    
+    @Published var banners: [BannerItem] = [
+        .init(
+            imageURL: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
+            title: "모임타이틀모임타이틀\n모이면 최저가에!",
+            subtitle: "모임 전용 쿠폰 & 이벤트"
+        ),
+        .init(
+            imageURL: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80",
+            title: "모임타이틀모임타이틀모임타이틀",
+            subtitle: "지금 놓치면 1년 기다려야 해요"
+        ),
+        .init(
+            imageURL: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
+            title: "모임타이틀모임타이틀",
+            subtitle: "담요 · 향초 · 머그컵 만드는 모임"
+        )
+    ]
+
+    func didTapBanner(_ banner: BannerItem) {
+        // TODO: 배너 상세 이동 / 웹뷰 열기 등
+        print("Tapped banner: \(banner.title)")
+    }
 
     // 카테고리 섹션에 보여줄 데이터
     @Published var categoryItems: [CategoryItem] = [

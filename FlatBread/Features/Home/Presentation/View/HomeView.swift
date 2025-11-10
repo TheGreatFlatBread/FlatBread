@@ -13,14 +13,24 @@ struct HomeView: View {
 
     var body: some View {
         ScrollView {
-            CategorySectionCard(
-                items: viewModel.categoryItems,
-                onTapCategory: { item in
-                    viewModel.didTapCategory(item)
-                }
-            )
+            VStack(spacing: 24) {
+                BannerCarouselView(
+                    items: viewModel.banners,
+                    onTapBanner: { banner in
+                        viewModel.didTapBanner(banner)
+                    }
+                )
+
+                CategorySectionCard(
+                    items: viewModel.categoryItems,
+                    onTapCategory: { item in
+                        viewModel.didTapCategory(item)
+                    }
+                )
+            }
+            .padding(.vertical, 16)
         }
-        .background(Color(.systemGray6))
+        .background(Color(.systemBackground))
     }
 }
 
