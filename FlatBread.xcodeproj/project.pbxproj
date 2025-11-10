@@ -25,7 +25,6 @@
 				DesignSystem/Styles/.gitkeep,
 				Features/Auth/.gitkeep,
 				Features/Chat/.gitkeep,
-				Features/Home/.gitkeep,
 				Features/Profile/.gitkeep,
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,
