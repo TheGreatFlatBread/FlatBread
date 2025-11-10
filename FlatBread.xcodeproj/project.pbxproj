@@ -394,14 +394,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/navermaps/SPM-NMapsMap.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 3.23.0;
-			};
-		};
 		17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
@@ -410,18 +402,26 @@
 				minimumVersion = 5.10.2;
 			};
 		};
+		4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/navermaps/SPM-NMapsMap.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.23.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4E037CE72EBC4CFC00965D62 /* NMapsMap */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
-			productName = NMapsMap;
-		};
 		17BCDA8C2EBA291E00451DBF /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */;
 			productName = Alamofire;
+		};
+		4E037CE72EBC4CFC00965D62 /* NMapsMap */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
+			productName = NMapsMap;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
