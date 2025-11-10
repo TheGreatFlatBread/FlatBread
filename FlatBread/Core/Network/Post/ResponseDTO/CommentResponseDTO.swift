@@ -11,9 +11,17 @@ struct CommentListResponseDTO: Decodable {
     let data: [CommentReplyResponseDTO]
 }
 
-struct CommentReplyResponseDTO: Decodable {
-    let comment: CommentResponseDTO
+struct CommentReplyResponseDTO {
+    let commentID: String?
+    let content: String?
+    let createdAt: String?
+    let creator: CreatorResponseDTO?
     let replies: [CommentResponseDTO]
+    
+    enum CodingKeys: String, CodingKey {
+        case commentID = "comment_id"
+        case content, createdAt, creator, replies
+    }
 }
 
 struct CommentResponseDTO: Decodable {
