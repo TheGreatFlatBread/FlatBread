@@ -40,6 +40,7 @@
 				Features/Chat/.gitkeep,
 				Features/Home/.gitkeep,
 				Features/Profile/.gitkeep,
+				Resources/FlatBread.xctestplan,
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,
 				Shared/Mappers/.gitkeep,
@@ -50,9 +51,22 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		17E9CCBC2EC0835E00EC0B33 /* Exceptions for "FlatBreadTests" folder in "Compile Sources" phase from "FlatBreadTests" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 179F97FA2EBE16290057F5D8 /* Sources */;
+			membershipExceptions = (
+				MockData/Single/refresh.json,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		179F97FF2EBE16290057F5D8 /* FlatBreadTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				17E9CCBC2EC0835E00EC0B33 /* Exceptions for "FlatBreadTests" folder in "Compile Sources" phase from "FlatBreadTests" target */,
+			);
 			path = FlatBreadTests;
 			sourceTree = "<group>";
 		};
