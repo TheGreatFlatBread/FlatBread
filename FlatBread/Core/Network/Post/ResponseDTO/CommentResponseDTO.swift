@@ -1,0 +1,34 @@
+//
+//  CommentResponseDTO.swift
+//  FlatBread
+//
+//  Created by hwan on 11/6/25.
+//
+
+import Foundation
+
+struct CommentListResponseDTO: Decodable {
+    let data: [CommentReplyResponseDTO]
+}
+
+struct CommentReplyResponseDTO: Decodable {
+    let comment: CommentResponseDTO
+    let replies: [CommentResponseDTO]
+}
+
+struct CommentResponseDTO: Decodable {
+    let commentID: String?
+    let content: String?
+    let createdAt: String?
+    let creator: CreatorResponseDTO?
+    
+    enum CodingKeys: String, CodingKey {
+        case commentID = "comment_id"
+        case content, createdAt, creator
+    }
+}
+
+
+struct CommentWriteResponseDTO: Decodable {
+    let content: String?
+}
