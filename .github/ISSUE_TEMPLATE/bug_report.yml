@@ -1,0 +1,53 @@
+name: 🐛 버그 리포트
+description: 버그나 오류를 발견했을 때 사용하세요
+title: "[Bug] "
+labels: ["bug"]
+
+body:
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: 버그 설명
+      description: 어떤 버그가 발생했는지 설명해주세요
+      placeholder: ex. 로그인 시도 시 앱 크래시 발생
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce-steps
+    attributes:
+      label: 재현 방법
+      description: 버그를 재현하는 단계를 작성해주세요
+      placeholder: |
+        1. 앱 실행
+        2. 로그인 버튼 탭
+        3. 크래시 발생
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: 예상 동작
+      description: 정상 동작은 무엇인가요?
+      placeholder: ex. 로그인 성공 후 메인 화면 표시
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 스크린샷 / 로그
+      description: 스크린샷이나 에러 로그를 첨부해주세요
+      placeholder: 스크린샷 또는 로그 첨부
+    validations:
+      required: false
+
+  - type: input
+    id: device
+    attributes:
+      label: 디바이스
+      description: 발생한 디바이스를 입력해주세요
+      placeholder: ex. iPhone 14 Pro
+    validations:
+      required: false
