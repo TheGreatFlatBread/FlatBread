@@ -46,7 +46,7 @@ enum UserRouter: APIRouter {
             return HTTPHeaders(headerTypes.map(\.httpHeader))
 
         case .signOut, .searchUser, .getMeProfile, .getOtherUserProfile:
-            let headerTypes: [APIHeader] = [.applicationJSON, .apiKey, .productID, .accessToken]
+            let headerTypes: [APIHeader] = [.applicationJSON, .apiKey, .productID]
             return HTTPHeaders(headerTypes.map(\.httpHeader))
         }
     }

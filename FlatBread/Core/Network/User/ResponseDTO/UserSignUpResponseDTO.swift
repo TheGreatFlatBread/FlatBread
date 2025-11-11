@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct UserSignUpResponseDTO: Decodable {
+struct UserSignUpResponseDTO {
     let userID: String?
     let email: String?
     let nick: String?
@@ -19,3 +19,5 @@ struct UserSignUpResponseDTO: Decodable {
         case email, nick, accessToken, refreshToken
     }
 }
+
+nonisolated extension UserSignUpResponseDTO: Decodable { }
