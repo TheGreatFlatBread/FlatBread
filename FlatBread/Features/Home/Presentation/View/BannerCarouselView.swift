@@ -17,13 +17,13 @@ struct BannerCarouselView: View {
     @State private var selectedBannerID: BannerItem.ID?
 
     // 카드 간 간격
-    private let itemSpacing: CGFloat = 4
+    private let itemSpacing: CGFloat = 0
 
     var body: some View {
         GeometryReader { proxy in
             let screenWidth = proxy.size.width
 
-            let itemWidth = screenWidth * 0.8
+            let itemWidth = screenWidth * 0.85
             let sidePadding = (screenWidth - itemWidth) / 2
 
             ScrollView(.horizontal, showsIndicators: false) {
