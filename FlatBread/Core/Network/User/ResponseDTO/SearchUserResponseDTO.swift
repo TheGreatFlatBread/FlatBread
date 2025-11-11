@@ -7,6 +7,8 @@
 
 import Foundation
 
-struct SearchUserResponseDTO: Decodable {
+struct SearchUserResponseDTO {
     let data: [CreatorResponseDTO]
 }
+
+nonisolated extension SearchUserResponseDTO: Decodable { }

@@ -7,6 +7,8 @@
 
 import Foundation
 
-struct FileUploadResponseDTO: Decodable {
+struct FileUploadResponseDTO {
     let files: [String]
 }
+
+nonisolated extension FileUploadResponseDTO: Decodable { }

@@ -7,10 +7,12 @@
 
 import Foundation
 
-struct LikeResponseDTO: Decodable {
+struct LikeResponseDTO {
     let likeStatus: Bool?
     
     enum CodingKeys: String, CodingKey {
         case likeStatus = "like_status"
     }
 }
+
+nonisolated extension LikeResponseDTO: Decodable { }

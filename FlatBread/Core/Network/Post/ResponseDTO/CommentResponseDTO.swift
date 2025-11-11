@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct CommentListResponseDTO: Decodable {
+struct CommentListResponseDTO {
     let data: [CommentReplyResponseDTO]
 }
 
@@ -24,7 +24,7 @@ struct CommentReplyResponseDTO {
     }
 }
 
-struct CommentResponseDTO: Decodable {
+struct CommentResponseDTO {
     let commentID: String?
     let content: String?
     let createdAt: String?
@@ -37,6 +37,12 @@ struct CommentResponseDTO: Decodable {
 }
 
 
-struct CommentWriteResponseDTO: Decodable {
+struct CommentWriteResponseDTO {
     let content: String?
 }
+
+
+nonisolated extension CommentListResponseDTO: Decodable { }
+nonisolated extension CommentReplyResponseDTO: Decodable { }
+nonisolated extension CommentResponseDTO: Decodable { }
+nonisolated extension CommentWriteResponseDTO: Decodable { }

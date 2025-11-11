@@ -14,8 +14,8 @@ struct FollowRouter: APIRouter {
     var headers: HTTPHeaders = HTTPHeaders(
         [
             APIHeader.applicationJSON,
-            APIHeader.apiKey, APIHeader.productID,
-            APIHeader.accessToken
+            APIHeader.apiKey,
+            APIHeader.productID
         ].map(\.httpHeader)
     )
     

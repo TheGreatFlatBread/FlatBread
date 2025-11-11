@@ -40,7 +40,7 @@ enum MultipartRouter: MultipartAPIRouter {
     var headers: HTTPHeaders {
         switch self {
         case .updateProfile, .uploadImages, .uploadVideos:
-            let headerTypes: [APIHeader] = [.multipartForm, .apiKey, .productID, .accessToken]
+            let headerTypes: [APIHeader] = [.multipartForm, .apiKey, .productID]
             return HTTPHeaders(headerTypes.map(\.httpHeader))
         }
     }
