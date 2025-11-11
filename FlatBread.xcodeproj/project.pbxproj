@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 17BCDA8C2EBA291E00451DBF /* Alamofire */; };
+		4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 4E037CE72EBC4CFC00965D62 /* NMapsMap */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -93,6 +94,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */,
+				4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -161,6 +163,7 @@
 			name = FlatBread;
 			packageProductDependencies = (
 				17BCDA8C2EBA291E00451DBF /* Alamofire */,
+				4E037CE72EBC4CFC00965D62 /* NMapsMap */,
 			);
 			productName = FlatBread;
 			productReference = FE6110272EB9D4AD006E4243 /* FlatBread.app */;
@@ -196,6 +199,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */,
+				4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FE6110282EB9D4AD006E4243 /* Products */;
@@ -547,6 +551,14 @@
 				minimumVersion = 5.10.2;
 			};
 		};
+		4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/navermaps/SPM-NMapsMap.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.23.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -554,6 +566,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */;
 			productName = Alamofire;
+		};
+		4E037CE72EBC4CFC00965D62 /* NMapsMap */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
+			productName = NMapsMap;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
