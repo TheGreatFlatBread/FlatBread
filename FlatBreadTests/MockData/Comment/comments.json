@@ -1,0 +1,36 @@
+{
+  "data": [
+    {
+      "comment_id": "ajsdkfjklsjfld",
+      "content": "할수 있나",
+      "createdAt": "9999-02-12T06:36:00.073Z",
+      "creator": {
+        "user_id": "ajsdkfjklsjfld",
+        "nick": "hwan",
+        "profileImage": "/data/profiles/1707716853682.png"
+      },
+      "replies": [
+        {
+          "comment_id": "ajsdkfjklsjfld",
+          "content": "대댓글 예시입니다",
+          "createdAt": "9999-02-12T06:40:00.073Z",
+          "creator": {
+            "user_id": "ajsdkfjklsjfld",
+            "nick": "jane",
+            "profileImage": "/data/profiles/1707716900000.png"
+          }
+        },
+        {
+          "comment_id": "ajsdkfjklsjfld",
+          "content": "또 다른 대댓글입니다",
+          "createdAt": "9999-02-12T06:45:00.073Z",
+          "creator": {
+            "user_id": "ajsdkfjklsjfld",
+            "nick": "mike",
+            "profileImage": "/data/profiles/1707716950000.png"
+          }
+        }
+      ]
+    }
+  ]
+}

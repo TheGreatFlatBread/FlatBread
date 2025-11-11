@@ -10,7 +10,18 @@
 		17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 17BCDA8C2EBA291E00451DBF /* Alamofire */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		179F98022EBE16290057F5D8 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FE61101F2EB9D4AD006E4243 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FE6110262EB9D4AD006E4243;
+			remoteInfo = FlatBread;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		179F97FE2EBE16290057F5D8 /* FlatBreadTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlatBreadTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE6110272EB9D4AD006E4243 /* FlatBread.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlatBread.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -20,7 +31,6 @@
 			membershipExceptions = (
 				Core/DI/.gitkeep,
 				Core/Extensions/.gitkeep,
-				Core/Persistence/.gitkeep,
 				Core/Services/.gitkeep,
 				Core/Utils/.gitkeep,
 				DesignSystem/Components/.gitkeep,
@@ -30,6 +40,7 @@
 				Features/Chat/.gitkeep,
 				Features/Home/.gitkeep,
 				Features/Profile/.gitkeep,
+				Resources/FlatBread.xctestplan,
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,
 				Shared/Mappers/.gitkeep,
@@ -40,7 +51,25 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		17E9CCBC2EC0835E00EC0B33 /* Exceptions for "FlatBreadTests" folder in "Compile Sources" phase from "FlatBreadTests" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			buildPhase = 179F97FA2EBE16290057F5D8 /* Sources */;
+			membershipExceptions = (
+				MockData/Single/refresh.json,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		179F97FF2EBE16290057F5D8 /* FlatBreadTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				17E9CCBC2EC0835E00EC0B33 /* Exceptions for "FlatBreadTests" folder in "Compile Sources" phase from "FlatBreadTests" target */,
+			);
+			path = FlatBreadTests;
+			sourceTree = "<group>";
+		};
 		FE6110292EB9D4AD006E4243 /* FlatBread */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
@@ -52,6 +81,13 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		179F97FB2EBE16290057F5D8 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FE6110242EB9D4AD006E4243 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -67,6 +103,7 @@
 			isa = PBXGroup;
 			children = (
 				FE6110292EB9D4AD006E4243 /* FlatBread */,
+				179F97FF2EBE16290057F5D8 /* FlatBreadTests */,
 				FE6110282EB9D4AD006E4243 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -75,6 +112,7 @@
 			isa = PBXGroup;
 			children = (
 				FE6110272EB9D4AD006E4243 /* FlatBread.app */,
+				179F97FE2EBE16290057F5D8 /* FlatBreadTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -82,6 +120,29 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		179F97FD2EBE16290057F5D8 /* FlatBreadTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 179F98042EBE16290057F5D8 /* Build configuration list for PBXNativeTarget "FlatBreadTests" */;
+			buildPhases = (
+				179F97FA2EBE16290057F5D8 /* Sources */,
+				179F97FB2EBE16290057F5D8 /* Frameworks */,
+				179F97FC2EBE16290057F5D8 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				179F98032EBE16290057F5D8 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				179F97FF2EBE16290057F5D8 /* FlatBreadTests */,
+			);
+			name = FlatBreadTests;
+			packageProductDependencies = (
+			);
+			productName = FlatBreadTests;
+			productReference = 179F97FE2EBE16290057F5D8 /* FlatBreadTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		FE6110262EB9D4AD006E4243 /* FlatBread */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FE6110322EB9D4AE006E4243 /* Build configuration list for PBXNativeTarget "FlatBread" */;
@@ -115,6 +176,10 @@
 				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 2610;
 				TargetAttributes = {
+					179F97FD2EBE16290057F5D8 = {
+						CreatedOnToolsVersion = 26.1;
+						TestTargetID = FE6110262EB9D4AD006E4243;
+					};
 					FE6110262EB9D4AD006E4243 = {
 						CreatedOnToolsVersion = 26.1;
 					};
@@ -138,11 +203,19 @@
 			projectRoot = "";
 			targets = (
 				FE6110262EB9D4AD006E4243 /* FlatBread */,
+				179F97FD2EBE16290057F5D8 /* FlatBreadTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		179F97FC2EBE16290057F5D8 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FE6110252EB9D4AD006E4243 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -153,6 +226,13 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		179F97FA2EBE16290057F5D8 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FE6110232EB9D4AD006E4243 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -162,7 +242,67 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		179F98032EBE16290057F5D8 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FE6110262EB9D4AD006E4243 /* FlatBread */;
+			targetProxy = 179F98022EBE16290057F5D8 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		179F98052EBE16290057F5D8 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2JZ8QNS5D4;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hyeonghwan.FlatBreadTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlatBread.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlatBread";
+			};
+			name = Debug;
+		};
+		179F98062EBE16290057F5D8 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 2JZ8QNS5D4;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.hyeonghwan.FlatBreadTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FlatBread.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/FlatBread";
+			};
+			name = Release;
+		};
 		FE6110302EB9D4AE006E4243 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReferenceAnchor = FE6110292EB9D4AD006E4243 /* FlatBread */;
@@ -369,6 +509,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		179F98042EBE16290057F5D8 /* Build configuration list for PBXNativeTarget "FlatBreadTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				179F98052EBE16290057F5D8 /* Debug */,
+				179F98062EBE16290057F5D8 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		FE6110222EB9D4AD006E4243 /* Build configuration list for PBXProject "FlatBread" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

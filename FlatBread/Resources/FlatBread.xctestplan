@@ -1,0 +1,33 @@
+{
+  "configurations" : [
+    {
+      "id" : "725E23E0-E98A-4C70-8BC1-EC833EFBA57C",
+      "name" : "Configuration 1",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : {
+      "targets" : [
+        {
+          "containerPath" : "container:FlatBread.xcodeproj",
+          "identifier" : "FE6110262EB9D4AD006E4243",
+          "name" : "FlatBread"
+        }
+      ]
+    }
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:FlatBread.xcodeproj",
+        "identifier" : "179F97FD2EBE16290057F5D8",
+        "name" : "FlatBreadTests"
+      }
+    }
+  ],
+  "version" : 1
+}

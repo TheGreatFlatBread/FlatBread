@@ -12,8 +12,16 @@ struct CommentListResponseDTO {
 }
 
 struct CommentReplyResponseDTO {
-    let comment: CommentResponseDTO
+    let commentID: String?
+    let content: String?
+    let createdAt: String?
+    let creator: CreatorResponseDTO?
     let replies: [CommentResponseDTO]
+    
+    enum CodingKeys: String, CodingKey {
+        case commentID = "comment_id"
+        case content, createdAt, creator, replies
+    }
 }
 
 struct CommentResponseDTO {
