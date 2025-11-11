@@ -15,9 +15,6 @@ struct NaverMapView: UIViewRepresentable {
     @Binding var markers: [MoimMarker]
     @Binding var focusingPlaceID: String?
     
-    @State(initialValue: Coordinator())
-    private var coordinator: Coordinator
-    
     init(
         coordinate: Binding<NMGLatLng>,
         markers: Binding<[MoimMarker]>,
