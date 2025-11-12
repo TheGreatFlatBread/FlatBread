@@ -37,7 +37,6 @@
 				DesignSystem/Components/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Styles/.gitkeep,
-				Features/Auth/.gitkeep,
 				Features/Chat/.gitkeep,
 				Features/Home/.gitkeep,
 				Features/Profile/.gitkeep,
