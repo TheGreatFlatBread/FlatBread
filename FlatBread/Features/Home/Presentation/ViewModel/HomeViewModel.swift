@@ -10,6 +10,35 @@ import Combine
 
 final class HomeViewModel: ObservableObject {
     
+    @Published var moimGroups: [MoimGroupItem] = [
+        .init(
+            title: "콤플레이 배드민턴 모임🔥 신입모집🔥",
+            subtitle: "함께 성장하는 2030 배드민턴 모임! 🏸",
+            category: "운동/스포츠",
+            memberCount: 251,
+            imageURL: "https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=600&q=80"
+        ),
+        .init(
+            title: "1인 창업자 AI/디자인/네트워킹",
+            subtitle: "창업, 디자인, 인공지능(AI) 활용 스터디",
+            category: "자기계발",
+            memberCount: 6,
+            imageURL: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=600&q=80"
+        ),
+        .init(
+            title: "데일리 한중 언어 교류 (韓中交流)",
+            subtitle: "📌 한중 언어 교류 모임 안내",
+            category: "외국어/언어",
+            memberCount: 146,
+            imageURL: "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=600&q=80"
+        )
+    ]
+    
+    func didTapMoimGroup(_ moim: MoimGroupItem) {
+        // TODO: 모임 상세 이동
+        print("Tapped moimGroup: \(moim.title)")
+    }
+    
     @Published var banners: [BannerItem] = [
         .init(
             imageURL: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",

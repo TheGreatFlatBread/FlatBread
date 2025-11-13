@@ -8,11 +8,35 @@
 import SwiftUI
 
 struct MoimGroupSectionView: View {
+    
+    let items: [MoimGroupItem]
+    var onTapRow: ((MoimGroupItem) -> Void)? = nil
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack(alignment: .leading, spacing: 12) {
+            // 섹션 헤더
+            Text("활동이 활발한 모임")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundStyle(.primary)
+                .padding(.horizontal, 16)
+            
+            // 리스트
+            VStack(spacing: 12) {
+                ForEach(items) { item in
+                    MoimGroupRowView(item: item, onTap: onTapRow)
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.bottom, 8)
+        }
     }
 }
 
 #Preview {
-    MoimGroupSectionView()
+    ScrollView {
+        MoimGroupSectionView(
+            items: HomeViewModel().moimGroups
+        )
+    }
+    .background(Color(.systemBackground))
 }

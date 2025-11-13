@@ -8,9 +8,9 @@
 import SwiftUI
 
 struct HomeView: View {
-
+    
     @StateObject private var viewModel = HomeViewModel()
-
+    
     var body: some View {
         VStack(spacing: 0) {
             // 최상단 커스텀 헤더
@@ -21,17 +21,22 @@ struct HomeView: View {
                     print("Search tapped")
                 }
             )
-
+            
             ScrollView {
                 VStack(spacing: 24) {
                     BannerCarouselView( // 배너 캐러셀
                         items: viewModel.banners,
                         onTapBanner: { viewModel.didTapBanner($0) }
                     )
-
+                    
                     CategorySectionCard( // 카테고리 섹션
                         items: viewModel.categoryItems,
                         onTapCategory: { viewModel.didTapCategory($0) }
+                    )
+                    MoimGroupSectionView(
+                        items: viewModel.moimGroups,
+                        onTapRow: { viewModel.didTapMoimGroup($0)
+                        }
                     )
                 }
                 .padding(.vertical, 4)
