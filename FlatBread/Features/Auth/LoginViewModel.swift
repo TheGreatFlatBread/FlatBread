@@ -45,7 +45,7 @@ final class LoginViewModel: NSObject, ObservableObject {
             
             #if DEBUG
             print("---- 애플 소셜 로그인 성공----")
-            print("toke: \(idToken)")
+            print("token: \(idToken)")
             if let fullName = appleIDCredential.fullName {
                 print("fullName: \(fullName)")
             }
@@ -85,12 +85,13 @@ final class LoginViewModel: NSObject, ObservableObject {
                 responseType: UserSignUpResponseDTO.self,
                 interceptorType: .onlyNetworkRetrier
             )
-            
-            print("accessToken: \(signInInfo.accessToken!)")
             await tokenStorage.saveToken(
                 access: signInInfo.accessToken!,
                 refresh: signInInfo.refreshToken!,
             )
+            #if DEBUG
+            print("accessToken: \(signInInfo.accessToken!)")
+            #endif
         } catch {
             alertMessage = error.localizedDescription
             showingAlert = true
