@@ -8,14 +8,18 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @StateObject private var viewModel = LoginViewModel(tokenStorage: DefaultTokenStorage())
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        if viewModel.isLoginSucceed {
+            Color.yellow
+        } else {
+            LoginView(
+                isLoginSucceed: $viewModel.isLoginSucceed,
+                viewModel: viewModel
+            )
         }
-        .padding()
     }
 }
 
