@@ -18,12 +18,8 @@ final class LoginViewModel: NSObject, ObservableObject {
         self.tokenStorage = tokenStorage
     }
     
-    @Published var accessToken: String = ""
-    @Published var refreshToken: String = ""
-    
     @Published var showingAlert: Bool = false
     @Published var alertMessage: String = ""
-    
     @Published var isLoginSucceed: Bool = false
     
     func handleAppleSignInResult(result: Result<ASAuthorization, any Error>) {
@@ -90,6 +86,7 @@ final class LoginViewModel: NSObject, ObservableObject {
                 interceptorType: .onlyNetworkRetrier
             )
             
+            print("accessToken: \(signInInfo.accessToken!)")
             await tokenStorage.saveToken(
                 access: signInInfo.accessToken!,
                 refresh: signInInfo.refreshToken!,
