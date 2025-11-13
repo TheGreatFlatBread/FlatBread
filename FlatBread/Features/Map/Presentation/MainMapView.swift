@@ -13,6 +13,14 @@ struct MainMapView: View {
     
     @State private var coordinate: NMGLatLng
     @State private var searchText: String = ""
+    @State private var categories: [MainMapCategoryUIModel] = [
+        .init(name: "운동", image: "figure.run"),
+        .init(name: "공부", image: "pencil"),
+        .init(name: "여행", image: "map"),
+        .init(name: "코딩", image: "swift"),
+        .init(name: "bakery", image: "birthday.cake"),
+    ]
+    private var selectedCategories: Set<MainMapCategoryUIModel> = []
     @State private var moims: [Moim] = []
     @State private var markers: [MoimMarker] = []
     @State private var focusingPlaceID: String? = nil
@@ -29,6 +37,17 @@ struct MainMapView: View {
                 
                 VStack {
                     MainMapSearchBar(searchText: $searchText)
+                    ScrollView(.horizontal) {
+                        HStack {
+                            ForEach($categories, id: \.name) { category in
+                                MainMapCategoryButton(category: category)
+                            }
+                        }
+                        .padding(.vertical, 1.5)
+                        .padding(.horizontal)
+                    }
+                    .scrollIndicators(.hidden)
+                    
                     Spacer()
                 }
                 .background(
