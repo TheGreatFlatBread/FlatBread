@@ -7,6 +7,8 @@
 
 import Foundation
 
-struct EmailValidationResponseDTO: Decodable {
+struct EmailValidationResponseDTO {
     var email: String?
 }
+
+nonisolated extension EmailValidationResponseDTO: Decodable { }

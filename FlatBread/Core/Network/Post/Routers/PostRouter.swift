@@ -55,7 +55,7 @@ enum PostRouter: APIRouter {
     var headers: HTTPHeaders {
         switch self {
         default:
-            let headerTypes: [APIHeader] = [.applicationJSON, .apiKey, .productID, .accessToken]
+            let headerTypes: [APIHeader] = [.applicationJSON, .apiKey, .productID]
             return HTTPHeaders(headerTypes.map(\.httpHeader))
         }
     }

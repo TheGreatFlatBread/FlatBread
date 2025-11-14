@@ -1,0 +1,31 @@
+{
+  "user_id": "user_id",
+  "email": "gudghks@gmail.com",
+  "nick": "냉면조아",
+  "profileImage": "example.png",
+  "phoneNum": "01012341234",
+  "gender": "male",
+  "birthDay": "99990410",
+  "info1": "안녕하세요",
+  "info2": "rx공부 같이 하실 분",
+  "info3": "문래역",
+  "info4": "독서, 러닝",
+  "info5": "rxswfit, combine, tca",
+  "followers": [
+    {
+      "user_id": "user_id",
+      "nick": "hwan",
+      "profileImage": "star.png"
+    }
+  ],
+  "following": [
+    {
+      "user_id": "user_id",
+      "nick": "hwan",
+      "profileImage": "star.png"
+    }
+  ],
+  "posts": [
+    "65c9aec120e856755623884e"
+  ]
+}

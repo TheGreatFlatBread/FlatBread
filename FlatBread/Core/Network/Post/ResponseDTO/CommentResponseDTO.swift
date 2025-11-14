@@ -7,16 +7,24 @@
 
 import Foundation
 
-struct CommentListResponseDTO: Decodable {
+struct CommentListResponseDTO {
     let data: [CommentReplyResponseDTO]
 }
 
-struct CommentReplyResponseDTO: Decodable {
-    let comment: CommentResponseDTO
+struct CommentReplyResponseDTO {
+    let commentID: String?
+    let content: String?
+    let createdAt: String?
+    let creator: CreatorResponseDTO?
     let replies: [CommentResponseDTO]
+    
+    enum CodingKeys: String, CodingKey {
+        case commentID = "comment_id"
+        case content, createdAt, creator, replies
+    }
 }
 
-struct CommentResponseDTO: Decodable {
+struct CommentResponseDTO {
     let commentID: String?
     let content: String?
     let createdAt: String?
@@ -29,6 +37,12 @@ struct CommentResponseDTO: Decodable {
 }
 
 
-struct CommentWriteResponseDTO: Decodable {
+struct CommentWriteResponseDTO {
     let content: String?
 }
+
+
+nonisolated extension CommentListResponseDTO: Decodable { }
+nonisolated extension CommentReplyResponseDTO: Decodable { }
+nonisolated extension CommentResponseDTO: Decodable { }
+nonisolated extension CommentWriteResponseDTO: Decodable { }
