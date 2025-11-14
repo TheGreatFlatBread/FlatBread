@@ -8,7 +8,6 @@
 import Foundation
 
 enum FBAPIError: Error {
-    case socialLoginError(SocialLoginError)
     case invalidAccessToken   // 401
     case invalidUserID        // 403
     case expiredAccessToken   // 419
@@ -26,8 +25,6 @@ enum FBAPIError: Error {
 extension FBAPIError: CustomStringConvertible {
     var description: String {
         return switch self {
-        case .socialLoginError(let socialLoginError):
-            socialLoginError.localizedDescription
         case .invalidAccessToken:
             "인증할 수 없는 액세스 토큰"
         case .invalidUserID:

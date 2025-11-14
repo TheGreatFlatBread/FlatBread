@@ -31,14 +31,12 @@ final class LoginViewModel: NSObject, ObservableObject {
                 return
             }
             guard let tokenData = appleIDCredential.identityToken else {
-                let error = NetworkError.apiError(.socialLoginError(.appleIdTokenNil))
-                alertMessage = error.localizedDescription
+                alertMessage = SocialLoginError.appleIdTokenNil.localizedDescription
                 showingAlert = true
                 return
             }
             guard let idToken = String(data: tokenData, encoding: .utf8) else {
-                let error = NetworkError.apiError(.socialLoginError(.appleIDTokenEncodingFailed))
-                alertMessage = error.localizedDescription
+                alertMessage = SocialLoginError.appleIDTokenEncodingFailed.localizedDescription
                 showingAlert = true
                 return
             }
