@@ -9,6 +9,14 @@ import SwiftUI
 
 struct ContentView: View {
     
+    init() {
+        let tabBarAppearance = UITabBarAppearance()
+        tabBarAppearance.configureWithDefaultBackground()
+        
+        UITabBar.appearance().standardAppearance = tabBarAppearance
+        UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+    }
+    
     var body: some View {
         // tabItem modifier는 deprecated되었으나,
         // 그 대체제인 Tab은 iOS 18.0 이상부터 사용 가능하므로
