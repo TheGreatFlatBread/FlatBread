@@ -24,7 +24,7 @@ struct MyMoimView: View {
 }
 
 private struct RecommendSectionView: View {
-    let moims: [Moim]
+    let moims: [MyMoimViewUIModel]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -46,7 +46,7 @@ private struct RecommendSectionView: View {
 }
 
 private struct MyJoinedSectionView: View {
-    let myMoims: [Moim]
+    let myMoims: [MyMoimViewUIModel]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {

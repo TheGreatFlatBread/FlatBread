@@ -11,13 +11,13 @@ import Combine
 final class MyMoimViewModel: ObservableObject {
 
     // MARK: - Published Properties
-    @Published var recommendMoims: [Moim] = []
-    @Published var myMoims: [Moim] = []
+    @Published var recommendMoims: [MyMoimViewUIModel] = []
+    @Published var myMoims: [MyMoimViewUIModel] = []
 
     // MARK: - Methods
     func loadMoims() {
         // 더미 데이터 로딩
-        let dummies = Moim.getDummies()
+        let dummies = MyMoimViewUIModel.getDummies()
         recommendMoims = dummies
         myMoims = dummies
     }
