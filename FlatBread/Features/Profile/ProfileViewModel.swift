@@ -44,6 +44,7 @@ class ProfileViewModel: ObservableObject {
     @Published var myProfile: UserProfileResponseDTO?
     @Published var path: [NavigationRoute] = []
     
+    @Published var isLoadingProfile: Bool = false
     @Published var alertTitle: String = ""
     @Published var alertMessage: String = ""
     @Published var showingAlert: Bool = false
@@ -56,13 +57,16 @@ class ProfileViewModel: ObservableObject {
     
     func requestMyProfile() async {
         do {
+            isLoadingProfile = true
             let responseDTO = try await networkService.request(
                 UserRouter.getMeProfile,
                 responseType: UserProfileResponseDTO.self,
                 interceptorType: .networkWithToken
             )
+            isLoadingProfile = false
             myProfile = responseDTO
         } catch {
+            isLoadingProfile = false
             alertTitle = "프로필 불러오기 실패"
             alertMessage = error.localizedDescription
             showingAlert = true

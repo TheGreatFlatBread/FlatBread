@@ -61,18 +61,24 @@ struct ProfileView: View {
     // MARK: - 프로필 정보 섹션
     private func profileInfoSection(profile: UserProfileResponseDTO?) -> some View {
         VStack(spacing: 16) {
-            HStack(spacing: 16) {
-                Image(systemName: "person.circle.fill")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: 60, height: 60)
-                    .clipShape(Circle())
-                    .foregroundColor(.gray)
-
-                Text(profile?.nick ?? "닉네임 없음")
-                    .font(.system(size: 20, weight: .bold))
-
-                Spacer()
+            if viewModel.isLoadingProfile {
+                ProgressView()
+                    .scaleEffect(1.5)
+                    .frame(height: 60)
+            } else {
+                HStack(spacing: 16) {
+                    Image(systemName: "person.circle.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipShape(Circle())
+                        .foregroundColor(.gray)
+                    
+                    Text(profile?.nick ?? "닉네임 없음")
+                        .font(.system(size: 20, weight: .bold))
+                    
+                    Spacer()
+                }
             }
 
             Divider()
