@@ -5,51 +5,22 @@
 //  Created by 김민성 on 11/13/25.
 //
 
+import Combine
 import SwiftUI
 
-
-extension UserProfileResponseDTO {
-    
-    static let dummy = UserProfileResponseDTO(
-        userID: "1234567890abcdefghijklmn",
-        email: "abcd@flatbread.com",
-        nick: "곰팡이핀플랫브레드",
-        profileImage: nil,
-        phoneNum: "01012341234",
-        gender: "male",
-        birthDay: nil,
-        info1: nil,
-        info2: nil,
-        info3: nil,
-        info4: nil,
-        info5: nil,
-        followers: [],
-        following: [],
-        postIDList: []
-    )
-    
-}
-
-// 내비게이션 경로
-enum NavigationRoute: Hashable {
-    case profile
-    case myMoim
-    case makeNewMoim
-    case chatList
-    case withdraw
-}
-
-// MARK: - 메인 프로필 뷰
 struct ProfileView: View {
     
-    @State private var userProfile = UserProfileResponseDTO.dummy
-    @State private var path: [NavigationRoute] = []
-
+    @StateObject private var viewModel: ProfileViewModel
+    
+    init(viewModel: ProfileViewModel = ProfileViewModel()) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+    
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationStack(path: $viewModel.path) {
             ScrollView {
                 VStack(spacing: 24) {
-                    profileInfoSection
+                    profileInfoSection(profile: viewModel.myProfile)
                     menuSection
                 }
                 .padding()
@@ -60,7 +31,7 @@ struct ProfileView: View {
             .navigationDestination(for: NavigationRoute.self) { route in
                 switch route {
                 case .profile:
-                    EditProfileView(userProfile: userProfile)
+                    EditProfileView(userProfile: viewModel.myProfile)
                 case .myMoim:
                     DummyView(navigationTitle: "내가 만든 모임", text: "내 모임")
                 case .makeNewMoim:
@@ -74,10 +45,21 @@ struct ProfileView: View {
             }
         }
         .tint(.primary)
+        .task {
+            await viewModel.requestMyProfile()
+        }
+        .alert(
+            viewModel.alertTitle,
+            isPresented: $viewModel.showingAlert) {
+                Button("확인", role: .cancel) { return }
+            } message: {
+                Text(viewModel.alertMessage)
+            }
+
     }
     
     // MARK: - 프로필 정보 섹션
-    private var profileInfoSection: some View {
+    private func profileInfoSection(profile: UserProfileResponseDTO?) -> some View {
         VStack(spacing: 16) {
             HStack(spacing: 16) {
                 Image(systemName: "person.circle.fill")
@@ -87,7 +69,7 @@ struct ProfileView: View {
                     .clipShape(Circle())
                     .foregroundColor(.gray)
 
-                Text(userProfile.nick ?? "닉네임 없음")
+                Text(profile?.nick ?? "닉네임 없음")
                     .font(.system(size: 20, weight: .bold))
 
                 Spacer()
@@ -99,22 +81,25 @@ struct ProfileView: View {
                 profileInfoRow(
                     systemImage: "envelope.fill",
                     title: "이메일",
-                    value: userProfile.email
+                    value: profile?.email
                 )
                 profileInfoRow(
                     systemImage: "calendar",
                     title: "생년월일",
-                    value: userProfile.birthDay
+                    value: profile?.birthDay
                 )
                 profileInfoRow(
                     systemImage: "person.fill",
                     title: "성별",
-                    value: (userProfile.gender == "male") ? "남성" : "여성"
+                    value: {
+                        guard let gender = profile?.gender else { return nil }
+                        return (gender == "male") ? "남성" : "여성"
+                    }()
                 )
                 profileInfoRow(
                     systemImage: "phone.fill",
                     title: "전화번호",
-                    value: userProfile.phoneNum
+                    value: profile?.phoneNum
                 )
             }
             
@@ -129,6 +114,8 @@ struct ProfileView: View {
                 .background(.orange)
                 .cornerRadius(14)
             }
+            .buttonStyle(PlainButtonStyle())
+            .disabled(viewModel.myProfile == nil)
         }
         .padding(20)
         .background(Color(.secondarySystemGroupedBackground))
@@ -160,6 +147,8 @@ struct ProfileView: View {
                 ProfileMenuButtonRow(title: "회원 탈퇴", isDestructive: true)
             }
         }
+        .buttonStyle(PlainButtonStyle())
+        .disabled(viewModel.myProfile == nil)
     }
 
     private func profileInfoRow(systemImage: String, title: String, value: String?) -> some View {
@@ -195,5 +184,6 @@ fileprivate struct DummyView: View {
 }
 
 #Preview {
-    ProfileView()
+    var viewModel = MockProfileViewModel()
+    ProfileView(viewModel: viewModel)
 }
