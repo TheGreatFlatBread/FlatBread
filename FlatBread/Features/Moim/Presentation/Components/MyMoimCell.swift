@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MyMoimCell: View {
-    let moim: Moim
+    let moim: MyMoimViewUIModel
     @State private var isLike: Bool = false
     
     var onTap: (() -> Void)? = nil
@@ -25,13 +25,41 @@ struct MyMoimCell: View {
 
     // MARK: - Thumbnail
     private var thumbnail: some View {
-        RoundedRectangle(cornerRadius: 12)
-            .fill(Color.blue.opacity(0.3))
-            .aspectRatio(1, contentMode: .fit)
-            .overlay(alignment: .bottomLeading) {
-                likeButton
+        Group {
+            if let thumbnailURL = moim.imageURLs.first,
+               let url = URL(string: thumbnailURL) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.gray.opacity(0.3))
+                            .overlay {
+                                ProgressView()
+                            }
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    case .failure:
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color.blue.opacity(0.3))
+                    @unknown default:
+                        EmptyView()
+                    }
+                }
+                .frame(width: 80, height: 80)
+                .aspectRatio(1, contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+            } else {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color.blue.opacity(0.3))
+                    .frame(width: 80, height: 80)
+                    .aspectRatio(1, contentMode: .fit)
             }
-            .frame(height: 80)
+        }
+        .overlay(alignment: .bottomLeading) {
+            likeButton
+        }
     }
 
     // MARK: - Content
@@ -93,10 +121,10 @@ struct MyMoimCell: View {
 }
 
 #Preview {
-    MyMoimCell(moim: Moim.getDummy())
+    MyMoimCell(moim: MyMoimViewUIModel.getDummy())
         .frame(height: 80)
     
-    MyMoimCell(moim: Moim.getDummy()) {
+    MyMoimCell(moim: MyMoimViewUIModel.getDummy()) {
         print("클릭")
     }
 }
