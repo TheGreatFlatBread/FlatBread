@@ -41,10 +41,10 @@ struct ContentView: View {
                         Label("지도", systemImage: "map")
                     }
                 
-                Color(.yellow)
+                MyMoimView()
                     .ignoresSafeArea()
                     .tabItem {
-                        Label("지도", systemImage: "checkmark.rectangle.stack")
+                        Label("내 모임", systemImage: "message")
                     }
                 
                 Color(.orange)
