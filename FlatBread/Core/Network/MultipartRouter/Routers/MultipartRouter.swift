@@ -12,6 +12,7 @@ enum MultipartRouter: MultipartAPIRouter {
     case updateProfile(request: UserProfileUpdateDTO)
     case uploadImages(request: ImageUploadRequestDTO)
     case uploadVideos(request: VideoUploadRequestDTO)
+    case uploadChatFiles(roomID: String, request: ImageUploadRequestDTO)
     
     var baseURL: URL {
         switch self {
@@ -25,6 +26,11 @@ enum MultipartRouter: MultipartAPIRouter {
                 assert(false, "is not valid Posts URL")
             }
             return url
+        case .uploadChatFiles:
+            guard let url = URL(string: APIConfig.baseURL + "/chats/") else {
+                assert(false, "is Not Valid Chat URL")
+            }
+            return url
         }
     }
 
@@ -32,14 +38,14 @@ enum MultipartRouter: MultipartAPIRouter {
         switch self {
         case .updateProfile:
             return .put
-        case .uploadImages, .uploadVideos:
+        case .uploadImages, .uploadVideos, .uploadChatFiles:
             return .post
         }
     }
 
     var headers: HTTPHeaders {
         switch self {
-        case .updateProfile, .uploadImages, .uploadVideos:
+        case .updateProfile, .uploadImages, .uploadVideos, .uploadChatFiles:
             let headerTypes: [APIHeader] = [.multipartForm, .apiKey, .productID]
             return HTTPHeaders(headerTypes.map(\.httpHeader))
         }
@@ -50,6 +56,7 @@ enum MultipartRouter: MultipartAPIRouter {
         case .updateProfile: "me/profile"
         case .uploadImages: "files"
         case .uploadVideos: "files"
+        case .uploadChatFiles(let roomID, _): "\(roomID)"
         }
     }
 
@@ -92,12 +99,21 @@ enum MultipartRouter: MultipartAPIRouter {
         case .uploadImages(let request):
             let formData = MultipartFormData()
             request.files.forEach { file in
-                formData.append(
-                    file.data,
-                    withName: "files",
-                    fileName: file.fileName,
-                    mimeType: file.mimeType
-                )
+                if let data = file.data {
+                    formData.append(
+                        data,
+                        withName: "files",
+                        fileName: file.fileName,
+                        mimeType: file.mimeType
+                    )
+                } else if let fileURL = file.fileURL {
+                    formData.append(
+                        fileURL,
+                        withName: "files",
+                        fileName: file.fileName,
+                        mimeType: file.mimeType
+                    )
+                }
             }
             return formData
 
@@ -110,6 +126,27 @@ enum MultipartRouter: MultipartAPIRouter {
                     fileName: file.fileName,
                     mimeType: file.mimeType
                 )
+            }
+            return formData
+            
+        case .uploadChatFiles(_, let request):
+            let formData = MultipartFormData()
+            request.files.forEach { file in
+                if let data = file.data {
+                    formData.append(
+                        data,
+                        withName: "files",
+                        fileName: file.fileName,
+                        mimeType: file.mimeType
+                    )
+                } else if let fileURL = file.fileURL {
+                    formData.append(
+                        fileURL,
+                        withName: "files",
+                        fileName: file.fileName,
+                        mimeType: file.mimeType
+                    )
+                }
             }
             return formData
         }

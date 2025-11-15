@@ -7,6 +7,7 @@
 
 import Foundation
 
+nonisolated
 struct ImageUploadRequestDTO {
     let files: [ImageFile]
 
@@ -29,6 +30,19 @@ struct ImageUploadRequestDTO {
                 data: data,
                 fileName: fileNames[index]
             )
+        }
+    }
+
+    init(fileURLs: [URL]) {
+        self.files = fileURLs.map { url in
+            ImageFile(fileURL: url)
+        }
+    }
+
+    init(fileURLs: [String]) {
+        self.files = fileURLs.compactMap { urlString in
+            guard let url = URL(string: urlString) else { return nil }
+            return ImageFile(fileURL: url)
         }
     }
 }
