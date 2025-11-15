@@ -9,6 +9,7 @@ import Foundation
 
 enum DateResolver {
     static let formatter: DateFormatter = DateFormatter()
+    static let isoFormatter: ISO8601DateFormatter = ISO8601DateFormatter()
 }
 
 extension Date {
@@ -17,6 +18,14 @@ extension Date {
         formatter.locale = Locale(identifier: "ko_KR")
         formatter.timeZone = TimeZone.current  // 현지 타임존 사용
         formatter.dateFormat = format
+        return formatter.string(from: self)
+    }
+
+    /// API용 ISO8601 UTC 포맷으로 변환 (밀리초 포함)
+    /// - Returns: "2024-11-15T05:13:54.357Z" 형식의 UTC 시간 문자열
+    func toISO8601String() -> String {
+        let formatter = DateResolver.isoFormatter
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter.string(from: self)
     }
     
