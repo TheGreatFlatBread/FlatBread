@@ -51,10 +51,6 @@ class ProfileViewModel: ObservableObject {
     
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     
-    init() {
-        print("viewModel 생성됨")
-    }
-    
     func requestMyProfile() async {
         do {
             isLoadingProfile = true
