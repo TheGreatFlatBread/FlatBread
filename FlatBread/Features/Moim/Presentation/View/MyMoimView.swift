@@ -13,8 +13,8 @@ struct MyMoimView: View {
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                RecommendSectionView(moims: viewModel.recommendMoims)
-                MyJoinedSectionView(myMoims: viewModel.myMoims)
+                RecommendMoimsList(moims: viewModel.recommendMoims)
+                MyJoinedMoimsList(myMoims: viewModel.myMoims)
             }
         }
         .onAppear {
@@ -23,63 +23,64 @@ struct MyMoimView: View {
     }
 }
 
-private struct RecommendSectionView: View {
+private struct RecommendMoimsList: View {
     let moims: [MyMoimViewUIModel]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionTitle("요즘 뜨는 모임")
+            SectionHeader(title: "요즘 뜨는 모임")
             
             ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack(spacing: 12) {
-                    ForEach(moims) { moim in
-                        MyMoimCell(moim: moim)
-                            .frame(width: 380, height: 80)
+                LazyHStack {
+                    ForEach(moims) { item in
+                        MyMoimCell(moim: item)
+                            .padding()
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .padding(.horizontal)
             }
-            .frame(height: 104)
         }
     }
 }
 
-private struct MyJoinedSectionView: View {
+private struct MyJoinedMoimsList: View {
     let myMoims: [MyMoimViewUIModel]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionTitle("가입한 모임")
-            
+            SectionHeader(title: "가입한 모임")
+
             if myMoims.isEmpty {
                 EmptyMyMoimView()
             } else {
-                LazyVStack(spacing: 12) {
-                    ForEach(myMoims) { moim in
-                        MyMoimCell(moim: moim) {
-                            print(moim.title ?? "이름 없음")
-                        }
-                        .frame(height: 80)
+                List(myMoims) { moim in
+                    MyMoimCell(moim: moim) {
+                        print(moim.title ?? "이름 없음")
                     }
+                    .frame(height: 80)
+                    .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 12)
+                .listStyle(.plain)
+                .scrollDisabled(true)
+                .frame(height: CGFloat(myMoims.count) * 92)
             }
         }
     }
 }
 
-private struct SectionTitle: View {
-    let text: String
-    
-    init(_ text: String) { self.text = text }
-    
+private struct SectionHeader: View {
+    let title: String
+
     var body: some View {
-        Text(text)
+        Text(title)
             .font(.title2.bold())
+            .foregroundStyle(.primary)
+            .textCase(nil)
             .padding(.horizontal, 16)
             .padding(.top, 20)
+            .padding(.bottom, 8)
     }
 }
 

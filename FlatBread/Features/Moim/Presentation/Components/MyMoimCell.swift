@@ -17,9 +17,10 @@ struct MyMoimCell: View {
         HStack(spacing: 6) {
             thumbnail
             content
-        }
-        .onTapGesture {
-            onTap?()
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    onTap?()
+                }
         }
     }
 
