@@ -9,9 +9,11 @@ import Foundation
 import Alamofire
 
 enum ChatRouter: APIRouter {
-    case sendMessage(roomID: String, content: String, files: [String])
-    case getMessages(roomID: String, cursorDate: String?)
-    case getChatRooms
+    static let encoder = JSONEncoder()
+    
+    case fetchChatRoomList
+    case makeChatRoom(opponent_id: String)
+    case fetchChatMessgeList(roomID: String, cursorDate: String)
 
     var baseURL: URL {
         guard let url = URL(string: APIConfig.baseURL + "/chats/") else {
@@ -22,9 +24,9 @@ enum ChatRouter: APIRouter {
 
     var method: HTTPMethod {
         switch self {
-        case .sendMessage:
+        case .makeChatRoom:
             return .post
-        case .getMessages, .getChatRooms:
+        case .fetchChatMessgeList, .fetchChatRoomList:
             return .get
         }
     }
@@ -36,52 +38,46 @@ enum ChatRouter: APIRouter {
 
     var path: String {
         switch self {
-        case .sendMessage(let roomID, _, _):
+        case .fetchChatMessgeList(let roomID, _):
             return "\(roomID)"
-        case .getMessages(let roomID, _):
-            return "\(roomID)"
-        case .getChatRooms:
-            return "my"
+        case .fetchChatRoomList, .makeChatRoom:
+            return ""
+        }
+    }
+    
+    var query: [URLQueryItem]? {
+        switch self {
+        case .fetchChatMessgeList(let roomID, let cursorDate):
+            [URLQueryItem(name: "room_id", value: roomID),
+            URLQueryItem(name: "cursor_date", value: cursorDate)]
+        default:
+            nil
         }
     }
 
-    var parameters: Parameters? {
+    var body: Data? {
         switch self {
-        case .sendMessage(_, let content, let files):
-            var params: [String: Any] = [:]
-            if !content.isEmpty {
-                params["content"] = content
-            }
-            if !files.isEmpty {
-                params["files"] = files
-            }
-            return params
-        case .getMessages(_, let cursorDate):
-            if let cursorDate = cursorDate {
-                return ["cursor_date": cursorDate]
-            }
+        case .makeChatRoom(let opponentID):
+            return try? Self.encoder.encode(["opponent_id": opponentID])
+        default:
             return nil
-        case .getChatRooms:
-            return nil
-        }
-    }
-
-    var encoding: ParameterEncoding {
-        switch self {
-        case .sendMessage:
-            return JSONEncoding.default
-        case .getMessages, .getChatRooms:
-            return URLEncoding.queryString
         }
     }
 
     func asURLRequest() throws -> URLRequest {
-        guard let url = URL(string: self.baseURL.appendingPathComponent(self.path).absoluteString) else {
+        var components = URLComponents(string: self.baseURL.appendingPathComponent(self.path).absoluteString)!
+        if let query {
+            components.queryItems = query
+        }
+        guard let url = components.url else {
             throw URLError(.badURL)
         }
         var request = URLRequest(url: url)
         request.method = self.method
         request.headers = self.headers
-        return try self.encoding.encode(request, with: self.parameters)
+        if let body {
+            request.httpBody = body
+        }
+        return request
     }
 }
