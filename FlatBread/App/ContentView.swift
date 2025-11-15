@@ -24,34 +24,43 @@ struct ContentView: View {
             // 그 대체제인 Tab은 iOS 18.0 이상부터 사용 가능하므로
             // tabItem modifier를 사용하였음.
             TabView {
-                Color(.green)
-                    .ignoresSafeArea()
-                    .tabItem {
-                        Label("홈", systemImage: "house")
-                    }
+                NavigationStack {
+                    Color(.green)
+                        .ignoresSafeArea()
+                }
+                .tabItem {
+                    Label("홈", systemImage: "house")
+                }
                 
-                Color(.blue)
-                    .ignoresSafeArea()
-                    .tabItem {
-                        Label("숏폼", systemImage: "play.rectangle")
-                    }
+                NavigationStack {
+                    Color(.blue)
+                        .ignoresSafeArea()
+                }
+                .tabItem {
+                    Label("숏폼", systemImage: "play.rectangle")
+                }
                 
-                MainMapView()
-                    .tabItem {
-                        Label("지도", systemImage: "map")
-                    }
+                NavigationStack {
+                    MainMapView()
+                }
+                .tabItem {
+                    Label("지도", systemImage: "map")
+                }
                 
-                MyMoimView()
-                    .ignoresSafeArea()
-                    .tabItem {
-                        Label("내 모임", systemImage: "message")
-                    }
+                NavigationStack {
+                    MyMoimView()
+                }
+                .tabItem {
+                    Label("내 모임", systemImage: "message")
+                }
                 
-                Color(.orange)
-                    .ignoresSafeArea()
-                    .tabItem {
-                        Label("지도", systemImage: "person")
-                    }
+                NavigationStack {
+                    Color(.orange)
+                        .ignoresSafeArea()
+                }
+                .tabItem {
+                    Label("지도", systemImage: "person")
+                }
             }
             .tint(.black)
         } else {
