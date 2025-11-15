@@ -42,6 +42,10 @@ struct ChatMessageResponseDTO: nonisolated Decodable {
 }
 
 struct ChatListResponseDTO: nonisolated Decodable {
+    let data: [ChatResponseDTO]
+}
+
+struct ChatMessageListResponseDTO: nonisolated Decodable {
     let data: [ChatMessageResponseDTO]
 }
 
