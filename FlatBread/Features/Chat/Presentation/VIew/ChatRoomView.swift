@@ -31,29 +31,11 @@ struct ChatRoomView: View {
             RefreshableContainer(
                 reverse: true,
                 content: {
-                    LazyVStack(spacing: 8) {
-                        ForEach(viewModel.groupedMessages, id: \.id) { section in
-                            Text(section.dateFormatted)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.gray)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 4)
-                                .background(Color(uiColor: .systemGray6))
-                                .cornerRadius(12)
-                                .padding(.vertical, 8)
-                            
-                            ForEach(section.displayConfigs, id: \.id) { config in
-                                ChatBubbleCell(
-                                    config: config,
-                                    isMyMessage: config.message.sender.id == viewModel.currentUserID,
-                                    onRetry: { message in
-                                        viewModel.retryMessage(message)
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    .padding(.vertical, 8)
+                    ChatSectionConatiner(
+                        chatSection: self.viewModel.groupedMessages,
+                        currentUserID: self.viewModel.currentUserID,
+                        retry: self.viewModel.retryMessage(_:)
+                    )
                 },
                 onRefresh: {
                     Task {
@@ -68,27 +50,13 @@ struct ChatRoomView: View {
                 text: $viewModel.messageText,
                 selectedImageURLs: $viewModel.selectedImageURLs,
                 isFocused: $isTextFieldFocused,
-                onSend: {
-                    viewModel.sendMessage()
-                },
-                onRemoveImage: { index in
-                    viewModel.removeImage(at: index)
-                },
-                onCameraButtonTap: {
-                    showImageSourcePicker = true
-                },
-                onImageButtonTap: {
-                    showImageSourcePicker = true
-                },
-                onVoiceButtonTap: {
-                    print("Voice tapped")
-                },
-                onEmojiButtonTap: {
-                    print("Emoji tapped")
-                },
-                onPlusButtonTap: {
-                    print("Plus tapped")
-                }
+                onSend: { viewModel.sendMessage() },
+                onRemoveImage: { index in viewModel.removeImage(at: index) },
+                onCameraButtonTap: { showImageSourcePicker = true },
+                onImageButtonTap: { showImageSourcePicker = true },
+                onVoiceButtonTap: { /* print("Voice tapped") */ },
+                onEmojiButtonTap: { /* print("Emoji tapped") */},
+                onPlusButtonTap: { /* print("Plus tapped") */ }
             )
         }
         .navigationTitle(viewModel.room.participants.first?.nick ?? "채팅방")
@@ -112,28 +80,50 @@ struct ChatRoomView: View {
                         }
                     }
                 }
+fileprivate struct ChatSectionConatiner: View {
+    let chatSection: [ChatMessageSection]
+    let currentUserID: String
+    let retry: (ChatMessageModel) -> Void
+    
+    var body: some View {
+        LazyVStack(spacing: 8) {
+            ForEach(chatSection, id: \.id) { section in
+                ChatListComponent(
+                    date: section.date,
+                    displayConfigs: section.displayConfigs,
+                    currentUserID: currentUserID,
+                    retry: retry
+                )
             }
         }
-        .photosPicker(
-            isPresented: $showPhotoPicker,
-            selection: $selectedPhotoItems,
-            maxSelectionCount: 5,
-            matching: .images
-        )
-        .onChange(of: selectedPhotoItems) { oldItems, newItems in
-            Task { @concurrent in
-                var imageDatas: [Data] = []
-                for item in newItems {
-                    if let data = try? await item.loadTransferable(type: Data.self) {
-                        imageDatas.append(data)
-                    }
+        .padding(.vertical, 8)
+    }
+}
+
+fileprivate struct ChatListComponent: View {
+    let date: String
+    let displayConfigs: [MessageDisplayConfig]
+    let currentUserID: String
+    let retry: (ChatMessageModel) -> Void
+    
+    var body: some View {
+        Text(self.date)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundColor(.gray)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 4)
+            .background(Color(uiColor: .systemGray6))
+            .cornerRadius(12)
+            .padding(.vertical, 8)
+        
+        ForEach(self.displayConfigs, id: \.id) { config in
+            ChatBubbleCell(
+                config: config,
+                isMyMessage: config.message.sender.id == currentUserID,
+                onRetry: { message in
+                    retry(message)
                 }
-                let savedURLs = await ImageFileManager.shared.saveImagesData(imageDatas)
-                await MainActor.run {
-                    selectedPhotoItems.removeAll()
-                    viewModel.selectedImageURLs.append(contentsOf: savedURLs)
-                }
-            }
+            )
         }
     }
 }
