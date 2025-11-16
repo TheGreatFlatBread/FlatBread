@@ -26,7 +26,7 @@ final class ImageFileManager {
     func saveImage(_ image: UIImage, compressionQuality: CGFloat = 0.75, maxSize: CGFloat = 720) -> String? {
         let originalSize = image.size
         let originalData = image.jpegData(compressionQuality: 1.0)
-        let originalSizeInMB = Double(originalData?.count ?? 0) / 1024.0 / 1024.0
+        let originalSizeInMB = originalData?.sizeInMiB ?? 0
 
         let resizedImage = resizeImage(image, maxSize: maxSize)
 
@@ -35,7 +35,7 @@ final class ImageFileManager {
         }
 
         #if DEBUG
-        let compressedSizeInMB = Double(imageData.count) / 1024.0 / 1024.0
+        let compressedSizeInMB = imageData.sizeInMiB
         let compressionRatio = (1.0 - compressedSizeInMB / originalSizeInMB) * 100
         print("""
            이미지 저장:
@@ -115,7 +115,7 @@ final class ImageFileManager {
         guard let url = URL(string: urlString) else { return nil }
         guard let attributes = try? FileManager.default.attributesOfItem(atPath: url.path) else { return nil }
         guard let fileSize = attributes[.size] as? Int64 else { return nil }
-        return Double(fileSize) / 1024.0 / 1024.0
+        return fileSize.sizeInMiB
     }
 
     func getTotalChatImagesSize() -> Double {
@@ -129,8 +129,8 @@ final class ImageFileManager {
             guard let fileSize = attributes[.size] as? Int64 else { return total }
             return total + fileSize
         }
-
-        return Double(totalBytes) / 1024.0 / 1024.0
+        
+        return totalBytes.sizeInMiB
     }
 
     func getChatImagesCount() -> Int {
@@ -166,7 +166,7 @@ final class ImageFileManager {
         
         #if DEBUG
         if deletedCount > 0 {
-            let deletedSizeInMB = Double(deletedSize) / 1024.0 / 1024.0
+            let deletedSizeInMB = deletedSize.sizeInMiB
             print("""
                Temp file 정리 완료:
                삭제된 파일: \(deletedCount)개
