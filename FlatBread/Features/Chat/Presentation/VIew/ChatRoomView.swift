@@ -12,9 +12,6 @@ struct ChatRoomView: View {
     @StateObject private var viewModel: ChatRoomViewModel
     @FocusState private var isTextFieldFocused: Bool
     @State private var showImageSourcePicker = false
-    @State private var showCamera = false
-    @State private var showPhotoPicker = false
-    @State private var selectedPhotoItems: [PhotosPickerItem] = []
 
     init(room: ChatRoomModel, currentUserID: String) {
         _viewModel = StateObject(
@@ -61,25 +58,13 @@ struct ChatRoomView: View {
         }
         .navigationTitle(viewModel.room.participants.first?.nick ?? "채팅방")
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("사진 선택", isPresented: $showImageSourcePicker) {
-            Button("카메라") {
-                showCamera = true
-            }
-            Button("보관함") {
-                showPhotoPicker = true
-            }
-            Button("취소", role: .cancel) {}
-        }
-        .sheet(isPresented: $showCamera) {
-            CameraImagePicker { image in
-                Task {
-                    let url = ImageFileManager.shared.saveImage(image)
-                    await MainActor.run {
-                        if let url {
-                            viewModel.selectedImageURLs.append(url)
-                        }
-                    }
-                }
+        .imagePicker(
+            selectedImageURLs: $viewModel.selectedImageURLs,
+            showPicker: $showImageSourcePicker
+        )
+    }
+}
+
 fileprivate struct ChatSectionConatiner: View {
     let chatSection: [ChatMessageSection]
     let currentUserID: String
