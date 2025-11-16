@@ -45,51 +45,80 @@ private struct ChatListRowView: View {
     var body: some View {
         HStack(spacing: 12) {
             if let profileImageURL = room.participants.first?.profileImage, !profileImageURL.isEmpty {
-                RemoteImage(
-                    url: "https://i.pravatar.cc/150?img=\(abs(profileImageURL.hashValue % 70))",
-                    displayMode: .thumbnail(CGSize(width: 100, height: 100))
-                ) { image in
-                    image
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width: 50, height: 50)
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 0.33)
-                        )
-                }
-            } else {
-                Circle()
-                    .fill(Color.gray.opacity(0.3))
+                ProfileImage(profileImageURL: profileImageURL)
                     .frame(width: 50, height: 50)
-                    .overlay(
-                        Text(participantName.prefix(1))
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.white)
-                    )
+            } else {
+                DefaultProfile(prefix: String(participantName.prefix(1)))
             }
-
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(participantName)
-                        .font(.system(size: 15, weight: .semibold))
-                        .lineLimit(1)
-
-                    Spacer()
-                    
-                    Text(room.lastChat?.createdAt.relativeTime() ?? "")
-                        .font(.system(size: 11, weight: .thin))
-                        .foregroundColor(.gray)
-                }
-
-                Text(room.lastChat?.messegeType.getLastMessage() ?? "")
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-            }
+            
+            UserDescription(
+                participantName: participantName,
+                createdAt: room.lastChat?.createdAt.relativeTime() ?? "",
+                lastMessage: room.lastChat?.messegeType.getLastMessage() ?? ""
+            )
         }
         .padding(.vertical, 4)
+    }
+}
+
+private struct ProfileImage: View {
+    let profileImageURL: String
+    var body: some View {
+        RemoteImage(
+            url: "https://i.pravatar.cc/150?img=\(abs(profileImageURL.hashValue % 70))",
+            displayMode: .thumbnail(CGSize(width: 100, height: 100))
+        ) { image in
+            image
+                .resizable()
+                .scaledToFill()
+                .frame(width: 50, height: 50)
+                .clipShape(Circle())
+                .overlay(
+                    Circle()
+                        .stroke(Color.gray.opacity(0.3), lineWidth: 0.33)
+                )
+        }
+    }
+}
+
+private struct DefaultProfile: View {
+    let prefix: String
+    
+    var body: some View {
+        Circle()
+            .fill(Color.gray.opacity(0.3))
+            .frame(width: 50, height: 50)
+            .overlay(
+                Text(prefix)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+            )
+    }
+}
+
+private struct UserDescription: View {
+    let participantName: String
+    let createdAt: String
+    let lastMessage: String
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(participantName)
+                    .font(.system(size: 15, weight: .semibold))
+                    .lineLimit(1)
+
+                Spacer()
+                
+                Text(createdAt)
+                    .font(.system(size: 11, weight: .thin))
+                    .foregroundColor(.gray)
+            }
+
+            Text(lastMessage)
+                .font(.system(size: 12, weight: .regular))
+                .foregroundColor(.secondary)
+                .lineLimit(2)
+        }
     }
 }
 
