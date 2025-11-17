@@ -38,7 +38,6 @@
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Styles/.gitkeep,
 				Features/Chat/.gitkeep,
-				Features/Profile/.gitkeep,
 				Resources/FlatBread.xctestplan,
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,

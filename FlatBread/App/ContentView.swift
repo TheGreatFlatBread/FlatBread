@@ -47,7 +47,7 @@ struct ContentView: View {
                         Label("내 모임", systemImage: "message")
                     }
                 
-                Color(.orange)
+                ProfileView()
                     .ignoresSafeArea()
                     .tabItem {
                         Label("지도", systemImage: "person")
