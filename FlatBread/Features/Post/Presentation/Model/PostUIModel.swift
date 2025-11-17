@@ -16,7 +16,7 @@ struct PostUIModel: Identifiable {
     let content: String
     let hashtags: [String]
     let images: [String]
-    let schedule: Schedule?
+    let schedule: ScheduleUIModel?
     var likeCount: Int
     var commentCount: Int
     var isBookmarked: Bool
@@ -26,13 +26,6 @@ struct PostUIModel: Identifiable {
         let id: String
         let name: String
         let profileImageURL: String?
-    }
-
-    struct Schedule: Equatable {
-        let date: Date
-        let title: String
-        let participantCount: Int
-        let maxParticipants: Int
     }
 }
 
@@ -47,11 +40,14 @@ extension PostUIModel {
             content: "좋료 우리 동네 식물원 탐험하며 힐링🌿 #식물원 #힐링 #새싹\n우리 동네 식물원 탐험하며 힐링하는 모임에 여러분을 초대합니다. 바쁜 일상 속에서 잠시 멈추니 식물들이 주는 평화로움을 함께 느껴보는 시간을 가져요.\n\n이런 분들에게 추천합니다:\n...더보기",
             hashtags: ["식물원", "힐링", "새싹"],
             images: [],
-            schedule: Schedule(
-                date: Calendar.current.date(byAdding: .day, value: 2, to: Date())!,
+            schedule: ScheduleUIModel(
+                id: UUID().uuidString,
                 title: "이번 주 월요일, 오후 3:00",
+                date: Calendar.current.date(byAdding: .day, value: 2, to: Date())!,
+                location: "문래동 카페",
                 participantCount: 1,
-                maxParticipants: 4
+                maxParticipants: 4,
+                description: "식물원 탐방"
             ),
             likeCount: 1,
             commentCount: 1,
@@ -71,11 +67,14 @@ extension PostUIModel {
                 content: "좋료 우리 동네 식물원 탐험하며 힐링🌿 #식물원 #새싹\n우리 동네 식물원 탐험하며 힐링하는 모임에 여러분을 초대합니다. 바쁜 일상 속에서 잠시 멈추니 식물들이 주는 평화로움을 함께 느껴보는 시간을 가져요.",
                 hashtags: ["식물원", "새싹"],
                 images: ["https://picsum.photos/400/300"],
-                schedule: Schedule(
-                    date: Calendar.current.date(byAdding: .day, value: 2, to: Date())!,
+                schedule: ScheduleUIModel(
+                    id: UUID().uuidString,
                     title: "이번 주 월요일, 오후 3:00",
+                    date: Calendar.current.date(byAdding: .day, value: 2, to: Date())!,
+                    location: "문래동 카페",
                     participantCount: 1,
-                    maxParticipants: 4
+                    maxParticipants: 4,
+                    description: "식물원 탐방"
                 ),
                 likeCount: 8,
                 commentCount: 3,
