@@ -27,7 +27,7 @@ struct MyMoimCell: View {
     // MARK: - Thumbnail
     private var thumbnail: some View {
         Group {
-            if let thumbnailURL = moim.imageURLs.first,
+            if let thumbnailURL = moim.titleImageURL,
                let url = URL(string: thumbnailURL) {
                 AsyncImage(url: url) { phase in
                     switch phase {
@@ -43,7 +43,7 @@ struct MyMoimCell: View {
                             .aspectRatio(contentMode: .fill)
                     case .failure:
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.blue.opacity(0.3))
+                            .fill(Color.blue)
                     @unknown default:
                         EmptyView()
                     }
@@ -53,7 +53,7 @@ struct MyMoimCell: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12))
             } else {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.blue.opacity(0.3))
+                    .fill(Color.blue)
                     .frame(width: 80, height: 80)
                     .aspectRatio(1, contentMode: .fit)
             }
@@ -66,11 +66,11 @@ struct MyMoimCell: View {
     // MARK: - Content
     private var content: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(moim.title ?? "")
+            Text(moim.title)
                 .lineLimit(1)
                 .font(.title3.bold())
 
-            Text(moim.content ?? "")
+            Text(moim.content)
                 .lineLimit(1)
                 .font(.body)
 
@@ -82,24 +82,24 @@ struct MyMoimCell: View {
     // MARK: - Meta Info
     private var metaInfo: some View {
         HStack(spacing: 4) {
-            if let category = moim.category {
-                Text(category)
+            if !moim.category.isEmpty {
+                Text(moim.category)
             }
 
-            if moim.category != nil && moim.value5 != nil {
+            if !moim.category.isEmpty && !moim.location.isEmpty {
                 Text("·")
             }
 
-            if let location = moim.value5 {
-                Text(location)
+            if !moim.location.isEmpty {
+                Text(moim.location)
             }
 
-            if moim.value5 != nil && moim.value4 != nil {
+            if !moim.location.isEmpty && !moim.memberCount.isEmpty {
                 Text("·")
             }
 
-            if let memberCount = moim.value4 {
-                Text("멤버 \(memberCount)")
+            if !moim.memberCount.isEmpty {
+                Text("멤버 \(moim.memberCount)")
             }
         }
         .font(.body)
