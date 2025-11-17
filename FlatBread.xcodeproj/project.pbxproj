@@ -32,13 +32,11 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/DI/.gitkeep,
-				Core/Extensions/.gitkeep,
 				Core/Services/.gitkeep,
 				Core/Utils/.gitkeep,
 				DesignSystem/Components/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Styles/.gitkeep,
-				Features/Chat/.gitkeep,
 				Resources/FlatBread.xctestplan,
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,
