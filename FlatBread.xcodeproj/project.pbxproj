@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1745BC0A2EC8B88600611C61 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 1745BC092EC8B88600611C61 /* Kingfisher */; };
 		17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 17BCDA8C2EBA291E00451DBF /* Alamofire */; };
 		4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 4E037CE72EBC4CFC00965D62 /* NMapsMap */; };
 /* End PBXBuildFile section */
@@ -31,14 +32,11 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/DI/.gitkeep,
-				Core/Extensions/.gitkeep,
 				Core/Services/.gitkeep,
 				Core/Utils/.gitkeep,
 				DesignSystem/Components/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Styles/.gitkeep,
-				Features/Chat/.gitkeep,
-				Features/Profile/.gitkeep,
 				Resources/FlatBread.xctestplan,
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,
@@ -91,6 +89,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1745BC0A2EC8B88600611C61 /* Kingfisher in Frameworks */,
 				17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */,
 				4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */,
 			);
@@ -162,6 +161,7 @@
 			packageProductDependencies = (
 				17BCDA8C2EBA291E00451DBF /* Alamofire */,
 				4E037CE72EBC4CFC00965D62 /* NMapsMap */,
+				1745BC092EC8B88600611C61 /* Kingfisher */,
 			);
 			productName = FlatBread;
 			productReference = FE6110272EB9D4AD006E4243 /* FlatBread.app */;
@@ -198,6 +198,7 @@
 			packageReferences = (
 				17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */,
 				4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
+				1745BC082EC8B88600611C61 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FE6110282EB9D4AD006E4243 /* Products */;
@@ -543,6 +544,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		1745BC082EC8B88600611C61 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/onevcat/Kingfisher";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.6.1;
+			};
+		};
 		17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
@@ -562,6 +571,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		1745BC092EC8B88600611C61 /* Kingfisher */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1745BC082EC8B88600611C61 /* XCRemoteSwiftPackageReference "Kingfisher" */;
+			productName = Kingfisher;
+		};
 		17BCDA8C2EBA291E00451DBF /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */;
