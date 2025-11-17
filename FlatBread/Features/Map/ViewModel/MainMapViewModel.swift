@@ -7,25 +7,31 @@
 
 import Combine
 import Foundation
+import NMapsMap
 import NMapsGeometry
 
 final class MainMapViewModel: ObservableObject {
     @Published var coordinate: NMGLatLng
     @Published var searchText: String = ""
-    @Published var categories: [MainMapCategoryUIModel] = [
-        .init(name: "운동", image: "figure.run"),
-        .init(name: "공부", image: "pencil"),
-        .init(name: "여행", image: "map"),
-        .init(name: "코딩", image: "swift"),
-        .init(name: "bakery", image: "birthday.cake"),
-    ]
-    private var selectedCategories: Set<MainMapCategoryUIModel> = []
-    @Published var markers: [MoimMarker] = []
+    @Published var categories: [MainMapCategoryUIModel] = Category.allCases.map {
+        MainMapCategoryUIModel(name: $0.rawValue, isSelected: true)
+    }
     @Published var focusingPlaceID: String? = nil
     @Published var nearbyMoims: [MoimMapUIModel] = []
+    @Published var markers: [MoimMarker] = []
+    
+    private var cancellables = Set<AnyCancellable>()
     
     init(coordinate: NMGLatLng) {
         self.coordinate = coordinate
+        
+        $categories
+            .debounce(for: 0.5, scheduler: RunLoop.main)
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { await self.requestNearbyMoimList() }
+            }
+            .store(in: &cancellables)
     }
     
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
@@ -35,7 +41,7 @@ final class MainMapViewModel: ObservableObject {
             let fetchResults = try await networkService.request(
                 PostRouter.searchGeolocationPostList(
                     // 뒤에 추가된 배열은 카테고리 확정되기 전에 입력한 데이터들.
-                    category: CategoryMapUIModel.allCases.map(\.rawValue) + ["sports", "performance", "운동", "사교/인맥"],
+                    category: categories.filter(\.isSelected).map(\.name) + ["sports", "performance", "운동", "사교/인맥"],
                     longitude: "\(coordinate.lng)",
                     latitude: "\(coordinate.lat)",
                     maxDistance: "100000",
@@ -46,8 +52,8 @@ final class MainMapViewModel: ObservableObject {
                 interceptorType: .networkWithToken
             ).data
             nearbyMoims = fetchResults.compactMap(\.toMoimMapUIModel)
+            markers.forEach { $0.mapView = nil }
             markers = fetchResults.map(\.asMoimMarker)
-            
         } catch {
             print(error.localizedDescription)
         }
@@ -57,7 +63,7 @@ final class MainMapViewModel: ObservableObject {
 
 extension MainMapViewModel {
     
-    enum CategoryMapUIModel: String, CaseIterable {
+    enum Category: String, CaseIterable {
         case exerciseSports = "운동/스포츠"
         case selfImprovement = "자기계발"
         case humanitiesBooksWriting = "인문학/책/글"

@@ -46,7 +46,6 @@ struct NaverMapView: UIViewRepresentable {
                 return true
             }
         }
-        
         uiView.moveCamera(cameraUpdate)
     }
     

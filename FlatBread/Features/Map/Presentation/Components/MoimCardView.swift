@@ -21,7 +21,7 @@ struct MoimCardView: View {
             } placeholder: {
                 Color.gray.opacity(0.5)
             }
-            .frame(width: 300, height: 200)
+            .frame(width: 300, height: 150)
             
             LinearGradient(
                 colors: [.clear, .black],
@@ -32,7 +32,7 @@ struct MoimCardView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     Text(moimModel.category)
-                        .font(.system(size: 13))
+                        .font(.system(size: 11))
                         .fontWeight(.semibold)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -42,7 +42,7 @@ struct MoimCardView: View {
                     Spacer()
                     
                     Text("\(moimModel.currentMembers)/\(moimModel.maxMembers)명")
-                        .font(.system(size: 13))
+                        .font(.system(size: 11))
                         .fontWeight(.semibold)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
@@ -51,7 +51,7 @@ struct MoimCardView: View {
                 }
                 
                 Text(moimModel.name)
-                    .font(.system(size: 19))
+                    .font(.system(size: 15))
                     .fontWeight(.bold)
                 
                 HStack {
@@ -59,13 +59,13 @@ struct MoimCardView: View {
                     Spacer()
                     Text("몇km떨어짐?")
                 }
-                .font(.system(size: 13))
+                .font(.system(size: 11))
                 .opacity(0.8)
             }
-            .padding()
+            .padding(.all, 12)
             .foregroundColor(.white)
         }
-        .frame(width: 300, height: 200)
+        .frame(width: 300, height: 150)
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)

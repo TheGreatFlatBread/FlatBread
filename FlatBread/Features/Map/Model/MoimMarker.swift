@@ -10,6 +10,11 @@ import NMapsGeometry
 
 final class MoimMarker: NMFMarker {
     
+    // 마커 메모리 누수 확인용
+    #if DEBUG
+    static var markerCount: Int = 0
+    #endif
+    
     let id: String
     
     init(id: String, position: NMGLatLng) {
@@ -17,6 +22,18 @@ final class MoimMarker: NMFMarker {
         super.init()
         self.position = position
         self.iconImage = NMF_MARKER_IMAGE_YELLOW
+        
+        #if DEBUG
+        Self.markerCount += 1
+        print("marker initialized, current count: \(Self.markerCount)")
+        #endif
     }
+    
+    #if DEBUG
+    deinit {
+        Self.markerCount -= 1
+        print("marker deinitialized, current count: \(Self.markerCount)")
+    }
+    #endif
     
 }

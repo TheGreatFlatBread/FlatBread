@@ -10,30 +10,35 @@ import SwiftUI
 struct MainMapCategoryButton: View {
     
     @Binding var category: MainMapCategoryUIModel
-    private let verticalInset: CGFloat = 10
-    private let horizontalInset: CGFloat = 16
-    private let clipShape = RoundedRectangle(cornerRadius: 30)
+    private let verticalInset: CGFloat = 6
+    private let horizontalInset: CGFloat = 10
+    private let clipShape = RoundedRectangle(cornerRadius: 15)
     
     var body: some View {
         Button {
-            category.isSelected.toggle()
+            withAnimation {
+                category.isSelected.toggle()
+            }
         } label: {
-            
             HStack {
-                Image(systemName: category.image)
+                if let categoryImageName = category.image {
+                    Image(systemName: categoryImageName)
+                }
                 Text(category.name)
             }
+            .frame(height: 15)
             .padding(
                 .init(top: verticalInset,
                       leading: horizontalInset,
                       bottom: verticalInset,
                       trailing: horizontalInset)
             )
-            .background(.yellow.opacity(category.isSelected ? 1.0 : 0.6))
+            .background(.white.opacity(category.isSelected ? 1.0 : 0.7))
             .clipShape(clipShape)
-            .overlay { clipShape.stroke(.orange, lineWidth: category.isSelected ? 3 : 0) }
+            .overlay { clipShape.stroke(category.isSelected ? .orange : .white, lineWidth: 1.5) }
         }
         .buttonStyle(.plain)
+        .font(.system(size: 13))
     }
     
 }
