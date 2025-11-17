@@ -5,15 +5,16 @@
 //  Created by 김민성 on 11/9/25.
 //
 
+import NMapsGeometry
 import SwiftUI
 
 struct MoimCardView: View {
-    let moim: Moim
+    let moimModel: MoimMapUIModel
     let isFocusing: Bool
     
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            AsyncImage(url: URL(string: moim.imageUrl)) { image in
+            AsyncImage(url: URL(string: moimModel.imageUrl ?? "")) { image in
                 return image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -30,7 +31,7 @@ struct MoimCardView: View {
             
             VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Text(moim.category)
+                    Text(moimModel.category)
                         .font(.system(size: 13))
                         .fontWeight(.semibold)
                         .padding(.horizontal, 8)
@@ -40,7 +41,7 @@ struct MoimCardView: View {
                     
                     Spacer()
                     
-                    Text("\(moim.currentMembers)/\(moim.maxMembers)명")
+                    Text("\(moimModel.currentMembers)/\(moimModel.maxMembers)명")
                         .font(.system(size: 13))
                         .fontWeight(.semibold)
                         .padding(.horizontal, 8)
@@ -49,7 +50,7 @@ struct MoimCardView: View {
                         .cornerRadius(8)
                 }
                 
-                Text(moim.name)
+                Text(moimModel.name)
                     .font(.system(size: 19))
                     .fontWeight(.bold)
                 
@@ -78,15 +79,15 @@ struct MoimCardView: View {
 import CoreLocation
 
 #Preview {
-    let seSACMoim = Moim(
+    let seSACMoim = MoimMapUIModel(
         id: "1",
         name: "새싹에서 공부하는 모임",
         category: "공부",
         currentMembers: 8,
         maxMembers: 12,
-        location: .init(latitude: 37.517677, longitude: 126.886442),
+        location: .init(lat: 37.517677, lng: 126.886442),
         imageUrl: "https://images.unsplash.com/photo-1680022087238-eafecd5a8933?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2ZmZWUlMjBtZWV0aW5nJTIwcGVvcGxlfGVufDF8fHx8MTc2MjM0MDE1MXww&ixlib=rb-4.1.0&q=80&w=1080",
     )
     
-    MoimCardView(moim: seSACMoim, isFocusing: true)
+    MoimCardView(moimModel: seSACMoim, isFocusing: true)
 }

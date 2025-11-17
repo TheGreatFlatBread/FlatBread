@@ -12,6 +12,10 @@ struct PostListResponseDTO {
     let next_cursor: String
 }
 
+struct PostGeoSearchListResponseDTO {
+    let data: [PostResponseDTO]
+}
+
 struct PostResponseDTO {
     let post_id: String?
     let category: String?
@@ -53,5 +57,6 @@ struct GeoLocationResponseDTO {
 
 nonisolated extension PostResponseDTO: Decodable { }
 nonisolated extension PostListResponseDTO: Decodable { }
+nonisolated extension PostGeoSearchListResponseDTO: Decodable { }
 nonisolated extension CreatorResponseDTO: Decodable { }
 nonisolated extension GeoLocationResponseDTO: Decodable { }

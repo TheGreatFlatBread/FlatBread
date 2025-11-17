@@ -54,7 +54,7 @@ struct NaverMapView: UIViewRepresentable {
 
 #Preview {
     @Previewable @State var coordinate: NMGLatLng = .init(lat: 37.517677, lng: 126.886442)
-    @Previewable @State var markers: [MoimMarker] = Moim.makeSample()
+    @Previewable @State var markers: [MoimMarker] = MoimMapUIModel.makeSample()
         .map { $0.asMarker }
     @Previewable @State var currentPlaceID: String? = nil
     NaverMapView(coordinate: $coordinate, markers: $markers, focusingPlaceID: $currentPlaceID)

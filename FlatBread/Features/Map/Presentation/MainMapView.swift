@@ -11,35 +11,28 @@ import NMapsGeometry
 
 struct MainMapView: View {
     
-    @State private var coordinate: NMGLatLng
-    @State private var searchText: String = ""
-    @State private var categories: [MainMapCategoryUIModel] = [
-        .init(name: "운동", image: "figure.run"),
-        .init(name: "공부", image: "pencil"),
-        .init(name: "여행", image: "map"),
-        .init(name: "코딩", image: "swift"),
-        .init(name: "bakery", image: "birthday.cake"),
-    ]
-    private var selectedCategories: Set<MainMapCategoryUIModel> = []
-    @State private var moims: [Moim] = []
-    @State private var markers: [MoimMarker] = []
-    @State private var focusingPlaceID: String? = nil
+    @StateObject private var viewModel: MainMapViewModel
     
     init(initialPosition: NMGLatLng = .init(lat: 37.517677, lng: 126.886442)) {
-        self.coordinate = initialPosition
+        let viewModel = MainMapViewModel(coordinate: initialPosition)
+        self._viewModel = StateObject(wrappedValue: viewModel)
     }
     
     var body: some View {
         ScrollViewReader { scrollViewProxy in
             ZStack {
-                NaverMapView(coordinate: $coordinate, markers: $markers, focusingPlaceID: $focusingPlaceID)
+                NaverMapView(
+                    coordinate: $viewModel.coordinate,
+                    markers: $viewModel.markers,
+                    focusingPlaceID: $viewModel.focusingPlaceID
+                )
                 .ignoresSafeArea(.all)
                 
                 VStack {
-                    MainMapSearchBar(searchText: $searchText)
+                    MainMapSearchBar(searchText: $viewModel.searchText)
                     ScrollView(.horizontal) {
                         HStack {
-                            ForEach($categories, id: \.name) { category in
+                            ForEach($viewModel.categories, id: \.name) { category in
                                 MainMapCategoryButton(category: category)
                             }
                         }
@@ -67,10 +60,10 @@ struct MainMapView: View {
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
-                            ForEach(moims) { moim in
+                            ForEach(viewModel.nearbyMoims) { moim in
                                 MoimCardView(
-                                    moim: moim,
-                                    isFocusing: focusingPlaceID == moim.id
+                                    moimModel: moim,
+                                    isFocusing: viewModel.focusingPlaceID == moim.id
                                 )
                                 .onTapGesture {
                                     handleCardClick(moimID: moim.id)
@@ -83,7 +76,7 @@ struct MainMapView: View {
                         .padding(.top, 1.5)
                     }
                     .background(.clear)
-                    .onChange(of: focusingPlaceID) { _, newValue in
+                    .onChange(of: viewModel.focusingPlaceID) { _, newValue in
                         guard let currentPlaceID  = newValue else { return }
                         withAnimation {
                             scrollViewProxy.scrollTo(currentPlaceID, anchor: .center)
@@ -92,20 +85,17 @@ struct MainMapView: View {
                 }
             }
         }
-        .onAppear {
-            moims = Moim.makeSample()
-            markers = moims.map({
-                return MoimMarker(id: $0.id, position: NMGLatLng(from: $0.location))
-            })
+        .task {
+            await viewModel.requestNearbyMoimList()
         }
     }
     
     func handleCardClick(moimID: String) {
-        if let selectedPosition = moims.filter({ $0.id == moimID }).first {
-            focusingPlaceID = moimID
-            coordinate = NMGLatLng(from: selectedPosition.location)
+        if let selectedPosition = viewModel.nearbyMoims.filter({ $0.id == moimID }).first {
+            viewModel.focusingPlaceID = moimID
+            viewModel.coordinate = selectedPosition.location
         }
-        focusingPlaceID = moimID
+        viewModel.focusingPlaceID = moimID
     }
 }
 
