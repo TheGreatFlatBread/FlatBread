@@ -206,7 +206,7 @@ private struct MessageMeView: View {
             .font(.system(size: 13, weight: .regular))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(.juwhang)
+            .background(.juhwang)
             .foregroundColor(.white)
             .cornerRadius(18)
     }

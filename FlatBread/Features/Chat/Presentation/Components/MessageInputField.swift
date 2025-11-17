@@ -32,7 +32,7 @@ struct MessageInputField: View {
             HStack(alignment: .center, spacing: 12) {
                 Button(action: onCameraButtonTap) {
                     Circle()
-                        .fill(Color("juwhang"))
+                        .fill(.juhwang)
                         .frame(width: 44, height: 44)
                         .overlay(
                             Image(systemName: "camera.fill")
@@ -54,7 +54,7 @@ struct MessageInputField: View {
                     if !text.isEmpty || !selectedImageURLs.isEmpty {
                         Button(action: onSend) {
                             Image(systemName: "paperplane.fill")
-                                .foregroundColor(Color("juwhang"))
+                                .foregroundColor(.juhwang)
                                 .font(.system(size: 20))
                         }
                     }
