@@ -64,16 +64,24 @@ final class HomeViewModel: ObservableObject {
 
     // 카테고리 섹션에 보여줄 데이터
     @Published var categoryItems: [CategoryItem] = [
-        .init(title: "추천 호스트", symbol: "heart.fill", tint: .red),
-        .init(title: "소규모 모임", symbol: "person.2.fill", tint: .yellow),
-        .init(title: "주말 모임", symbol: "calendar.badge.clock", tint: .red),
-        .init(title: "당일 모임", symbol: "alarm.fill", tint: .red),
-        .init(title: "대규모 모임", symbol: "person.3.sequence.fill", tint: .orange),
-        .init(title: "넓적빵 PICK", symbol: "hand.thumbsup.fill", tint: .pink),
-        .init(title: "클래스", symbol: "pencil.and.outline", tint: .teal),
-        .init(title: "파티", symbol: "party.popper.fill", tint: .purple),
-        .init(title: "칼퇴각 모임", symbol: "figure.run", tint: .yellow),
-        .init(title: "선착순 할인", symbol: "ticket.fill", tint: .red)
+        .init(title: "운동/스포츠",    symbol: "sportscourt.fill",        tint: .blue),
+        .init(title: "자기계발",      symbol: "brain.head.profile",      tint: .purple),
+        .init(title: "인문학/책/글",  symbol: "book.closed.fill",        tint: .brown),
+        .init(title: "문화/공연/축제", symbol: "theatermasks.fill",      tint: .pink),
+        .init(title: "공예/만들기",    symbol: "scissors",               tint: .orange),
+        .init(title: "봉사활동",      symbol: "hands.sparkles.fill",     tint: .green),
+        .init(title: "차/바이크",     symbol: "car.fill",                tint: .gray),
+        .init(title: "스포츠관람",    symbol: "sportscourt.circle.fill", tint: .indigo),
+        .init(title: "요리/제조",     symbol: "fork.knife.circle.fill",  tint: .red),
+        .init(title: "외국/언어",     symbol: "globe",                   tint: .teal),
+        .init(title: "아웃도어/여행", symbol: "mountain.2.fill",         tint: .green),
+        .init(title: "업종/직무",     symbol: "briefcase.fill",          tint: .brown),
+        .init(title: "음악/악기",     symbol: "music.mic",               tint: .purple),
+        .init(title: "댄스/무용",     symbol: "figure.dance",            tint: .pink),
+        .init(title: "사교/인맥",     symbol: "person.3.fill",           tint: .orange),
+        .init(title: "사진/영상",     symbol: "camera.fill",             tint: .blue),
+        .init(title: "게임/오락",     symbol: "gamecontroller.fill",     tint: .green),
+        .init(title: "반려동물",      symbol: "pawprint.fill",           tint: .brown)
     ]
 
     // 아이템 탭 액션 (추후 네비게이션/필터링 로직 연결)
