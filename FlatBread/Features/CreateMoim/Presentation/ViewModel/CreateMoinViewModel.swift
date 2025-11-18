@@ -29,8 +29,8 @@ final class CreateMoimViewModel: ObservableObject {
     )
 
     // UI 상태
-    @Published var categories: [MoimCategory] = .dummy10
-    @Published var selectedCategory: MoimCategory? = nil
+    @Published var categories: [MoimCategory2] = .dummy10
+    @Published var selectedCategory: MoimCategory2? = nil
     @Published var isFree: Bool = true
     @Published var priceText: String = ""      // 유료일 때만 사용(숫자 문자열)
     @Published var selectedImageData: Data? = nil
@@ -70,7 +70,7 @@ final class CreateMoimViewModel: ObservableObject {
         return !t.isEmpty && !c.isEmpty && !(dto.category ?? "").isEmpty && (dto.price ?? 0) >= 0
     }
 
-    func selectCategory(_ cat: MoimCategory) {
+    func selectCategory(_ cat: MoimCategory2) {
         selectedCategory = cat
         dto.category = cat.name
     }
