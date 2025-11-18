@@ -25,7 +25,6 @@ struct ContentView: View {
             // tabItem modifier를 사용하였음.
             TabView {
                 HomeView()
-                    .ignoresSafeArea()
                     .tabItem {
                         Label("홈", systemImage: "house")
                     }
