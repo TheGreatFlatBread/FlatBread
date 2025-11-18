@@ -70,9 +70,37 @@ final class CreateMoimViewModel: ObservableObject {
     }
 
     var canSubmit: Bool {
+        // 1) 기본 텍스트들
         let t = (dto.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let c = (dto.content ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return !t.isEmpty && !c.isEmpty && !(dto.category ?? "").isEmpty && (dto.price ?? 0) >= 0
+        let hasTitle = !t.isEmpty
+        let hasContent = !c.isEmpty
+        
+        // 2) 카테고리
+        let hasCategory = !(dto.category ?? "").isEmpty
+        
+        // 3) 지역 (시/군/구)
+        let hasRegion = selectedRegionName != nil
+        
+        // 4) 대표 이미지
+        let hasImage = selectedImageData != nil
+        
+        // 5) 가격 조건
+        let price = dto.price ?? 0
+        let hasValidPrice: Bool = {
+            if isFree {
+                return price == 0
+            } else {
+                return price > 0        // 유료면 0원 금지
+            }
+        }()
+        
+        return hasTitle
+            && hasContent
+            && hasCategory
+            && hasRegion
+            && hasImage
+            && hasValidPrice
     }
     
     // 지역 선택 시 DTO에도 반영
@@ -226,6 +254,7 @@ final class CreateMoimViewModel: ObservableObject {
         print("lat/lon:", dto.latitude, dto.longitude)
         print("files:", dto.files)
         print("content:", dto.content ?? "nil")
+        print("region:", dto.value1 ?? "nil")
         print("-----------------------")
     }
 }

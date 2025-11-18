@@ -259,6 +259,7 @@ struct CreateMoimView: View {
             
             // 하단 제출 버튼
             Button {
+                print("Button")
                 Task { await vm.submit() }   // 업로드 → URL 반영 → 생성
             } label: {
                 Text("모임 만들기")
