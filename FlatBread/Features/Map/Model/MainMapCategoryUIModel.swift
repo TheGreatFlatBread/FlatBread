@@ -8,6 +8,12 @@
 struct MainMapCategoryUIModel: Hashable {
     let name: String
     /// system image name
-    let image: String
-    var isSelected: Bool = true
+    let image: String?
+    var isSelected: Bool
+    
+    init(name: String, image: String? = nil, isSelected: Bool = true) {
+        self.name = name
+        self.image = image
+        self.isSelected = isSelected
+    }
 }

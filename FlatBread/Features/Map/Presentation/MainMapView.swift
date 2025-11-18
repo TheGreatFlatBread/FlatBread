@@ -11,66 +11,35 @@ import NMapsGeometry
 
 struct MainMapView: View {
     
-    @State private var coordinate: NMGLatLng
-    @State private var searchText: String = ""
-    @State private var categories: [MainMapCategoryUIModel] = [
-        .init(name: "운동", image: "figure.run"),
-        .init(name: "공부", image: "pencil"),
-        .init(name: "여행", image: "map"),
-        .init(name: "코딩", image: "swift"),
-        .init(name: "bakery", image: "birthday.cake"),
-    ]
-    private var selectedCategories: Set<MainMapCategoryUIModel> = []
-    @State private var moims: [Moim] = []
-    @State private var markers: [MoimMarker] = []
-    @State private var focusingPlaceID: String? = nil
+    @StateObject private var viewModel: MainMapViewModel
+    @FocusState private var searchBarFocused: Bool
+    @State private var isSearchActive: Bool = false
+//    @Namespace private var animation
     
     init(initialPosition: NMGLatLng = .init(lat: 37.517677, lng: 126.886442)) {
-        self.coordinate = initialPosition
+        let viewModel = MainMapViewModel(coordinate: initialPosition)
+        self._viewModel = StateObject(wrappedValue: viewModel)
     }
     
     var body: some View {
         ScrollViewReader { scrollViewProxy in
             ZStack {
-                NaverMapView(coordinate: $coordinate, markers: $markers, focusingPlaceID: $focusingPlaceID)
-                .ignoresSafeArea(.all)
-                
-                VStack {
-                    MainMapSearchBar(searchText: $searchText)
-                    ScrollView(.horizontal) {
-                        HStack {
-                            ForEach($categories, id: \.name) { category in
-                                MainMapCategoryButton(category: category)
-                            }
-                        }
-                        .padding(.vertical, 1.5)
-                        .padding(.horizontal)
-                    }
-                    .scrollIndicators(.hidden)
-                    
-                    Spacer()
-                }
-                .background(
-                    LinearGradient(
-                        colors: [.white.opacity(0.95), .white.opacity(0)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 150)
-                    .edgesIgnoringSafeArea(.top)
-                    .allowsHitTesting(false),
-                    alignment: .top
+                NaverMapView(
+                    coordinate: $viewModel.coordinate,
+                    markers: $viewModel.markers,
+                    focusingPlaceID: $viewModel.focusingPlaceID
                 )
+                .ignoresSafeArea(.all)
                 
                 VStack(spacing: 0) {
                     Spacer()
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
-                            ForEach(moims) { moim in
+                            ForEach(viewModel.nearbyMoims) { moim in
                                 MoimCardView(
-                                    moim: moim,
-                                    isFocusing: focusingPlaceID == moim.id
+                                    moimModel: moim,
+                                    isFocusing: viewModel.focusingPlaceID == moim.id
                                 )
                                 .onTapGesture {
                                     handleCardClick(moimID: moim.id)
@@ -83,29 +52,87 @@ struct MainMapView: View {
                         .padding(.top, 1.5)
                     }
                     .background(.clear)
-                    .onChange(of: focusingPlaceID) { _, newValue in
+                    .onChange(of: viewModel.focusingPlaceID) { _, newValue in
                         guard let currentPlaceID  = newValue else { return }
                         withAnimation {
                             scrollViewProxy.scrollTo(currentPlaceID, anchor: .center)
                         }
                     }
                 }
+                .ignoresSafeArea(.keyboard, edges: .bottom)
+                
+                ZStack {
+                    if isSearchActive {
+                        Color(UIColor.systemGray6)
+                            .ignoresSafeArea()
+                    }
+                    
+                    VStack {
+                        HStack(spacing: 12) {
+                            MainMapSearchBar(searchText: $viewModel.searchText)
+                                .focused($searchBarFocused)
+                            
+                            if isSearchActive {
+                                Button {
+                                    withAnimation {
+                                        searchBarFocused = false
+                                    }
+                                } label: {
+                                    Image(systemName: "xmark")
+                                        .font(.system(size: 17))
+                                        .padding(12)
+                                        .background(Color.white)
+                                        .foregroundStyle(.gray)
+                                        .cornerRadius(.infinity)
+                                        .shadow(radius: 8)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        
+                        ScrollView(.horizontal) {
+                            HStack {
+                                ForEach($viewModel.categories, id: \.name) { category in
+                                    MainMapCategoryButton(category: category)
+                                }
+                            }
+                            .padding(.vertical, 1.5)
+                            .padding(.horizontal)
+                        }
+                        .scrollIndicators(.hidden)
+                        
+                        Spacer()
+                    }
+                    .background(
+                        LinearGradient(
+                            colors: [.white.opacity(0.95), .white.opacity(0)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                        .frame(height: 150)
+                        .edgesIgnoringSafeArea(.top)
+                        .allowsHitTesting(false),
+                        alignment: .top
+                    )
+                }
             }
         }
-        .onAppear {
-            moims = Moim.makeSample()
-            markers = moims.map({
-                return MoimMarker(id: $0.id, position: NMGLatLng(from: $0.location))
-            })
+        .onChange(of: searchBarFocused) { oldValue, newValue in
+            withAnimation {
+                isSearchActive = newValue
+            }
+        }
+        .task {
+            await viewModel.requestNearbyMoimList()
         }
     }
     
     func handleCardClick(moimID: String) {
-        if let selectedPosition = moims.filter({ $0.id == moimID }).first {
-            focusingPlaceID = moimID
-            coordinate = NMGLatLng(from: selectedPosition.location)
+        if let selectedPosition = viewModel.nearbyMoims.filter({ $0.id == moimID }).first {
+            viewModel.focusingPlaceID = moimID
+            viewModel.coordinate = selectedPosition.location
         }
-        focusingPlaceID = moimID
+        viewModel.focusingPlaceID = moimID
     }
 }
 
