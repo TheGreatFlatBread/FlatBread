@@ -21,7 +21,7 @@ final class MoimMarker: NMFMarker {
         self.id = id
         super.init()
         self.position = position
-        self.iconImage = NMF_MARKER_IMAGE_YELLOW
+        self.iconImage = .init(image: .mapMarker.withTintColor(.juhwang))
         
         #if DEBUG
         Self.markerCount += 1
