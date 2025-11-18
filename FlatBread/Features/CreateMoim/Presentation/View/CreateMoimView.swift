@@ -136,9 +136,9 @@ struct CreateMoimView: View {
                         
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
-                                ForEach(vm.categories) { cat in
+                                ForEach(vm.categories, id: \.self) { cat in
                                     ChipButton(
-                                        title: cat.name,
+                                        title: cat.rawValue,
                                         isSelected: vm.selectedCategory == cat
                                     ) { vm.selectCategory(cat) }
                                 }
