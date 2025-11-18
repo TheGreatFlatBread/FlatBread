@@ -36,6 +36,11 @@ final class CreateMoimViewModel: ObservableObject {
     @Published var selectedImageData: Data? = nil
     @Published var isUploading: Bool = false
     @Published var uploadErrorMessage: String? = nil
+    
+    // 지역 선택 상태
+    @Published var selectedRegionName: String? = nil
+    
+    var allRegions: [String] { RegionData.allRegionNames }
 
     private let maxUploadFileSizeBytes: Int = 10 * 1024 * 1024 // 10MB
 
@@ -68,6 +73,12 @@ final class CreateMoimViewModel: ObservableObject {
         let t = (dto.title ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let c = (dto.content ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         return !t.isEmpty && !c.isEmpty && !(dto.category ?? "").isEmpty && (dto.price ?? 0) >= 0
+    }
+    
+    // 지역 선택 시 DTO에도 반영
+    func selectRegionName(_ name: String) {
+        selectedRegionName = name
+        dto.value1 = name
     }
 
     func selectCategory(_ cat: MoimCategory) {

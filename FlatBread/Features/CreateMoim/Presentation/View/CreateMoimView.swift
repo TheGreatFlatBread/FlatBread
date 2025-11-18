@@ -20,6 +20,9 @@ struct CreateMoimView: View {
     // 대표 사진 선택용
     @State private var pickerItem: PhotosPickerItem? = nil
     
+    // 지역 선택 시트 표시 여부
+    @State private var isRegionPickerPresented = false
+    
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -156,6 +159,33 @@ struct CreateMoimView: View {
                             get: { CLLocationCoordinate2D(latitude: vm.dto.latitude, longitude: vm.dto.longitude) },
                             set: { vm.updateCoordinate($0) }
                         ))
+                    // 시/군/구 선택 필드
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("시/군/구")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            
+                            Button {
+                                isRegionPickerPresented = true
+                            } label: {
+                                HStack {
+                                    Text(vm.selectedRegionName ?? "시/군/구를 선택해 주세요.")
+                                        .foregroundStyle(vm.selectedRegionName == nil ? .secondary : .primary)
+                                        .lineLimit(1)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.top, 8)
                     }
                     .padding(.horizontal, 16)
                     
@@ -257,6 +287,17 @@ struct CreateMoimView: View {
             }
         } message: {
             Text(vm.uploadErrorMessage ?? "이미지 크기가 10MB를 초과합니다. 이미지 크기를 줄인 후 다시 시도해 주세요.")
+        }
+        // 지역 검색 시트
+        .sheet(isPresented: $isRegionPickerPresented) {
+            RegionSearchView(
+                allRegions: vm.allRegions,
+                selected: vm.selectedRegionName,
+                onSelect: { region in
+                    vm.selectRegionName(region)
+                    isRegionPickerPresented = false
+                }
+            )
         }
     }
 }
