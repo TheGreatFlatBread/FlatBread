@@ -25,14 +25,12 @@ final class MoimMarker: NMFMarker {
         
         #if DEBUG
         Self.markerCount += 1
-        print("marker initialized, current count: \(Self.markerCount)")
         #endif
     }
     
     #if DEBUG
     deinit {
         Self.markerCount -= 1
-        print("marker deinitialized, current count: \(Self.markerCount)")
     }
     #endif
     

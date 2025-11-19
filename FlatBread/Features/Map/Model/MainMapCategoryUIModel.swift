@@ -6,14 +6,11 @@
 //
 
 struct MainMapCategoryUIModel: Hashable {
-    let name: String
-    /// system image name
-    let image: String?
+    let category: MoimCategory
     var isSelected: Bool
     
-    init(name: String, image: String? = nil, isSelected: Bool = true) {
-        self.name = name
-        self.image = image
+    init(category: MoimCategory, isSelected: Bool = true) {
+        self.category = category
         self.isSelected = isSelected
     }
 }

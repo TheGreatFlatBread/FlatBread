@@ -21,10 +21,7 @@ struct MainMapCategoryButton: View {
             }
         } label: {
             HStack {
-                if let categoryImageName = category.image {
-                    Image(systemName: categoryImageName)
-                }
-                Text(category.name)
+                Text(category.category.rawValue)
             }
             .frame(height: 15)
             .padding(
@@ -44,6 +41,6 @@ struct MainMapCategoryButton: View {
 }
 
 #Preview {
-    @Previewable @State var category = MainMapCategoryUIModel(name: "운동", image: "figure.run")
+    @Previewable @State var category = MainMapCategoryUIModel(category: .culturePerformancesFestivals)
     MainMapCategoryButton(category: $category)
 }
