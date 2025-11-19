@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Kingfisher
 
 enum ImageSource {
     case url(String)
@@ -22,18 +21,37 @@ struct RemoteImage<Content: View>: View {
     let source: ImageSource
     let displayMode: ImageDisplayMode
     let content: (Image) -> Content
+    let placeholder: AnyView?
+    private let imageService: ImageService
 
     @State private var loadedImage: UIImage?
     @State private var isLoading = false
     @State private var loadFailed = false
 
-    init(
+    init<PlaceholderContent: View>(
         source: ImageSource,
         displayMode: ImageDisplayMode = .original,
+        @ViewBuilder placeholder: () -> PlaceholderContent,
+        imageService: ImageService = DefaultImageService.shared,
         @ViewBuilder content: @escaping (Image) -> Content
     ) {
         self.source = source
         self.displayMode = displayMode
+        self.placeholder = AnyView(placeholder())
+        self.imageService = imageService
+        self.content = content
+    }
+
+    init(
+        source: ImageSource,
+        displayMode: ImageDisplayMode = .original,
+        imageService: ImageService = DefaultImageService.shared,
+        @ViewBuilder content: @escaping (Image) -> Content
+    ) {
+        self.source = source
+        self.displayMode = displayMode
+        self.placeholder = nil
+        self.imageService = imageService
         self.content = content
     }
     
@@ -44,11 +62,15 @@ struct RemoteImage<Content: View>: View {
             } else if isLoading {
                 ProgressView()
             } else if loadFailed {
-                Color.gray.opacity(0.3)
-                    .overlay(
-                        Image(systemName: "photo.fill")
-                            .foregroundColor(.gray)
-                    )
+                if let placeholder = placeholder {
+                    placeholder
+                } else {
+                    Color.gray.opacity(0.3)
+                        .overlay(
+                            Image(systemName: "photo.fill")
+                                .foregroundColor(.gray)
+                        )
+                }
             } else {
                 Color.clear
                     .onAppear {
@@ -62,86 +84,32 @@ struct RemoteImage<Content: View>: View {
         switch source {
         case .uiImage(let image):
             loadedImage = image
-            
+
         case .url(let urlString):
+            guard !urlString.isEmpty else {
+                loadFailed = true
+                return
+            }
+
             isLoading = true
-            
+
             guard let url = URL(string: urlString) else {
                 isLoading = false
+                loadFailed = true
                 return
             }
 
             Task {
                 do {
-                    if url.isFileURL {
-                        let options: KingfisherOptionsInfo
-                        switch displayMode {
-                            case .thumbnail(let size):
-                                options = [
-                                    .processor(DownsamplingImageProcessor(size: size)),
-                                    .scaleFactor(UIScreen.main.scale),
-                                    .cacheMemoryOnly,
-                                    .backgroundDecode
-                                ]
-                            case .original:
-                                options = [
-                                    .memoryCacheExpiration(.expired),
-                                    .diskCacheExpiration(.expired),
-                                    .backgroundDecode
-                                ]
-                        }
-                        let retrieveImage = try await KingfisherManager.shared.retrieveImage(
-                            with: .provider(LocalFileImageDataProvider(fileURL: url)),
-                            options: options
-                        )
-                        await MainActor.run {
-                            loadedImage = retrieveImage.image
-                            isLoading = false
-                        }
-                    } else {
-                        #if DEBUG
-                        print("🔍 RemoteImage 로드 시도: \(url.absoluteString)")
-                        #endif
-                        
-                        var image: UIImage
-                        
-                        let result = try await ImageCache.default.retrieveImage(forKey: urlString)
-                        
-                        switch result {
-                        case .disk(let _image), .memory(let _image):
-                            image = _image
-                        default:
-                            let options: KingfisherOptionsInfo
-                            switch displayMode {
-                            case .thumbnail(let size):
-                                options = [
-                                    .processor(DownsamplingImageProcessor(size: size)),
-                                    .scaleFactor(UIScreen.main.scale),
-                                    .cacheOriginalImage,
-                                    .diskCacheExpiration(.days(7)),
-                                    .backgroundDecode,
-                                    .transition(.fade(0.2))
-                                ]
-                            case .original:
-                                options = [
-                                    .diskCacheExpiration(.days(7)),
-                                    .cacheOriginalImage,
-                                    .backgroundDecode,
-                                    .transition(.fade(0.2))
-                                ]
-                            }
-                            let retrieveImage = try await KingfisherManager.shared.retrieveImage(
-                                with: .network(url),
-                                options: options
-                            )
-                            image = retrieveImage.image
-                        }
-                        await MainActor.run {
-                            loadedImage = image
-                            isLoading = false
-                        }
+                    let image = try await imageService.loadImage(from: url, displayMode: displayMode)
+                    await MainActor.run {
+                        loadedImage = image
+                        isLoading = false
                     }
                 } catch {
+                    #if DEBUG
+                    print("이미지 로드 실패: \(urlString), 에러: \(error)")
+                    #endif
                     await MainActor.run {
                         isLoading = false
                         loadFailed = true
@@ -153,11 +121,45 @@ struct RemoteImage<Content: View>: View {
 }
 
 extension RemoteImage {
-    init(url: String, displayMode: ImageDisplayMode = .original, @ViewBuilder content: @escaping (Image) -> Content) {
-        self.init(source: .url(url), displayMode: displayMode, content: content)
+    // placeholder 있는 버전
+    init<PlaceholderContent: View>(
+        url: String,
+        displayMode: ImageDisplayMode = .original,
+        @ViewBuilder placeholder: @escaping () -> PlaceholderContent,
+        imageService: ImageService = DefaultImageService.shared,
+        @ViewBuilder content: @escaping (Image) -> Content
+    ) {
+        self.init(source: .url(url), displayMode: displayMode, placeholder: placeholder, imageService: imageService, content: content)
     }
 
-    init(uiImage: UIImage, displayMode: ImageDisplayMode = .original, @ViewBuilder content: @escaping (Image) -> Content) {
-        self.init(source: .uiImage(uiImage), displayMode: displayMode, content: content)
+    // placeholder 없는 버전
+    init(
+        url: String,
+        displayMode: ImageDisplayMode = .original,
+        imageService: ImageService = DefaultImageService.shared,
+        @ViewBuilder content: @escaping (Image) -> Content
+    ) {
+        self.init(source: .url(url), displayMode: displayMode, imageService: imageService, content: content)
+    }
+
+    // UIImage placeholder 있는 버전
+    init<PlaceholderContent: View>(
+        uiImage: UIImage,
+        displayMode: ImageDisplayMode = .original,
+        @ViewBuilder placeholder: @escaping () -> PlaceholderContent,
+        imageService: ImageService = DefaultImageService.shared,
+        @ViewBuilder content: @escaping (Image) -> Content
+    ) {
+        self.init(source: .uiImage(uiImage), displayMode: displayMode, placeholder: placeholder, imageService: imageService, content: content)
+    }
+
+    // UIImage placeholder 없는 버전
+    init(
+        uiImage: UIImage,
+        displayMode: ImageDisplayMode = .original,
+        imageService: ImageService = DefaultImageService.shared,
+        @ViewBuilder content: @escaping (Image) -> Content
+    ) {
+        self.init(source: .uiImage(uiImage), displayMode: displayMode, imageService: imageService, content: content)
     }
 }
