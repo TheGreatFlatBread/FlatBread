@@ -34,10 +34,12 @@ struct MapPickerView: View {
                 }
             
             // 중앙 고정 핀
-            Image(systemName: "mappin.and.ellipse")
-                .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(.red)
+            Image("map_marker")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 30, height: 40)
                 .shadow(radius: 4)
+                .allowsHitTesting(false)
             
             // 좌표 표시 바
             VStack {
