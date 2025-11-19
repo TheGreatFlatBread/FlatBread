@@ -15,6 +15,8 @@ import UniformTypeIdentifiers
 @MainActor
 final class CreateMoimViewModel: ObservableObject {
 
+    private let networkService = NetworkServiceFactory.shared.makeNetworkService()
+
     // 서버 전송용 DTO
     @Published var dto = PostUploadRequestDTO(
         category: nil,
@@ -220,29 +222,53 @@ final class CreateMoimViewModel: ObservableObject {
         return nil
     }
     
+    private func uploadImagesIfNeeded() async throws -> [String] {
+        guard let data = selectedImageData else { return [] }
+        // 10MB 이하가 되도록 검증: 리사이즈 우선, 필요 시 압축
+        guard let preparedData = prepareImageForUpload(data, maxBytes: maxUploadFileSizeBytes) else {
+            throw NetworkError.uploadFailed
+        }
+
+        let request = ImageUploadRequestDTO(images: [preparedData])
+        let router = MultipartRouter.uploadImages(request: request)
+        let response = try await networkService.upload(
+            router,
+            responseType: FileUploadResponseDTO.self,
+            interceptorType: .networkWithToken,
+            progress: { progress in
+                print("upload progress: ", progress)
+            }
+        )
+        return response.files
+    }
+    
     func submit() async {
         if isFree { dto.price = 0 } else { commitPriceFromText() }
 
-        if let data = selectedImageData {
-            isUploading = true
-            defer { isUploading = false }
+        isUploading = true
+        uploadErrorMessage = nil
+        defer { isUploading = false }
 
-            // 10MB 이하가 되도록 검증: 리사이즈 우선, 필요 시 압축
-            guard let preparedData = prepareImageForUpload(data, maxBytes: maxUploadFileSizeBytes) else {
-                print("[ImageValidation] Image exceeds 10MB even after processing. Aborting upload.")
-                uploadErrorMessage = "이미지 크기가 10MB를 초과합니다. 이미지 크기를 줄인 후 다시 시도해 주세요."
-                return
+        do {
+            // 대표 이미지 업로드
+            if selectedImageData != nil {
+                let uploadedURLs = try await uploadImagesIfNeeded()
+                dto.files = uploadedURLs
             }
 
-            // ---- 실제 업로드 시 교체할 부분 ----
-            let _ = ImageUploadRequestDTO(images: [preparedData])
-            // 서버 업로드 후 반환된 이미지 URL이라고 가정 (더미)
-            let uploadedURL = "https://picsum.photos/seed/flatbread/1200/800"
-            // ----------------------------------
-            dto.files = [uploadedURL]
-        }
+            // 게시글 생성 요청
+            let postResponse = try await networkService.request(
+                PostRouter.uploadPost(request: dto),
+                responseType: PostResponseDTO.self,
+                interceptorType: .networkWithToken
+            )
+            print("[POST CREATED]: \(postResponse)")
 
-        createTapped()
+            createTapped() // 성공 로그
+        } catch {
+            print("[CreateMoim] 업로드 또는 생성 실패: \(error)")
+            uploadErrorMessage = error.localizedDescription
+        }
     }
 
     // 임시 업로드 액션(동작 확인용)
