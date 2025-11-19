@@ -14,16 +14,18 @@ struct CreateMoimView: View {
     
     @StateObject private var vm = CreateMoimViewModel()
     
-    // 바인딩용 좌표
-    @State private var selectedCoord = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780)
+    @State private var selectedCoord = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780) // 바인딩용 좌표
+    @State private var pickerItem: PhotosPickerItem? = nil // 대표 사진 선택용
+    @State private var isRegionPickerPresented = false // 지역 선택 시트 표시 여부
+    @State private var showSubmitSuccessAlert = false // 업로드 성공 시 alert
     
-    // 대표 사진 선택용
-    @State private var pickerItem: PhotosPickerItem? = nil
+    @FocusState private var focusedField: FocusedField? // 포커스 관리용
     
-    // 지역 선택 시트 표시 여부
-    @State private var isRegionPickerPresented = false
-    
-    @State private var showSubmitSuccessAlert = false
+    enum FocusedField {
+        case title
+        case content
+        case price
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -123,6 +125,7 @@ struct CreateMoimView: View {
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                                         .stroke(Color(.systemGray4), lineWidth: 1)
                                 )
+                                .focused($focusedField, equals: .title)
                             
                             HStack {
                                 Spacer()
@@ -204,6 +207,7 @@ struct CreateMoimView: View {
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                                         .stroke(Color(.systemGray4), lineWidth: 1)
                                 )
+                                .focused($focusedField, equals: .content)
                             
                             if (vm.dto.content ?? "").isEmpty {
                                 Text("활동 중심으로 모임을 소개해주세요. 소개를 잘 작성한 모임은 2배 많은 이웃이 가입해요.")
@@ -244,6 +248,7 @@ struct CreateMoimView: View {
                                     .onChange(of: vm.priceText) { _, _ in
                                         vm.commitPriceFromText()
                                     }
+                                    .focused($focusedField, equals: .price)
                             }
                             .padding(12)
                             .background(
@@ -287,6 +292,9 @@ struct CreateMoimView: View {
             }
             .disabled(!vm.canSubmit || vm.isUploading)
             .background(Color(.systemBackground))
+        }
+        .onTapGesture {
+            focusedField = nil
         }
         .background(Color(.systemBackground))
         .alert(
