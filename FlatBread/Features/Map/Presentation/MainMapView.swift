@@ -61,7 +61,7 @@ struct MainMapView: View {
                 }
                 .ignoresSafeArea(.keyboard, edges: .bottom)
                 
-                ZStack {
+                ZStack(alignment: .top) {
                     if isSearchActive {
                         Color(UIColor.systemGray6)
                             .ignoresSafeArea()
@@ -76,6 +76,7 @@ struct MainMapView: View {
                                 Button {
                                     withAnimation {
                                         searchBarFocused = false
+                                        isSearchActive = false
                                     }
                                 } label: {
                                     Image(systemName: "xmark")
@@ -92,7 +93,7 @@ struct MainMapView: View {
                         
                         ScrollView(.horizontal) {
                             HStack {
-                                ForEach($viewModel.categories, id: \.name) { category in
+                                ForEach($viewModel.categories, id: \.category) { category in
                                     MainMapCategoryButton(category: category)
                                 }
                             }
@@ -101,7 +102,16 @@ struct MainMapView: View {
                         }
                         .scrollIndicators(.hidden)
                         
-                        Spacer()
+                        ScrollView {
+                            LazyVStack(alignment: .leading) {
+                                ForEach($viewModel.moimSearchResult) { postDTO in
+                                    MoimListCell(moim: postDTO)
+                                }
+                            }
+                            .padding()
+                        }
+                        .opacity(isSearchActive ? 1.0 : 0.0)
+                        .scrollDismissesKeyboard(.immediately)
                     }
                     .background(
                         LinearGradient(
@@ -118,8 +128,10 @@ struct MainMapView: View {
             }
         }
         .onChange(of: searchBarFocused) { oldValue, newValue in
-            withAnimation {
-                isSearchActive = newValue
+            if newValue {
+                withAnimation {
+                    isSearchActive = newValue
+                }
             }
         }
         .task {
@@ -136,6 +148,6 @@ struct MainMapView: View {
     }
 }
 
-#Preview {
-    MainMapView()
-}
+//#Preview {
+//    MainMapView()
+//}

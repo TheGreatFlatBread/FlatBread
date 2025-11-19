@@ -10,14 +10,21 @@ import Foundation
 import NMapsMap
 import NMapsGeometry
 
-final class MainMapViewModel: ObservableObject {
+class MainMapViewModel: ObservableObject {
     @Published var coordinate: NMGLatLng
     @Published var searchText: String = ""
-    @Published var categories: [MainMapCategoryUIModel] = Category.allCases.map {
-        MainMapCategoryUIModel(name: $0.rawValue, isSelected: true)
+    @Published var categories: [MainMapCategoryUIModel] = MoimCategory.allCases.map {
+        MainMapCategoryUIModel(category: $0, isSelected: true)
+    }
+    private var selectedCategoriesPublisher: AnyPublisher<[MoimCategory], Never> {
+        $categories
+            .map { $0.filter(\.isSelected).map(\.category) }
+            .eraseToAnyPublisher()
     }
     @Published var focusingPlaceID: String? = nil
     @Published var nearbyMoims: [MoimMapUIModel] = []
+    @Published private var allMoimSearchResult: [MoimSearchResultUIModel] = []
+    @Published var moimSearchResult: [MoimSearchResultUIModel] = []
     @Published var markers: [MoimMarker] = []
     
     private var cancellables = Set<AnyCancellable>()
@@ -32,6 +39,26 @@ final class MainMapViewModel: ObservableObject {
                 Task { await self.requestNearbyMoimList() }
             }
             .store(in: &cancellables)
+            
+        $allMoimSearchResult
+            .combineLatest(selectedCategoriesPublisher)
+            .map { (searchResult, selectedCategories) in
+                return searchResult.filter { selectedCategories.contains($0.category) }
+            }.eraseToAnyPublisher()
+            .assign(to: \.moimSearchResult, on: self)
+            .store(in: &cancellables)
+        
+        $searchText
+            .removeDuplicates(by: {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                == $1.trimmingCharacters(in: .whitespacesAndNewlines)
+            })
+            .debounce(for: 0.5, scheduler: RunLoop.main)
+            .sink { [weak self] searchText in
+                guard let self else { return }
+                Task { await self.searchMoim(searchText) }
+            }
+            .store(in: &cancellables)
     }
     
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
@@ -41,7 +68,7 @@ final class MainMapViewModel: ObservableObject {
             let fetchResults = try await networkService.request(
                 PostRouter.searchGeolocationPostList(
                     // 뒤에 추가된 배열은 카테고리 확정되기 전에 입력한 데이터들.
-                    category: categories.filter(\.isSelected).map(\.name) + ["sports", "performance", "운동", "사교/인맥"],
+                    category: categories.map(\.category.rawValue) + ["sports", "performance", "운동", "사교/인맥"],
                     longitude: "\(coordinate.lng)",
                     latitude: "\(coordinate.lat)",
                     maxDistance: "100000",
@@ -59,33 +86,28 @@ final class MainMapViewModel: ObservableObject {
         }
     }
     
-}
-
-extension MainMapViewModel {
-    
-    enum Category: String, CaseIterable {
-        case exerciseSports = "운동/스포츠"
-        case selfImprovement = "자기계발"
-        case humanitiesBooksWriting = "인문학/책/글"
-        case culturePerformancesFestivals = "문화/공연/축제"
-        case craftsMaking = "공예/만들기"
-        case volunteerWork = "봉사활동"
-        case carsBikes = "차/바이크"
-        case watchingSports = "스포츠관람"
-        case cookingManufacturing = "요리/제조"
-        case foreignLanguage = "외국/언어"
-        case outdoorTravel = "아웃도어/여행"
-        case industryJobRole = "업종/직무"
-        case musicInstruments = "음악/악기"
-        case danceBallet = "댄스/무용"
-        case socialNetworking = "사교/인맥"
-        case photographyVideo = "사진/영상"
-        case gamesEntertainment = "게임/오락"
-        case pets = "반려동물"
+    func searchMoim(_ query: String) async {
+        let selectedCategories = categories
+            .filter(\.isSelected)
+            .map(\.category.rawValue)
+        
+        do {
+            allMoimSearchResult = try await networkService.request(
+                PostRouter.searchPostTitle(
+                    title: query,
+                    category: selectedCategories
+                ),
+                responseType: PostTitleSearchListResponseDTO.self
+            )
+            .data
+            .compactMap(\.asSearchResultUIModel)
+            
+        } catch {
+            print(error.localizedDescription)
+        }
     }
     
 }
-
 
 extension PostResponseDTO {
     var asMoimMarker: MoimMarker {
@@ -108,4 +130,13 @@ extension GeoLocationResponseDTO {
         guard let latitude, let longitude else { return nil }
         return .init(lat: latitude, lng: longitude)
     }
+}
+
+
+final class MainMapViewMockModel: MainMapViewModel {
+    
+    override func requestNearbyMoimList() async {
+        return
+    }
+    
 }
