@@ -23,6 +23,8 @@ struct CreateMoimView: View {
     // 지역 선택 시트 표시 여부
     @State private var isRegionPickerPresented = false
     
+    @State private var showSubmitSuccessAlert = false
+    
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -257,10 +259,21 @@ struct CreateMoimView: View {
                 .padding(.vertical, 12)
             }
             
+            // 업로드 진행 중 표시
+            if vm.isUploading {
+                GearLoadingView(progress: vm.uploadProgress)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
+            }
+            
             // 하단 제출 버튼
             Button {
-                print("Button")
-                Task { await vm.submit() }   // 업로드 → URL 반영 → 생성
+                Task {
+                    let success = await vm.submit() // 업로드 → URL 반영 → 생성
+                    if success {
+                        showSubmitSuccessAlert = true
+                    }
+                }
             } label: {
                 Text("모임 만들기")
                     .font(.system(size: 17, weight: .semibold))
@@ -277,7 +290,7 @@ struct CreateMoimView: View {
         }
         .background(Color(.systemBackground))
         .alert(
-            "이미지 업로드 오류",
+            "모임 생성 실패",
             isPresented: Binding(
                 get: { vm.uploadErrorMessage != nil },
                 set: { newValue in if !newValue { vm.uploadErrorMessage = nil } }
@@ -287,7 +300,17 @@ struct CreateMoimView: View {
                 vm.uploadErrorMessage = nil
             }
         } message: {
-            Text(vm.uploadErrorMessage ?? "이미지 크기가 10MB를 초과합니다. 이미지 크기를 줄인 후 다시 시도해 주세요.")
+            Text(vm.uploadErrorMessage ?? "모임 생성에 실패했습니다. 다시 시도해 주세요.")
+        }
+
+        // 성공 Alert
+        .alert("모임 생성 완료", isPresented: $showSubmitSuccessAlert) {
+            Button("확인", role: .cancel) {
+                showSubmitSuccessAlert = false
+                // 필요하면 여기서 화면 dismiss 처리 등
+            }
+        } message: {
+            Text("모임이 성공적으로 생성되었습니다.")
         }
         // 지역 검색 시트
         .sheet(isPresented: $isRegionPickerPresented) {
