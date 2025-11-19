@@ -68,6 +68,25 @@ final class DefaultNetworkService: AsyncNetworkService {
             throw NetworkError.unknown(error)
         }
     }
+
+    func download(_ router: DownloadAPIRouter, interceptorType: InterceptorType) async throws(NetworkError) -> URL {
+        do {
+            let interceptor = interceptorType.wrappingInterceptor(
+                networkRetrier: networkRetrier,
+                tokenInterceptor: tokenInterceptor
+            )
+            let downloadTask = session.download(router, interceptor: interceptor, to: router.destination)
+                .validate(statusCode: 200..<300)
+                .serializingDownloadedFileURL()
+
+            let fileURL = try await downloadTask.value
+            return fileURL
+        } catch let afError as AFError {
+            throw NetworkError.from(afError)
+        } catch {
+            throw NetworkError.unknown(error)
+        }
+    }
 }
 
 extension DefaultNetworkService: ReactiveNetworkService {
