@@ -24,7 +24,7 @@ struct ContentView: View {
             // 그 대체제인 Tab은 iOS 18.0 이상부터 사용 가능하므로
             // tabItem modifier를 사용하였음.
             TabView {
-                HomeView()
+                HomeContainerView()
                     .tabItem {
                         Label("홈", systemImage: "house")
                     }

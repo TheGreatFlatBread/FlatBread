@@ -1,0 +1,36 @@
+//
+//  HomeContainerView.swift
+//  FlatBread
+//
+//  Created by andev on 11/19/25.
+//
+
+import SwiftUI
+
+enum HomeRoute: Hashable {
+    case createMoim
+}
+
+struct HomeContainerView: View {
+    
+    @State private var path = NavigationPath()
+    
+    var body: some View {
+        NavigationStack(path: $path) {
+            HomeView {
+                // 플로팅 버튼 탭 시 네비게이션 경로에 push
+                path.append(HomeRoute.createMoim)
+            }
+            .navigationDestination(for: HomeRoute.self) { route in
+                switch route {
+                case .createMoim:
+                    CreateMoimView()
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    HomeContainerView()
+}
