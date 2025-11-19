@@ -56,7 +56,6 @@ final class DefaultImageService: ImageService {
             #if DEBUG
             print("서버에서 이미지 다운로드 시작: \(urlString)")
             #endif
-
             let imageData = try await downloadImageData(from: urlString)
             let provider = RawImageDataProvider(data: imageData, cacheKey: urlString)
             let options = makeNetworkURLOptions(displayMode: displayMode)
@@ -73,8 +72,6 @@ final class DefaultImageService: ImageService {
         }
     }
 
-    /// AsyncNetworkService로 이미지 다운로드 (TokenInterceptor 자동 적용)
-    /// Download task 사용으로 메모리 효율적
     private func downloadImageData(from urlString: String) async throws -> Data {
         let router = ImageDownloadRouter.downloadImage(path: urlString)
         let fileURL = try await networkService.download(router)
@@ -106,9 +103,6 @@ final class DefaultImageService: ImageService {
     private func makeNetworkURLOptions(displayMode: ImageDisplayMode) -> KingfisherOptionsInfo {
         switch displayMode {
         case .thumbnail(let size):
-            #if DEBUG
-            print("📐 Downsampling 적용: \(size.width)x\(size.height) @\(UIScreen.main.scale)x")
-            #endif
             return [
                 .processor(DownsamplingImageProcessor(size: size)),
                 .scaleFactor(UIScreen.main.scale),
@@ -118,9 +112,6 @@ final class DefaultImageService: ImageService {
                 .transition(.fade(0.2))
             ]
         case .original:
-            #if DEBUG
-            print("📐 Original 이미지 사용 (Downsampling 없음)")
-            #endif
             return [
                 .diskCacheExpiration(.days(7)),
                 .cacheOriginalImage,
@@ -131,7 +122,6 @@ final class DefaultImageService: ImageService {
     }
 }
 
-/// 이미지 다운로드용 Router (Download Task 사용)
 enum ImageDownloadRouter: DownloadAPIRouter {
     case downloadImage(path: String)
 
