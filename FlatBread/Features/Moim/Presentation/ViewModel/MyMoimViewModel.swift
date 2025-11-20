@@ -49,7 +49,7 @@ final class MyMoimViewModel: ObservableObject {
                 PostRouter.getPostList(
                     next: "",
                     limit: "20",
-                    category: []
+                    category: MoimCategory.allCases.map { $0.rawValue }
                 ),
                 responseType: PostListResponseDTO.self
             )
