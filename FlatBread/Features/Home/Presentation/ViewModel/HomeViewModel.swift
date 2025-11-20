@@ -12,29 +12,7 @@ final class HomeViewModel: ObservableObject {
     
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     
-    @Published var moimGroups: [MoimGroupItem] = [
-        .init(
-            title: "콤플레이 배드민턴 모임🔥 신입모집🔥",
-            subtitle: "함께 성장하는 2030 배드민턴 모임! 🏸",
-            category: "운동/스포츠",
-            memberCount: 251,
-            imageURL: "https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=600&q=80"
-        ),
-        .init(
-            title: "1인 창업자 AI/디자인/네트워킹",
-            subtitle: "창업, 디자인, 인공지능(AI) 활용 스터디",
-            category: "자기계발",
-            memberCount: 6,
-            imageURL: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=600&q=80"
-        ),
-        .init(
-            title: "데일리 한중 언어 교류 (韓中交流)",
-            subtitle: "📌 한중 언어 교류 모임 안내",
-            category: "외국어/언어",
-            memberCount: 146,
-            imageURL: "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=600&q=80"
-        )
-    ]
+    @Published var moimGroups: [MoimGroupItem] = []
     
     @Published var banners: [BannerItem] = []
     
@@ -62,6 +40,7 @@ final class HomeViewModel: ObservableObject {
     init() {
         Task { [weak self] in
             await self?.fetchBanners()
+            await self?.fetchMoimGroups()
         }
     }
     
@@ -98,6 +77,26 @@ final class HomeViewModel: ObservableObject {
             return BannerItem(id: id, imageURL: imageURL, title: title, subtitle: subtitle)
         }
     }
+    
+    private func mapPostsToMoimGroups(_ dto: PostListResponseDTO) -> [MoimGroupItem] {
+        dto.data.compactMap { post in
+            let id = post.post_id ?? ""
+            let title = post.title ?? ""
+            let subtitle = post.content ?? ""
+            let category = post.category ?? ""
+            let memberCount = post.buyers.count
+            let imageURL = post.files.first ?? ""
+            if id.isEmpty && title.isEmpty && subtitle.isEmpty && imageURL.isEmpty { return nil }
+            return MoimGroupItem(
+                id: id,
+                title: title,
+                subtitle: subtitle,
+                category: category,
+                memberCount: memberCount,
+                imageURL: imageURL
+            )
+        }
+    }
 
     private func fetchBanners() async {
         do {
@@ -113,6 +112,24 @@ final class HomeViewModel: ObservableObject {
         } catch {
             #if DEBUG
             print("[HomeViewModel] Failed to fetch banners: \(error)")
+            #endif
+        }
+    }
+    
+    private func fetchMoimGroups() async {
+        do {
+            let response = try await networkService.request(
+                PostRouter.getPostList(next: "", limit: "50", category: []),
+                responseType: PostListResponseDTO.self,
+                interceptorType: .networkWithToken
+            )
+            let groups = mapPostsToMoimGroups(response)
+            await MainActor.run {
+                self.moimGroups = groups
+            }
+        } catch {
+            #if DEBUG
+            print("[HomeViewModel] Failed to fetch moim groups: \(error)")
             #endif
         }
     }
