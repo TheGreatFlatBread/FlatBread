@@ -54,6 +54,7 @@ struct BannerCardView: View {
 
                     Text(item.subtitle)
                         .font(.system(size: 13, weight: .medium))
+                        .lineLimit(3)
                         .opacity(0.8)
                 }
                 .foregroundStyle(.white)
@@ -66,3 +67,4 @@ struct BannerCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
     }
 }
+
