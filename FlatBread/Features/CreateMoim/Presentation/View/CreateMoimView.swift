@@ -14,11 +14,18 @@ struct CreateMoimView: View {
     
     @StateObject private var vm = CreateMoimViewModel()
     
-    // 바인딩용 좌표
-    @State private var selectedCoord = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780)
+    @State private var selectedCoord = CLLocationCoordinate2D(latitude: 37.5665, longitude: 126.9780) // 바인딩용 좌표
+    @State private var pickerItem: PhotosPickerItem? = nil // 대표 사진 선택용
+    @State private var isRegionPickerPresented = false // 지역 선택 시트 표시 여부
+    @State private var showSubmitSuccessAlert = false // 업로드 성공 시 alert
     
-    // 대표 사진 선택용
-    @State private var pickerItem: PhotosPickerItem? = nil
+    @FocusState private var focusedField: FocusedField? // 포커스 관리용
+    
+    enum FocusedField {
+        case title
+        case content
+        case price
+    }
     
     var body: some View {
         VStack(spacing: 0) {
@@ -118,6 +125,7 @@ struct CreateMoimView: View {
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                                         .stroke(Color(.systemGray4), lineWidth: 1)
                                 )
+                                .focused($focusedField, equals: .title)
                             
                             HStack {
                                 Spacer()
@@ -136,9 +144,9 @@ struct CreateMoimView: View {
                         
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
-                                ForEach(vm.categories) { cat in
+                                ForEach(vm.categories, id: \.self) { cat in
                                     ChipButton(
-                                        title: cat.name,
+                                        title: cat.rawValue,
                                         isSelected: vm.selectedCategory == cat
                                     ) { vm.selectCategory(cat) }
                                 }
@@ -156,6 +164,33 @@ struct CreateMoimView: View {
                             get: { CLLocationCoordinate2D(latitude: vm.dto.latitude, longitude: vm.dto.longitude) },
                             set: { vm.updateCoordinate($0) }
                         ))
+                    // 시/군/구 선택 필드
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("시/군/구")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                            
+                            Button {
+                                isRegionPickerPresented = true
+                            } label: {
+                                HStack {
+                                    Text(vm.selectedRegionName ?? "시/군/구를 선택해 주세요.")
+                                        .foregroundStyle(vm.selectedRegionName == nil ? .secondary : .primary)
+                                        .lineLimit(1)
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.footnote)
+                                        .foregroundStyle(.secondary)
+                                }
+                                .padding(12)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                        }
+                        .padding(.top, 8)
                     }
                     .padding(.horizontal, 16)
                     
@@ -172,6 +207,7 @@ struct CreateMoimView: View {
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
                                         .stroke(Color(.systemGray4), lineWidth: 1)
                                 )
+                                .focused($focusedField, equals: .content)
                             
                             if (vm.dto.content ?? "").isEmpty {
                                 Text("활동 중심으로 모임을 소개해주세요. 소개를 잘 작성한 모임은 2배 많은 이웃이 가입해요.")
@@ -212,6 +248,7 @@ struct CreateMoimView: View {
                                     .onChange(of: vm.priceText) { _, _ in
                                         vm.commitPriceFromText()
                                     }
+                                    .focused($focusedField, equals: .price)
                             }
                             .padding(12)
                             .background(
@@ -227,9 +264,21 @@ struct CreateMoimView: View {
                 .padding(.vertical, 12)
             }
             
+            // 업로드 진행 중 표시
+            if vm.isUploading {
+                GearLoadingView(progress: vm.uploadProgress)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
+            }
+            
             // 하단 제출 버튼
             Button {
-                Task { await vm.submit() }   // 업로드 → URL 반영 → 생성
+                Task {
+                    let success = await vm.submit() // 업로드 → URL 반영 → 생성
+                    if success {
+                        showSubmitSuccessAlert = true
+                    }
+                }
             } label: {
                 Text("모임 만들기")
                     .font(.system(size: 17, weight: .semibold))
@@ -244,9 +293,12 @@ struct CreateMoimView: View {
             .disabled(!vm.canSubmit || vm.isUploading)
             .background(Color(.systemBackground))
         }
+        .onTapGesture {
+            focusedField = nil
+        }
         .background(Color(.systemBackground))
         .alert(
-            "이미지 업로드 오류",
+            "모임 생성 실패",
             isPresented: Binding(
                 get: { vm.uploadErrorMessage != nil },
                 set: { newValue in if !newValue { vm.uploadErrorMessage = nil } }
@@ -256,7 +308,28 @@ struct CreateMoimView: View {
                 vm.uploadErrorMessage = nil
             }
         } message: {
-            Text(vm.uploadErrorMessage ?? "이미지 크기가 10MB를 초과합니다. 이미지 크기를 줄인 후 다시 시도해 주세요.")
+            Text(vm.uploadErrorMessage ?? "모임 생성에 실패했습니다. 다시 시도해 주세요.")
+        }
+
+        // 성공 Alert
+        .alert("모임 생성 완료", isPresented: $showSubmitSuccessAlert) {
+            Button("확인", role: .cancel) {
+                showSubmitSuccessAlert = false
+                // 필요하면 여기서 화면 dismiss 처리 등
+            }
+        } message: {
+            Text("모임이 성공적으로 생성되었습니다.")
+        }
+        // 지역 검색 시트
+        .sheet(isPresented: $isRegionPickerPresented) {
+            RegionSearchView(
+                allRegions: vm.allRegions,
+                selected: vm.selectedRegionName,
+                onSelect: { region in
+                    vm.selectRegionName(region)
+                    isRegionPickerPresented = false
+                }
+            )
         }
     }
 }
