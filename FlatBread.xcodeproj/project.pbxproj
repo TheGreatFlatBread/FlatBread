@@ -41,7 +41,6 @@
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,
 				Shared/Mappers/.gitkeep,
-				Shared/Models/.gitkeep,
 				Shared/Protocols/.gitkeep,
 			);
 			target = FE6110262EB9D4AD006E4243 /* FlatBread */;
