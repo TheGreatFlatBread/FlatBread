@@ -16,6 +16,8 @@ protocol AsyncNetworkService: Sendable {
                                          responseType: T.Type,
                                          interceptorType: InterceptorType,
                                          progress: (@Sendable (Double) -> Void)?) async throws(NetworkError) -> T
+    func download(_ router: DownloadAPIRouter,
+                  interceptorType: InterceptorType) async throws(NetworkError) -> URL
 }
 
 extension AsyncNetworkService {
@@ -30,6 +32,11 @@ extension AsyncNetworkService {
                                          interceptorType: InterceptorType = .networkWithToken,
                                          progress: (@Sendable (Double) -> Void)? = nil) async throws(NetworkError) -> T {
         try await self.upload(router, responseType: responseType, interceptorType: interceptorType, progress: progress)
+    }
+
+    func download(_ router: DownloadAPIRouter,
+                  interceptorType: InterceptorType = .networkWithToken) async throws(NetworkError) -> URL {
+        try await self.download(router, interceptorType: interceptorType)
     }
 }
 
