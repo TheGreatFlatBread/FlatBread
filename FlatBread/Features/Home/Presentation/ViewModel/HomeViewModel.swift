@@ -124,6 +124,7 @@ final class HomeViewModel: ObservableObject {
                 interceptorType: .networkWithToken
             )
             let groups = mapPostsToMoimGroups(response)
+                .sorted { $0.memberCount > $1.memberCount } // 멤버 많은 순 정렬
             await MainActor.run {
                 self.moimGroups = groups
             }
