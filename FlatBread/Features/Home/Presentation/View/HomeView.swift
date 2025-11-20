@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomeView: View {
     
-    @StateObject private var viewModel = HomeViewModel()
+    @EnvironmentObject var viewModel: HomeViewModel
     
     let onTapCreateMoim: () -> Void // 모임 생성 버튼 탭시
     
@@ -63,3 +63,4 @@ struct HomeView: View {
         .background(Color(.systemBackground))
     }
 }
+

@@ -7,7 +7,6 @@
 
 import Foundation
 
-// 샘플 모델
 struct BannerItem: Identifiable, Equatable {
     typealias ID = String
     let id: ID

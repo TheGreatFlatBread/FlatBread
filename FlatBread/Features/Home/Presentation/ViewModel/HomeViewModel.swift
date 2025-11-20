@@ -16,6 +16,11 @@ final class HomeViewModel: ObservableObject {
     
     @Published var banners: [BannerItem] = []
     
+    // Category detail navigation & data
+    @Published var selectedCategoryTitle: String? = nil
+    @Published var selectedCategoryGroups: [MoimGroupItem] = []
+    @Published var isShowingCategoryDetail: Bool = false
+
     @Published var categoryItems: [CategoryItem] = [
         .init(title: "운동/스포츠",    symbol: "sportscourt.fill",        tint: .blue),
         .init(title: "자기계발",      symbol: "brain.head.profile",      tint: .purple),
@@ -54,10 +59,30 @@ final class HomeViewModel: ObservableObject {
         print("Tapped banner: \(banner.title)")
     }
 
-    // 아이템 탭 액션 (추후 네비게이션/필터링 로직 연결)
+    // 아이템 탭 액션 (추후 네비게이션 로직 연결)
     func didTapCategory(_ item: CategoryItem) {
-        // TODO: 라우팅 / 필터링 / 트래킹 등
-        print("Tapped category: \(item.title)")
+        Task { [weak self] in
+            guard let self else { return }
+            self.selectedCategoryTitle = item.title
+            do {
+                let categories: [String] = [item.title]
+                let response = try await self.networkService.request(
+                    PostRouter.getPostList(next: "", limit: "50", category: categories),
+                    responseType: PostListResponseDTO.self,
+                    interceptorType: .networkWithToken
+                )
+                let groups = self.mapPostsToMoimGroups(response)
+                    .sorted { $0.memberCount > $1.memberCount }
+                await MainActor.run {
+                    self.selectedCategoryGroups = groups
+                    self.isShowingCategoryDetail = true
+                }
+            } catch {
+                #if DEBUG
+                print("[HomeViewModel] Failed to fetch category detail for (\(item.title)): \(error)")
+                #endif
+            }
+        }
     }
     
     @MainActor
@@ -131,6 +156,29 @@ final class HomeViewModel: ObservableObject {
         } catch {
             #if DEBUG
             print("[HomeViewModel] Failed to fetch moim groups: \(error)")
+            #endif
+        }
+    }
+    
+    private func fetchMoimGroups(category: String?) async {
+        do {
+            let categories: [String] = {
+                if let c = category, !c.isEmpty { return [c] }
+                return []
+            }()
+            let response = try await networkService.request(
+                PostRouter.getPostList(next: "", limit: "50", category: categories),
+                responseType: PostListResponseDTO.self,
+                interceptorType: .networkWithToken
+            )
+            let groups = mapPostsToMoimGroups(response)
+                .sorted { $0.memberCount > $1.memberCount }
+            await MainActor.run {
+                self.moimGroups = groups
+            }
+        } catch {
+            #if DEBUG
+            print("[HomeViewModel] Failed to fetch moim groups for category (\(category ?? "")): \(error)")
             #endif
         }
     }

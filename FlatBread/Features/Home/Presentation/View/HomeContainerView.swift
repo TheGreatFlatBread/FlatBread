@@ -13,6 +13,7 @@ enum HomeRoute: Hashable {
 
 struct HomeContainerView: View {
     
+    @StateObject private var viewModel = HomeViewModel()
     @State private var path = NavigationPath()
     
     var body: some View {
@@ -21,11 +22,18 @@ struct HomeContainerView: View {
                 // 플로팅 버튼 탭 시 네비게이션 경로에 push
                 path.append(HomeRoute.createMoim)
             }
+            .environmentObject(viewModel)
             .navigationDestination(for: HomeRoute.self) { route in
                 switch route {
                 case .createMoim:
                     CreateMoimView()
                 }
+            }
+            .navigationDestination(isPresented: $viewModel.isShowingCategoryDetail) {
+                HomeCategoryDetailView(
+                    title: viewModel.selectedCategoryTitle ?? "",
+                    items: viewModel.selectedCategoryGroups.map { $0.title }
+                )
             }
         }
     }
