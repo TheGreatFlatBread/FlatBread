@@ -66,16 +66,3 @@ struct BannerCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
     }
 }
-
-#Preview {
-    BannerCardView(
-        item: .init(
-            id: "preview-post-id",
-            imageURL: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
-            title: "모임타이틀모임타이틀\n모이면 최저가에!",
-            subtitle: "모임 전용 쿠폰 & 이벤트"
-        )
-    )
-    .padding()
-    .background(.black.opacity(0.1))
-}
