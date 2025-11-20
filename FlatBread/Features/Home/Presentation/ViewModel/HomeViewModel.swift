@@ -10,6 +10,8 @@ import Combine
 
 final class HomeViewModel: ObservableObject {
     
+    private let networkService = NetworkServiceFactory.shared.makeNetworkService()
+    
     @Published var moimGroups: [MoimGroupItem] = [
         .init(
             title: "콤플레이 배드민턴 모임🔥 신입모집🔥",
@@ -34,35 +36,8 @@ final class HomeViewModel: ObservableObject {
         )
     ]
     
-    func didTapMoimGroup(_ moim: MoimGroupItem) {
-        // TODO: 모임 상세 이동
-        print("Tapped moimGroup: \(moim.title)")
-    }
+    @Published var banners: [BannerItem] = []
     
-    @Published var banners: [BannerItem] = [
-        .init(
-            imageURL: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
-            title: "모임타이틀모임타이틀\n모이면 최저가에!",
-            subtitle: "모임 전용 쿠폰 & 이벤트"
-        ),
-        .init(
-            imageURL: "https://images.unsplash.com/photo-1515879218367-8466d910aaa4?auto=format&fit=crop&w=1200&q=80",
-            title: "모임타이틀모임타이틀모임타이틀",
-            subtitle: "지금 놓치면 1년 기다려야 해요"
-        ),
-        .init(
-            imageURL: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
-            title: "모임타이틀모임타이틀",
-            subtitle: "담요 · 향초 · 머그컵 만드는 모임"
-        )
-    ]
-
-    func didTapBanner(_ banner: BannerItem) {
-        // TODO: 배너 상세 이동 / 웹뷰 열기 등
-        print("Tapped banner: \(banner.title)")
-    }
-
-    // 카테고리 섹션에 보여줄 데이터
     @Published var categoryItems: [CategoryItem] = [
         .init(title: "운동/스포츠",    symbol: "sportscourt.fill",        tint: .blue),
         .init(title: "자기계발",      symbol: "brain.head.profile",      tint: .purple),
@@ -84,9 +59,62 @@ final class HomeViewModel: ObservableObject {
         .init(title: "반려동물",      symbol: "pawprint.fill",           tint: .brown)
     ]
 
+    init() {
+        Task { [weak self] in
+            await self?.fetchBanners()
+        }
+    }
+    
+    func didTapMoimGroup(_ moim: MoimGroupItem) {
+        // TODO: 모임 상세 이동
+        print("Tapped moimGroup: \(moim.title)")
+    }
+    
+    func didTapBanner(_ banner: BannerItem) {
+        // TODO: 배너 상세 이동 / 웹뷰 열기 등
+        print("Tapped banner: \(banner.title)")
+    }
+
     // 아이템 탭 액션 (추후 네비게이션/필터링 로직 연결)
     func didTapCategory(_ item: CategoryItem) {
         // TODO: 라우팅 / 필터링 / 트래킹 등
         print("Tapped category: \(item.title)")
     }
+    
+    @MainActor
+    private func updateBanners(_ items: [BannerItem]) {
+        self.banners = items
+    }
+
+    private func mapPostsToBanners(_ dto: PostListResponseDTO) -> [BannerItem] {
+        let posts = dto.data
+        return posts.compactMap { post in
+            let id = post.post_id ?? ""
+            let imageURL = post.files.first ?? ""
+            let title = post.title ?? ""
+            let subtitle = post.content ?? ""
+            // Skip if completely empty
+            if id.isEmpty && title.isEmpty && subtitle.isEmpty && imageURL.isEmpty { return nil }
+            return BannerItem(id: id, imageURL: imageURL, title: title, subtitle: subtitle)
+        }
+    }
+
+    private func fetchBanners() async {
+        do {
+            let response = try await networkService.request(
+                PostRouter.getPostList(next: "", limit: "50", category: []),
+                responseType: PostListResponseDTO.self,
+                interceptorType: .networkWithToken
+            )
+            let banners = mapPostsToBanners(response)
+            await MainActor.run {
+                self.banners = banners
+            }
+        } catch {
+            #if DEBUG
+            print("[HomeViewModel] Failed to fetch banners: \(error)")
+            #endif
+        }
+    }
 }
+

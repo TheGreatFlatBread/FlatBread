@@ -16,12 +16,17 @@ struct BannerCardView: View {
             ZStack(alignment: .bottomLeading) {
 
                 // URL 기반 비동기 이미지 로딩
-                AsyncImage(url: URL(string: item.imageURL)) { phase in
-                    switch phase {
-                    case .empty:
+                RemoteImage(
+                    url: item.imageURL,
+                    displayMode: .thumbnail(CGSize(width: geo.size.width, height: geo.size.height)),
+                    placeholder: {
                         Color(.systemGray5)
-
-                    case .success(let image):
+                            .overlay {
+                                ProgressView()
+                            }
+                    },
+                    imageService: DefaultImageService.shared,
+                    content: { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
@@ -30,19 +35,8 @@ struct BannerCardView: View {
                                 height: geo.size.height
                             )
                             .clipped()
-
-                    case .failure:
-                        Color(.systemGray4)
-                            .overlay {
-                                Image(systemName: "photo")
-                                    .font(.system(size: 32, weight: .regular))
-                                    .foregroundStyle(.white.opacity(0.7))
-                            }
-
-                    @unknown default:
-                        Color(.systemGray5)
                     }
-                }
+                )
 
                 // 아래쪽 그라데이션
                 LinearGradient(
@@ -76,6 +70,7 @@ struct BannerCardView: View {
 #Preview {
     BannerCardView(
         item: .init(
+            id: "preview-post-id",
             imageURL: "https://images.unsplash.com/photo-1519710164239-da123dc03ef4?auto=format&fit=crop&w=1200&q=80",
             title: "모임타이틀모임타이틀\n모이면 최저가에!",
             subtitle: "모임 전용 쿠폰 & 이벤트"
