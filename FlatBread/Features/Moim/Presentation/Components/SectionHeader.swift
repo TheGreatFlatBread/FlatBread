@@ -9,10 +9,16 @@ import SwiftUI
 
 struct SectionHeader: View {
     let title: String
-
+    let fontSize: Font
+    
+    init(title: String, fontSize: Font = .title2.bold()) {
+        self.title = title
+        self.fontSize = fontSize
+    }
+    
     var body: some View {
         Text(title)
-            .font(.title2.bold())
+            .font(fontSize)
             .foregroundStyle(.primary)
             .textCase(nil)
             .padding(.horizontal, 16)
