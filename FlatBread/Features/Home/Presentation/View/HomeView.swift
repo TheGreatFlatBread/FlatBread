@@ -44,6 +44,9 @@ struct HomeView: View {
                     }
                     .padding(.vertical, 4)
                 }
+                .refreshable {
+                    await viewModel.refreshHome()
+                }
             }
             
             Button(action: {

@@ -49,6 +49,12 @@ final class HomeViewModel: ObservableObject {
         }
     }
     
+    @MainActor
+    func refreshHome() async {
+        await fetchBanners()
+        await fetchMoimGroups()
+    }
+    
     func didTapMoimGroup(_ moim: MoimGroupItem) {
         // TODO: 모임 상세 이동
         print("Tapped moimGroup: \(moim.title)")
