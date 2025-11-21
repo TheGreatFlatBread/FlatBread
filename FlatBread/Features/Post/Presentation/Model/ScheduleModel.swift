@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct ScheduleUIModel: Identifiable {
+struct ScheduleUIModel: Identifiable, Hashable {
     let id: String
     let title: String
     let date: Date
