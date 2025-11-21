@@ -12,10 +12,11 @@ final class NetworkServiceFactory {
     static let shared = NetworkServiceFactory()
     private let tokenStorage: TokenStorage
     private let tokenCoordinator: TokenRefreshCoordinator
+    private let tokenInterceptor: TokenInterceptor
     private let session: Session
     private lazy var networkService = DefaultNetworkService(
         session: session,
-        tokenInterceptor: TokenInterceptor(coordinator: tokenCoordinator),
+        tokenInterceptor: tokenInterceptor,
         networkRetrier: NetworkRetryRetrier()
     )
     
@@ -38,6 +39,7 @@ final class NetworkServiceFactory {
             tokenStorage: tokenStorage,
             session: mainSession
         )
+        self.tokenInterceptor = TokenInterceptor(coordinator: tokenCoordinator)
         self.session = mainSession
     }
 
@@ -51,5 +53,9 @@ final class NetworkServiceFactory {
     
     func getTokenCoordinator() -> TokenRefreshCoordinator {
         tokenCoordinator
+    }
+
+    func getTokenInterceptor() -> TokenInterceptor {
+        tokenInterceptor
     }
 }
