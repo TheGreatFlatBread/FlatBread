@@ -87,6 +87,26 @@ final class DefaultNetworkService: AsyncNetworkService {
             throw NetworkError.unknown(error)
         }
     }
+    
+    func downloadVideo(_ router: any APIRouter, interceptorType: InterceptorType) async throws(NetworkError) -> (HTTPURLResponse?, Data?) {
+        let interceptor = interceptorType.wrappingInterceptor(
+            networkRetrier: networkRetrier,
+            tokenInterceptor: tokenInterceptor
+        )
+        
+        let request = session.request(router, interceptor: interceptor)
+        let afResponse = await request
+            .validate(statusCode: 200..<300)
+            .serializingData()
+            .response
+        
+        switch afResponse.result {
+        case .success(let data):
+            return (afResponse.response, data)
+        case .failure(let afError):
+            throw NetworkError.from(afError)
+        }
+    }
 }
 
 extension DefaultNetworkService: ReactiveNetworkService {

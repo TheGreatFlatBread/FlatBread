@@ -18,6 +18,8 @@ protocol AsyncNetworkService: Sendable {
                                          progress: (@Sendable (Double) -> Void)?) async throws(NetworkError) -> T
     func download(_ router: DownloadAPIRouter,
                   interceptorType: InterceptorType) async throws(NetworkError) -> URL
+    func downloadVideo(_ router: any APIRouter,
+                       interceptorType: InterceptorType) async throws(NetworkError) -> (HTTPURLResponse?, Data?)
 }
 
 extension AsyncNetworkService {
@@ -37,6 +39,11 @@ extension AsyncNetworkService {
     func download(_ router: DownloadAPIRouter,
                   interceptorType: InterceptorType = .networkWithToken) async throws(NetworkError) -> URL {
         try await self.download(router, interceptorType: interceptorType)
+    }
+    
+    func downloadVideo(_ router: any APIRouter,
+                       interceptorType: InterceptorType = .networkWithToken) async throws(NetworkError) -> (HTTPURLResponse?, Data?) {
+        try await self.downloadVideo(router, interceptorType: interceptorType)
     }
 }
 

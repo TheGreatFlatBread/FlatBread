@@ -32,8 +32,7 @@ struct ContentView: View {
                             Label("홈", systemImage: "house")
                         }
                     
-                    Color(.blue)
-                        .ignoresSafeArea()
+                    ShortFormFeedView()
                         .tabItem {
                             Label("숏폼", systemImage: "play.rectangle")
                         }
