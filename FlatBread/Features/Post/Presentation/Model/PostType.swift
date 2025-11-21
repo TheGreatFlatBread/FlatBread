@@ -8,7 +8,7 @@
 import Foundation
 
 enum PostType: String, CaseIterable {
-    case all = "ALL"           // 필터링 전용 (서버에는 없음)
+    case all = "ALL"
     case free = "FREE"
     case greeting = "GREETING"
     case schedule = "SCHEDULE"
@@ -25,18 +25,18 @@ enum PostType: String, CaseIterable {
     var categoryHashtag: String {
         switch self {
         case .all: return ""
-        case .free: return "#자유게시판"
-        case .greeting: return "#가입인사"
-        case .schedule: return "#모임일정"
+        case .free: return "#FBP_FREE"
+        case .greeting: return "#FBP_GREETING"
+        case .schedule: return "#FBP_SCHEDULE"
         }
     }
 
     static func fromHashtags(_ hashtags: [String]) -> PostType? {
-        if hashtags.contains("자유게시판") {
+        if hashtags.contains("FBP_FREE") {
             return .free
-        } else if hashtags.contains("가입인사") {
+        } else if hashtags.contains("FBP_GREETING") {
             return .greeting
-        } else if hashtags.contains("모임일정") {
+        } else if hashtags.contains("FBP_SCHEDULE") {
             return .schedule
         }
         return nil
