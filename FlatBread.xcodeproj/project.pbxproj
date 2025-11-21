@@ -37,7 +37,6 @@
 				DesignSystem/Components/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Styles/.gitkeep,
-				Resources/FlatBread.xctestplan,
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,
 				Shared/Mappers/.gitkeep,
