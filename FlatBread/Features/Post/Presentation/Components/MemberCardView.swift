@@ -9,7 +9,13 @@ import SwiftUI
 
 struct MemberCardView: View {
     let member: MemberUIModel
+    let currentUserId: String?
     let cellTapped: () -> Void
+
+    private var isMe: Bool {
+        guard let currentUserId else { return false }
+        return member.id == currentUserId
+    }
 
     var body: some View {
         Button(action: cellTapped) {
@@ -29,6 +35,16 @@ struct MemberCardView: View {
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
                                 .background(Color.orange.opacity(0.1))
+                                .clipShape(Capsule())
+                        }
+
+                        if isMe {
+                            Text("나")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(.blue)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Color.blue.opacity(0.1))
                                 .clipShape(Capsule())
                         }
                     }
@@ -57,7 +73,7 @@ struct MemberCardView: View {
 #Preview {
     VStack(spacing: 12) {
         ForEach(MemberUIModel.mocks) { member in
-            MemberCardView(member: member) {
+            MemberCardView(member: member, currentUserId: MemberUIModel.mocks.first?.id) {
                 print("Tapped: \(member.name)")
             }
             .background(Color(.systemBackground))
