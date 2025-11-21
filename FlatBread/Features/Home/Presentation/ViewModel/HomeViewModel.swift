@@ -59,7 +59,6 @@ final class HomeViewModel: ObservableObject {
         print("Tapped banner: \(banner.title)")
     }
 
-    // 아이템 탭 액션 (추후 네비게이션 로직 연결)
     func didTapCategory(_ item: CategoryItem) {
         Task { [weak self] in
             guard let self else { return }

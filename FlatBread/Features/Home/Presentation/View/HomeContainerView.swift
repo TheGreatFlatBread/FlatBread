@@ -32,7 +32,7 @@ struct HomeContainerView: View {
             .navigationDestination(isPresented: $viewModel.isShowingCategoryDetail) {
                 HomeCategoryDetailView(
                     title: viewModel.selectedCategoryTitle ?? "",
-                    items: viewModel.selectedCategoryGroups.map { $0.title }
+                    items: viewModel.selectedCategoryGroups
                 )
             }
         }
