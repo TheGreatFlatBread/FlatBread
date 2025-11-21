@@ -63,7 +63,11 @@ final class LoginViewModel: NSObject, ObservableObject {
                 if authError.code == .canceled {
                     print("사용자가 Apple Sign In 취소함")
                     return
+                } else if authError.code == .unknown {
+                    print("로그인 프로세스 중 credential 상태 확인 실패한 것")
+                    return
                 }
+                
                 self.alertMessage = authError.localizedDescription
                 self.showingAlert = true
             } else {
