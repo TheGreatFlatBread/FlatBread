@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct PostUIModel: Identifiable {
+struct PostUIModel: Identifiable, Hashable {
     let id: String
     let moimId: String
     let author: Author
@@ -22,7 +22,7 @@ struct PostUIModel: Identifiable {
     var isBookmarked: Bool
     var isLiked: Bool
 
-    struct Author: Identifiable, Equatable {
+    struct Author: Identifiable, Hashable {
         let id: String
         let name: String
         let profileImageURL: String?

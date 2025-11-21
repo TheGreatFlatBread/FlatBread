@@ -212,12 +212,12 @@ extension ScheduleDetailView {
                     .foregroundStyle(.primary)
                     .padding(.horizontal, 20)
 
-                Map(coordinateRegion: .constant(region), annotationItems: [MapAnnotation(coordinate: region.center)]) { annotation in
-                    MapMarker(coordinate: annotation.coordinate, tint: .orange)
-                }
-                .frame(height: 200)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-                .padding(.horizontal, 20)
+//                Map(coordinateRegion: .constant(region), annotationItems: [MapAnnotation(coordinate: region.center)]) { annotation in
+//                    MapMarker(coordinate: annotation.coordinate, tint: .orange)
+//                }
+//                .frame(height: 200)
+//                .clipShape(RoundedRectangle(cornerRadius: 12))
+//                .padding(.horizontal, 20)
 
                 if let location {
                     HStack(spacing: 8) {
