@@ -17,22 +17,22 @@ struct MoimGroupRowView: View {
             onTap?(item)
         } label: {
             HStack(alignment: .top, spacing: 12) {
-                AsyncImage(url: URL(string: item.imageURL)) { phase in
-                    switch phase {
-                    case .empty: Color(.systemGray5)
-                    case .success(let image):
-                        image.resizable().aspectRatio(contentMode: .fill)
-                    case .failure:
-                        Color(.systemGray4).overlay {
-                            Image(systemName: "photo")
-                                .font(.system(size: 20))
-                                .foregroundStyle(.white.opacity(0.8))
-                        }
-                    @unknown default: Color(.systemGray5)
-                    }
+                RemoteImage(
+                    url: item.imageURL,
+                    displayMode: .thumbnail(CGSize(width: 72, height: 72))
+                ) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
                 }
                 .frame(width: 72, height: 72)
+                .background(Color(uiColor: .systemGray5))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    Group {
+                        EmptyView()
+                    }
+                )
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.title)
@@ -60,17 +60,4 @@ struct MoimGroupRowView: View {
         .buttonStyle(.plain)
         .contentShape(Rectangle())
     }
-}
-
-#Preview {
-    MoimGroupRowView(
-        item: .init(
-            title: "콤플레이 배드민턴 모임🔥 신입모집🔥",
-            subtitle: "함께 성장하는 2030 배드민턴 모임! 🏸",
-            category: "운동/스포츠",
-            memberCount: 251,
-            imageURL: "https://images.unsplash.com/photo-1518604666860-9ed391f76460?auto=format&fit=crop&w=600&q=80"
-        )
-    )
-    .padding()
 }

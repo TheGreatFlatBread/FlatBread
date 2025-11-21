@@ -8,7 +8,8 @@
 import Foundation
 
 struct MoimGroupItem: Identifiable, Equatable {
-    let id = UUID()
+    typealias ID = String
+    let id: ID
     let title: String
     let subtitle: String
     let category: String

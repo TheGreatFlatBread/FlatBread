@@ -12,9 +12,9 @@ struct CategorySectionCard: View {
     let items: [CategoryItem]
     var onTapCategory: ((CategoryItem) -> Void)?
 
-    /// 5열 고정. 기기 너비에 따라 바꾸려면 count 조절
-    private let columns: [GridItem] =
-        Array(repeating: GridItem(.flexible(), spacing: 6), count: 5)
+    /// 2행 고정 (세로 2줄)
+    private let rows: [GridItem] =
+        Array(repeating: GridItem(.fixed(84), spacing: 10), count: 2)
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
@@ -23,16 +23,25 @@ struct CategorySectionCard: View {
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 4)
 
-            LazyVGrid(columns: columns, alignment: .center, spacing: 10) {
-                ForEach(items) { item in
-                    CategoryIconCard(
-                        title: item.title,
-                        systemImage: item.symbol,
-                        tint: item.tint
-                    ) {
-                        onTapCategory?(item)
+            ScrollView(.horizontal, showsIndicators: false) {
+                LazyHGrid(
+                    rows: rows,
+                    alignment: .center,
+                    spacing: 10
+                ) {
+                    ForEach(items, id: \.self.id) { item in
+                        CategoryIconCard(
+                            title: item.title,
+                            systemImage: item.symbol,
+                            tint: item.tint
+                        ) {
+                            onTapCategory?(item)
+                        }
+                        .frame(width: 90) // 한 칸 너비 고정
                     }
                 }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 4)
             }
         }
         .padding(.horizontal, 12)

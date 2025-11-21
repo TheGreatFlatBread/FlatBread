@@ -89,7 +89,6 @@ final class LoginViewModel: NSObject, ObservableObject {
             Task {
                 await tokenStorage.saveAppleUserID(appleIDCredential.user)
                 await appleLogin(idToken: idToken)
-                isLoginSucceed = true
             }
             
             
@@ -129,7 +128,10 @@ final class LoginViewModel: NSObject, ObservableObject {
             #if DEBUG
             print("accessToken: \(signInInfo.accessToken!)")
             #endif
+            
+            isLoginSucceed = true
         } catch {
+            print("\(error)")
             alertMessage = error.localizedDescription
             showingAlert = true
         }

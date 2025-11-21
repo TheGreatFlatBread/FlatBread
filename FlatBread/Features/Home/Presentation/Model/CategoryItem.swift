@@ -7,8 +7,7 @@
 
 import SwiftUI
 
-// 샘플 모델
-struct CategoryItem: Identifiable, Equatable {
+struct CategoryItem: Identifiable, Hashable {
     let id = UUID()
     let title: String
     let symbol: String
