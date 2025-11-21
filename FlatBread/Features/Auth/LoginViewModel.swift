@@ -21,6 +21,40 @@ final class LoginViewModel: NSObject, ObservableObject {
     @Published var showingAlert: Bool = false
     @Published var alertMessage: String = ""
     @Published var isLoginSucceed: Bool = false
+    @Published var isCheckingLoginStatus: Bool = true
+
+    @MainActor
+    func checkLoginStatus() async {
+        guard let userID = await tokenStorage.getAppleUserID() else {
+            isCheckingLoginStatus = false
+            return
+        }
+
+        let state = await checkCredentialState(userID: userID)
+
+        switch state {
+        case .authorized:
+            if await tokenStorage.getAccessToken() != nil {
+                isLoginSucceed = true
+            }
+
+        case .revoked, .notFound, .transferred:
+            await tokenStorage.clearTokens()
+
+        @unknown default:
+            break
+        }
+
+        isCheckingLoginStatus = false
+    }
+
+    private func checkCredentialState(userID: String) async -> ASAuthorizationAppleIDProvider.CredentialState {
+        await withCheckedContinuation { continuation in
+            ASAuthorizationAppleIDProvider().getCredentialState(forUserID: userID) { state, _ in
+                continuation.resume(returning: state)
+            }
+        }
+    }
     
     func handleAppleSignInResult(result: Result<ASAuthorization, any Error>) {
         switch result {
@@ -53,6 +87,7 @@ final class LoginViewModel: NSObject, ObservableObject {
             #endif
             
             Task {
+                await tokenStorage.saveAppleUserID(appleIDCredential.user)
                 await appleLogin(idToken: idToken)
                 isLoginSucceed = true
             }
