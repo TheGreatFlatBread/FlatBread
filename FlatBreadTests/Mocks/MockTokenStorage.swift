@@ -9,6 +9,14 @@ import Foundation
 @testable import FlatBread
 
 actor MockTokenStorage: TokenStorage {
+    func getAppleUserID() async -> String? {
+        nil
+    }
+    
+    func saveAppleUserID(_ userID: String) async {
+        
+    }
+    
     private var accessToken: String
     private var refreshToken: String
     
@@ -21,12 +29,12 @@ actor MockTokenStorage: TokenStorage {
         self.refreshToken = refreshToken
     }
 
-    func getAccessToken() async -> String {
+    func getAccessToken() async -> String? {
         getAccessTokenCallCount += 1
         return accessToken
     }
 
-    func getRefreshToken() async -> String {
+    func getRefreshToken() async -> String? {
         getRefreshTokenCallCount += 1
         return refreshToken
     }

@@ -10,28 +10,45 @@ import SwiftUI
 struct PostListView: View {
     @StateObject private var viewModel: PostListViewModel
     @State private var isShowWriteView = false
-    @State private var isSelectedTab: MoimTab = .posts
     @State private var isSelectedSchedule: ScheduleUIModel?
+    @State private var selectedPostForComment: PostUIModel?
+    
+    @State private var showOptions = false
+    @State private var selectedPostForOptions: PostUIModel?
+    @State private var showDeleteConfirmation = false
+    @State private var showEditSheet = false
     
     init(moim: TempPostMoimModel) {
         _viewModel = StateObject(wrappedValue: PostListViewModel(moim: moim))
     }
     
     var body: some View {
-        NavigationStack {
-            ZStack(alignment: .bottomTrailing) {
-                if let moim = viewModel.moim {
-                    ScrollView {
-                        VStack(spacing: 16) {
-                            PostListView.MoimHeader(moim: moim)
-                            
-                            PostListView.CategoryAndTabSection(
-                                selectedTab: $isSelectedTab,
-                                selectedCategory: $viewModel.selectedCategory,
-                                postCount: viewModel.posts.count
-                            )
-                            
-                            switch isSelectedTab {
+        ZStack(alignment: .bottomTrailing) {
+            if let moim = viewModel.moim {
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        PostListView.MoimHeader(
+                            moim: moim,
+                            isLeader: viewModel.isLeader,
+                            isMember: viewModel.isMember,
+                            onJoinTap: {
+                                Task {
+                                    await viewModel.toggleMoimMembership()
+                                }
+                            }
+                        )
+                        
+                        PostListView.CategoryAndTabSection(
+                            selectedTab: $viewModel.selectedTab,
+                            selectedCategory: viewModel.selectedCategory,
+                            postCount: viewModel.posts.count,
+                            onCategorySelect: { category in
+                                viewModel.selectCategory(category)
+                            }
+                        )
+                        
+                        if viewModel.isLeader || viewModel.isMember {
+                            switch viewModel.selectedTab {
                             case .schedule:
                                 PostListView.ScheduleListView(
                                     schedules: viewModel.schedules,
@@ -41,53 +58,129 @@ struct PostListView: View {
                                 PostListView.PostList(
                                     posts: viewModel.filteredPosts,
                                     onLikeTap: viewModel.toggleLike(for:),
-                                    onCommentTap: { comment in  },
-                                    settingTapped: { _ in }
+                                    onCommentTap: { post in
+                                        selectedPostForComment = post
+                                    },
+                                    settingTapped: { post in
+                                        showOptions = true
+                                        selectedPostForOptions = post
+                                    }
                                 )
                             case .members:
                                 PostListView.MembersListView(
                                     members: viewModel.members,
+                                    currentUserId: viewModel.currentUserId,
                                     cellTapped: { _ in }
                                 )
                             }
+                        } else {
+                            switch viewModel.selectedTab {
+                            case .schedule:
+                                PostListView.MemberOnlyView(tabName: "일정")
+                            case .posts:
+                                PostListView.MemberOnlyView(tabName: "게시물")
+                            case .members:
+                                PostListView.MemberOnlyView(tabName: "멤버")
+                            }
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 8)
-                        .padding(.bottom, 100)
+                        
+                        if viewModel.shouldShowPagination {
+                            HStack {
+                                Spacer()
+                                ProgressView()
+                                    .onAppear {
+                                        Task {
+                                            await viewModel.loadMore()
+                                        }
+                                    }
+                                Spacer()
+                            }
+                            .padding(.vertical, 8)
+                        }
                     }
-                    .background(Color(.systemGroupedBackground))
-                    
-                    FloatingWriteButton(showWriteView: $isShowWriteView)
-                } else {
-                    ProgressView()
+                    .padding(.horizontal, 16)
+                    .padding(.top, 8)
+                    .padding(.bottom, 100)
                 }
+                .background(Color(.systemGroupedBackground))
+                
+                if viewModel.isMember || viewModel.isLeader {
+                    FloatingWriteButton(showWriteView: $isShowWriteView)
+                }
+            } else {
+                ProgressView()
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                toolBarItem
-            }
+        }
+        .toolbarRole(.editor)
+        .toolbar(.hidden, for: .tabBar)
+        .toolbar {
+            toolBarItem
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationDestination(item: $selectedPostForComment) { post in
+            PostDetailView(postId: post.id, currentUserId: viewModel.currentUserId)
+                .environmentObject(viewModel)
         }
         .sheet(isPresented: $isShowWriteView) {
-            // PostWriteView(moimId: viewModel.moimId)
-            //     .interactiveDismissDisabled()
+            PostWriteView(
+                moimId: viewModel.moimId,
+                onPostCreated: { response in
+                    viewModel.addNewPost(response)
+                }
+            )
+            .interactiveDismissDisabled()
         }
         .sheet(item: $isSelectedSchedule) { schedule in
-            // ScheduleDetailView(schedule: schedule)
+             ScheduleDetailView(schedule: schedule)
+        }
+        .confirmationDialog(
+            "게시물 옵션",
+            isPresented: $showOptions,
+            presenting: selectedPostForOptions
+        ) { post in
+            if viewModel.isMyPost(post) {
+                Button("수정") {
+                    showEditSheet = true
+                }
+                Button("삭제", role: .destructive) {
+                    showDeleteConfirmation = true
+                }
+            } else {
+                // Button("신고", role: .destructive) { }
+            }
+        }
+        .alert("게시물을 삭제하시겠습니까?", isPresented: $showDeleteConfirmation) {
+            Button("취소", role: .cancel) { }
+            Button("삭제", role: .destructive) {
+                if let post = selectedPostForOptions {
+                    Task {
+                        let success = await viewModel.deletePost(post.id)
+                        if success {
+                            selectedPostForOptions = nil
+                        } else {
+                            selectedPostForOptions = nil
+                        }
+                    }
+                }
+            }
+        }
+        .fullScreenCover(isPresented: $showEditSheet) {
+            if let post = selectedPostForOptions {
+                PostPatchView(
+                    post: post,
+                    onPostUpdated: { response in
+                        viewModel.updateExistingPost(response)
+                    }
+                )
+            }
+        }
+        .task {
+            await viewModel.loadInitialData()
         }
     }
     
     @ToolbarContentBuilder
     var toolBarItem: some ToolbarContent {
-        ToolbarItem(placement: .navigationBarLeading) {
-            Button {
-                // TODO: Dismiss
-            } label: {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(.primary)
-            }
-        }
-        
         ToolbarItem(placement: .principal) {
             Text(viewModel.moim?.name ?? "")
                 .font(.system(size: 17, weight: .semibold))
@@ -95,14 +188,6 @@ struct PostListView: View {
         
         ToolbarItem(placement: .navigationBarTrailing) {
             HStack(spacing: 16) {
-                Button {
-                    // TODO: Search
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.primary)
-                }
-                
                 Button {
                     // TODO: Setting View
                 } label: {
@@ -118,27 +203,19 @@ struct PostListView: View {
 extension PostListView {
     struct MoimHeader: View {
         let moim: TempPostMoimModel
+        let isLeader: Bool
+        let isMember: Bool
+        let onJoinTap: () -> Void
         
         var body: some View {
             VStack(spacing: 0) {
-                AsyncImage(url: URL(string: moim.imageURLs.first ?? "")) { image in
+                RemoteImage(
+                    url: moim.imageURLs.first ?? "",
+                    displayMode: .thumbnail(CGSize(width: 400, height: 180))
+                ) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.orange.opacity(0.3), Color.orange.opacity(0.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay {
-                            Image(systemName: "photo")
-                                .font(.system(size: 40))
-                                .foregroundStyle(.white.opacity(0.5))
-                        }
                 }
                 .frame(height: 180)
                 .frame(maxWidth: .infinity)
@@ -180,15 +257,32 @@ extension PostListView {
                                 Image(systemName: "person.2.fill")
                                     .font(.system(size: 12))
                                     .foregroundStyle(.secondary)
-                                Text("\(moim.memberCount)명")
+                                Text("\(moim.memberCount + 1)명")
                                     .font(.system(size: 14))
                                     .foregroundStyle(.secondary)
                             }
                         }
                         Spacer()
                     }
-                    .padding(16)
+                    
+                    if !isLeader {
+                        Button(action: onJoinTap) {
+                            HStack {
+                                Image(systemName: isMember ? "person.badge.minus" : "person.badge.plus")
+                                    .font(.system(size: 14, weight: .semibold))
+                                Text(isMember ? "탈퇴하기" : "가입하기")
+                                    .font(.system(size: 15, weight: .semibold))
+                            }
+                            .foregroundStyle(isMember ? .red : .white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(isMember ? Color.red.opacity(0.1) : Color.orange)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
+                .padding(16)
             }
             .background(Color(.systemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -198,9 +292,10 @@ extension PostListView {
     
     struct CategoryAndTabSection: View {
         @Binding var selectedTab: MoimTab
-        @Binding var selectedCategory: PostType
+        let selectedCategory: PostType
         let postCount: Int
-
+        let onCategorySelect: (PostType) -> Void
+        
         var body: some View {
             VStack(spacing: 12) {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -218,7 +313,7 @@ extension PostListView {
                         }
                     }
                 }
-
+                
                 if selectedTab == .posts {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
@@ -229,7 +324,7 @@ extension PostListView {
                                     isSelected: selectedCategory == category
                                 ) {
                                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                        selectedCategory = category
+                                        onCategorySelect(category)
                                     }
                                 }
                             }
@@ -245,14 +340,18 @@ extension PostListView {
         @Binding var selectedSchedule: ScheduleUIModel?
         
         var body: some View {
-            LazyVStack(spacing: 12) {
-                ForEach(schedules) { schedule in
-                    ScheduleCardView(schedule: schedule) {
-                        selectedSchedule = schedule
+            if schedules.isEmpty {
+                EmptyScheduleView()
+            } else {
+                LazyVStack(spacing: 12) {
+                    ForEach(schedules, id: \.id) { schedule in
+                        ScheduleCardView(schedule: schedule) {
+                            selectedSchedule = schedule
+                        }
+                        .background(Color(.systemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                     }
-                    .background(Color(.systemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                 }
             }
         }
@@ -265,8 +364,10 @@ extension PostListView {
         let settingTapped: (PostUIModel) -> Void
         
         var body: some View {
-            LazyVStack(spacing: 12) {
-                ForEach(posts) { post in
+            if posts.isEmpty {
+                EmptyPostView()
+            } else {
+                ForEach(posts, id: \.id) { post in
                     PostCardView(
                         post: post,
                         onLikeTap: { onLikeTap(post) },
@@ -283,19 +384,99 @@ extension PostListView {
     
     struct MembersListView: View {
         let members: [MemberUIModel]
+        let currentUserId: String
         let cellTapped: (MemberUIModel) -> Void
-        
+
         var body: some View {
-            LazyVStack(spacing: 12) {
-                ForEach(members) { member in
-                    MemberCardView(member: member) {
-                        cellTapped(member)
+            if members.isEmpty {
+                EmptyMembersView()
+            } else {
+                LazyVStack(spacing: 12) {
+                    ForEach(members, id: \.id) { member in
+                        MemberCardView(member: member, currentUserId: currentUserId) {
+                            cellTapped(member)
+                        }
+                        .background(Color(.systemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                     }
-                    .background(Color(.systemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                 }
             }
+        }
+    }
+    
+    struct EmptyPostView: View {
+        var body: some View {
+            VStack(spacing: 16) {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.secondary.opacity(0.3))
+                Text("아직 게시물이 없습니다")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                Text("첫 게시물을 작성해보세요")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 60)
+        }
+    }
+    
+    struct EmptyScheduleView: View {
+        var body: some View {
+            VStack(spacing: 16) {
+                Image(systemName: "calendar")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.secondary.opacity(0.3))
+                Text("등록된 일정이 없습니다")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+                Text("새로운 일정을 만들어보세요")
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary.opacity(0.7))
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 60)
+        }
+    }
+    
+    struct EmptyMembersView: View {
+        var body: some View {
+            VStack(spacing: 16) {
+                Image(systemName: "person.2")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.secondary.opacity(0.3))
+                Text("아직 멤버가 없습니다")
+                    .font(.system(size: 15))
+                    .foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 60)
+        }
+    }
+    
+    struct MemberOnlyView: View {
+        let tabName: String
+        
+        var body: some View {
+            VStack(spacing: 20) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.orange.opacity(0.5))
+                
+                VStack(spacing: 8) {
+                    Text("\(tabName)은 멤버만 볼 수 있습니다")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.primary)
+                    
+                    Text("모임에 가입하고 \(tabName)을 확인해보세요")
+                        .font(.system(size: 14))
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 80)
         }
     }
     

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MyJoinedMoimsList: View {
-    let myMoims: [MyMoimViewUIModel]
+    let myMoims: [MoimSearchResultUIModel]
     let isLoading: Bool
     let hasMoreData: Bool
     let loadMore: () -> Void
@@ -23,17 +23,18 @@ struct MyJoinedMoimsList: View {
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(myMoims) { moim in
-                            MyMoimCell(moim: moim) {
-                                print(moim.title)
-                            }
-                            .frame(height: 80)
-                            .padding(.horizontal, 16)
-                            .onAppear {
-                                // 마지막 아이템이 보이면 다음 페이지 로드
-                                if moim.id == myMoims.last?.id && hasMoreData && !isLoading {
-                                    loadMore()
+                            MoimListCell(moim: .constant(moim))
+                                .frame(height: 80)
+                                .padding(.horizontal, 16)
+                                .onTapGesture {
+                                    print(moim.title ?? "")
                                 }
-                            }
+                                .onAppear {
+                                    // 마지막 아이템이 보이면 다음 페이지 로드
+                                    if moim.id == myMoims.last?.id && hasMoreData && !isLoading {
+                                        loadMore()
+                                    }
+                                }
                         }
 
                         // 로딩 인디케이터
@@ -56,7 +57,7 @@ struct MyJoinedMoimsList: View {
 
 #Preview {
     MyJoinedMoimsList(
-        myMoims: MyMoimViewUIModel.getDummies(),
+        myMoims: [],
         isLoading: false,
         hasMoreData: true,
         loadMore: {

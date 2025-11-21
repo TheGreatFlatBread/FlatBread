@@ -9,7 +9,20 @@ import Foundation
 
 enum DateResolver {
     static let formatter: DateFormatter = DateFormatter()
-    static let isoFormatter: ISO8601DateFormatter = ISO8601DateFormatter()
+
+    /// 밀리초 포함 ISO8601 formatter (API 응답용)
+    static let isoFormatterWithFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    /// 밀리초 없는 ISO8601 formatter (fallback용)
+    static let isoFormatterWithoutFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
 }
 
 extension Date {
@@ -24,33 +37,45 @@ extension Date {
     /// API용 ISO8601 UTC 포맷으로 변환 (밀리초 포함)
     /// - Returns: "2024-11-15T05:13:54.357Z" 형식의 UTC 시간 문자열
     func toISO8601String() -> String {
-        let formatter = DateResolver.isoFormatter
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter.string(from: self)
+        DateResolver.isoFormatterWithFractionalSeconds.string(from: self)
     }
     
     func relativeTimeString() -> String {
-        let interval = Int(Date.now.timeIntervalSince(self))
-        if interval < 60 {
-            return "방금 전"
-        } else if interval < 3600 {
-            return "\(interval / 60)분 전"
-        } else if interval < 86400 {
-            return "\(interval / 3600)시간 전"
+        let calendar = Calendar.current
+        let now = Date.now
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: self, to: now)
+
+        if let year = components.year, year > 0 {
+            return "\(year)년 전"
+        } else if let month = components.month, month > 0 {
+            return "\(month)달 전"
+        } else if let day = components.day, day > 0 {
+            return "\(day)일 전"
+        } else if let hour = components.hour, hour > 0 {
+            return "\(hour)시간 전"
+        } else if let minute = components.minute, minute > 0 {
+            return "\(minute)분 전"
         } else {
-            let formatter = DateResolver.formatter
-            formatter.locale = Locale(identifier: "ko_KR")
-            formatter.dateFormat = "yyyy.MM.dd"
-            return formatter.string(from: self)
+            return "방금 전"
         }
     }
 }
 
 extension String {
     func toDate(format: String = "yyyy-MM-dd'T'HH:mm:ssZ") -> Date? {
+        if self.contains("T") && self.hasSuffix("Z") {
+            if let date = DateResolver.isoFormatterWithFractionalSeconds.date(from: self) {
+                return date
+            }
+            if let date = DateResolver.isoFormatterWithoutFractionalSeconds.date(from: self) {
+                return date
+            }
+        }
+
+        // 일반 포맷 시도
         let formatter = DateResolver.formatter
         formatter.locale = Locale(identifier: "ko_KR")
-        formatter.timeZone = TimeZone.current  // 현지 타임존 사용
+        formatter.timeZone = TimeZone.current
         formatter.dateFormat = format
         return formatter.date(from: self)
     }

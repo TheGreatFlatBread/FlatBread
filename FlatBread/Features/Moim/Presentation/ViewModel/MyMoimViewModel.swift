@@ -11,8 +11,8 @@ import Combine
 final class MyMoimViewModel: ObservableObject {
 
     // MARK: - Published Properties
-    @Published var recommendMoims: [MyMoimViewUIModel] = []
-    @Published var myMoims: [MyMoimViewUIModel] = []
+    @Published var recommendMoims: [MoimSearchResultUIModel] = []
+    @Published var myMoims: [MoimSearchResultUIModel] = []
     @Published var isLoading: Bool = false
     @Published var hasMoreData: Bool = true
 
@@ -29,6 +29,7 @@ final class MyMoimViewModel: ObservableObject {
     // MARK: - Methods
     private func loadMoims() {
         Task {
+            await fetchRecommendMoims()
             await fetchMyMoims()
         }
     }
@@ -38,6 +39,25 @@ final class MyMoimViewModel: ObservableObject {
         print(#function)
         Task {
             await fetchMyMoims()
+        }
+    }
+
+    @MainActor
+    private func fetchRecommendMoims() async {
+        do {
+            let response = try await networkService.request(
+                PostRouter.getPostList(
+                    next: "",
+                    limit: "20",
+                    category: MoimCategory.allCases.map { $0.rawValue }
+                ),
+                responseType: PostListResponseDTO.self
+            )
+
+            let allMoims = response.data.compactMap { $0.asSearchResultUIModel }
+            recommendMoims = Array(allMoims.shuffled().prefix(8))
+        } catch {
+            print("Failed to fetch recommend moims: \(error)")
         }
     }
 
@@ -56,7 +76,7 @@ final class MyMoimViewModel: ObservableObject {
                 responseType: PostListResponseDTO.self
             )
 
-            let newMoims = response.data.compactMap { $0.toMyMoimViewUIModel() }
+            let newMoims = response.data.compactMap { $0.asSearchResultUIModel }
             myMoims.append(contentsOf: newMoims)
             nextCursor = response.next_cursor
             hasMoreData = response.next_cursor != "0"
@@ -67,36 +87,16 @@ final class MyMoimViewModel: ObservableObject {
     }
 }
 
-// MARK: - PostResponseDTO Extension
-extension PostResponseDTO {
-    func toMyMoimViewUIModel() -> MyMoimViewUIModel? {
-        guard let postID = post_id else { return nil }
-        guard let category = category else { return nil }
-        guard let title = title else { return nil }
-        
-        return MyMoimViewUIModel(
-            postID: postID,
-            category: category,
-            title: title,
-            content: content ?? "",
-            location: value6 ?? "전국",
-            memberCount: value3 ?? "1명",
-            titleImageURL: files.first
-        )
-    }
-}
-
 // MARK: - Preview ViewModel
 final class PreviewMyMoimViewModel: ObservableObject {
-    @Published var recommendMoims: [MyMoimViewUIModel] = []
-    @Published var myMoims: [MyMoimViewUIModel] = []
+    @Published var recommendMoims: [MoimSearchResultUIModel] = []
+    @Published var myMoims: [MoimSearchResultUIModel] = []
     @Published var isLoading: Bool = false
     @Published var hasMoreData: Bool = false
 
     init() {
-        let dummies = MyMoimViewUIModel.getDummies()
-        self.myMoims = dummies
-        self.recommendMoims = Array(dummies.prefix(3))
+        self.myMoims = []
+        self.recommendMoims = []
     }
 
     func loadMore() {

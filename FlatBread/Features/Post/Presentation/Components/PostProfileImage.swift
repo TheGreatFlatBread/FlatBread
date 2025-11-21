@@ -8,30 +8,59 @@
 import SwiftUI
 
 struct PostProfileImage: View {
-    let profileImageURL: String
-    
+    let profileImageURL: String?
+    let name: String?
+    let size: CGFloat
+
+    init(
+        profileImageURL: String?,
+        name: String? = nil,
+        size: CGFloat = 32
+    ) {
+        self.profileImageURL = profileImageURL
+        self.name = name
+        self.size = size
+    }
+
     var body: some View {
         Group {
-            if let url = URL(string: profileImageURL) {
-                AsyncImage(url: url) { image in
+            if let profileImageURL = profileImageURL,
+               !profileImageURL.isEmpty {
+                RemoteImage(
+                    url: profileImageURL,
+                    displayMode: .thumbnail(CGSize(width: size * 2, height: size * 2))
+                ) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Circle()
-                        .fill(Color.gray.opacity(0.2))
                 }
             } else {
-                Circle()
-                    .fill(Color.orange.opacity(0.2))
-                    .overlay {
-                        Image(systemName: "person.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(Color.orange)
-                    }
+                placeholderView
             }
         }
-        .frame(width: 32, height: 32)
+        .frame(width: size, height: size)
         .clipShape(Circle())
+    }
+
+    private var placeholderView: some View {
+        Circle()
+            .fill(
+                LinearGradient(
+                    colors: [Color.orange.opacity(0.3), Color.orange.opacity(0.1)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+            )
+            .overlay {
+                if let name = name, let firstLetter = name.first {
+                    Text(String(firstLetter))
+                        .font(.system(size: size * 0.4, weight: .semibold))
+                        .foregroundStyle(.orange)
+                } else {
+                    Image(systemName: "person.fill")
+                        .font(.system(size: size * 0.45))
+                        .foregroundStyle(Color.orange)
+                }
+            }
     }
 }

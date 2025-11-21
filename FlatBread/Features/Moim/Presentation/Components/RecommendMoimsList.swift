@@ -8,24 +8,28 @@
 import SwiftUI
 
 struct RecommendMoimsList: View {
-    let moims: [MyMoimViewUIModel]
+    let moims: [MoimSearchResultUIModel]
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            SectionHeader(title: "요즘 뜨는 모임")
+            SectionHeader(title: "새로 생긴 모임이에요", fontSize: .callout.bold())
 
-            ScrollView(.horizontal, showsIndicators: false) {
-                LazyHStack {
-                    ForEach(moims) { item in
-                        MyMoimCell(moim: item)
+            GeometryReader { geometry in
+                ScrollView(.horizontal, showsIndicators: false) {
+                    LazyHStack(spacing: 12) {
+                        ForEach(moims) { item in
+                            MoimListCell(moim: .constant(item))
+                                .frame(width: geometry.size.width * 0.9, height: 80)
+                        }
                     }
+                    .padding(.horizontal, 16)
                 }
-                .padding(.horizontal)
             }
+            .frame(height: 80)
         }
     }
 }
 
 #Preview {
-    RecommendMoimsList(moims: MyMoimViewUIModel.getDummies())
+    RecommendMoimsList(moims: [])
 }
