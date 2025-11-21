@@ -30,7 +30,10 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:FlatBread.xctestplan"
+            reference = "container:FlatBread.xctestplan">
+         </TestPlanReference>
+         <TestPlanReference
+            reference = "container:FlatBread/Resources/FlatBreadTest.xctestplan"
             default = "YES">
          </TestPlanReference>
       </TestPlans>
