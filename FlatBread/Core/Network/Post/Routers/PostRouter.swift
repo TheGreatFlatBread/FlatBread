@@ -14,7 +14,7 @@ enum PostRouter: APIRouter {
     case uploadPost(request: PostUploadRequestDTO)
     case getPostList(next: String, limit: String, category: [String])
     case getPost(postID: String)
-    case updatePost(postID: String)
+    case updatePost(postID: String, request: PostUploadRequestDTO)
     case deletePost(postID: String)
     case togglePostLikeV1(postID: String, like_status: Bool)
     case togglePostLikeV2(postID: String, like_status: Bool)
@@ -64,7 +64,7 @@ enum PostRouter: APIRouter {
         return switch self {
         case .uploadPost: ""
         case .getPostList: ""
-        case .getPost(let id), .updatePost(let id), .deletePost(let id): "\(id)"
+        case .getPost(let id), .updatePost(let id, _), .deletePost(let id): "\(id)"
         case .togglePostLikeV1(let id, _): "\(id)/like"
         case .togglePostLikeV2(let id, _): "\(id)/like-2"
         case .getMeLikePostListV1: "likes/me"
@@ -79,7 +79,7 @@ enum PostRouter: APIRouter {
     
     var body: Data? {
         return switch self {
-        case .uploadPost(let requestDTO):
+        case .uploadPost(let requestDTO), .updatePost(_, let requestDTO):
             try? Self.encoder.encode(requestDTO)
         case .togglePostLikeV1(_, let like_status):
             try? Self.encoder.encode(["like_status": like_status])

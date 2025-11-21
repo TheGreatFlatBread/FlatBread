@@ -52,3 +52,26 @@ extension FBAPIError: CustomStringConvertible {
         }
     }
 }
+
+extension FBAPIError: Equatable {
+    static func == (lhs: FBAPIError, rhs: FBAPIError) -> Bool {
+        switch (lhs, rhs) {
+        case (.invalidAccessToken, .invalidAccessToken),
+             (.invalidUserID, .invalidUserID),
+             (.expiredAccessToken, .expiredAccessToken),
+             (.invalidApiKey, .invalidApiKey),
+             (.invalidProductID, .invalidProductID),
+             (.execcedApiLimit, .execcedApiLimit),
+             (.invalidApiCall, .invalidApiCall),
+             (.internalServerError, .internalServerError),
+             (.failedReissueToken, .failedReissueToken),
+             (.accessTokenEmpty, .accessTokenEmpty),
+             (.unknownError, .unknownError):
+            return true
+        case (.invalidStatusCode(let s1, let r1), .invalidStatusCode(let s2, let r2)):
+            return s1 == s2 && r1 == r2
+        default:
+            return false
+        }
+    }
+}

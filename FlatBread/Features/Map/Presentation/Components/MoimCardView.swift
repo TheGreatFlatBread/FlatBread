@@ -14,12 +14,12 @@ struct MoimCardView: View {
     
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            AsyncImage(url: URL(string: moimModel.imageUrl ?? "")) { image in
-                return image
+            RemoteImage(url: moimModel.imageUrl ?? "",
+                        displayMode: .thumbnail(CGSize(width: 300, height: 150)))
+            { image in
+                image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Color.gray.opacity(0.5)
             }
             .frame(width: 300, height: 150)
             

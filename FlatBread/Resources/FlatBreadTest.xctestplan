@@ -1,7 +1,7 @@
 {
   "configurations" : [
     {
-      "id" : "725E23E0-E98A-4C70-8BC1-EC833EFBA57C",
+      "id" : "2AA7A324-1683-44A7-BD3B-09F93A894CCD",
       "name" : "Configuration 1",
       "options" : {
 
@@ -9,15 +9,7 @@
     }
   ],
   "defaultOptions" : {
-    "codeCoverage" : {
-      "targets" : [
-        {
-          "containerPath" : "container:FlatBread.xcodeproj",
-          "identifier" : "FE6110262EB9D4AD006E4243",
-          "name" : "FlatBread"
-        }
-      ]
-    }
+    "testTimeoutsEnabled" : true
   },
   "testTargets" : [
     {

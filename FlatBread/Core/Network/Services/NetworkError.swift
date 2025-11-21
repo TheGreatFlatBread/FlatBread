@@ -8,20 +8,38 @@
 import Foundation
 import Alamofire
 
-enum NetworkError: LocalizedError {
-    case apiError(FBAPIError)
+enum NetworkError: LocalizedError, Equatable {
     
+    case apiError(FBAPIError)
     case networkFailure
     case timeout
     case noInternetConnection
     case maxRetryExceeded
     case uploadFailed
-
     case decodingFailed
     case invalidResponse
     case invalidURL
-
     case unknown(Error)
+    
+    static func == (lhs: NetworkError, rhs: NetworkError) -> Bool {
+        switch (lhs, rhs) {
+        case (.apiError(let a), .apiError(let b)):
+            return a == b
+        case (.networkFailure, .networkFailure),
+             (.timeout, .timeout),
+             (.noInternetConnection, .noInternetConnection),
+             (.maxRetryExceeded, .maxRetryExceeded),
+             (.uploadFailed, .uploadFailed),
+             (.decodingFailed, .decodingFailed),
+             (.invalidResponse, .invalidResponse),
+             (.invalidURL, .invalidURL):
+            return true
+        case (.unknown(let e1), .unknown(let e2)):
+            return e1.localizedDescription == e2.localizedDescription
+        default:
+            return false
+        }
+    }
 
     var errorDescription: String? {
         switch self {

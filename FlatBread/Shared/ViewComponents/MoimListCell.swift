@@ -16,13 +16,15 @@ struct MoimListCell: View {
     
     var body: some View {
         HStack(spacing: 14) {
-            AsyncImage(url: URL(string: moim.imageURL ?? "")) { image in
+            RemoteImage(
+                url: moim.imageURL ?? "",
+                displayMode: .thumbnail(CGSize(width: 100, height: 100))
+            ) {
+                Color.gray
+            } content: { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                
-            } placeholder: {
-                Color.gray
             }
             .frame(width: imageSideLength, height: imageSideLength)
             .cornerRadius(14)
