@@ -206,7 +206,7 @@ struct TokenRefreshCoordinatorTests {
         _ = try await coordinator.refreshToken()
 
         // Then
-        let savedAccess = await tokenStorage.getAccessToken()
+        let savedAccess = await tokenStorage.getAccessToken() ?? ""
         let savedRefresh = await tokenStorage.getRefreshToken()
         let saveCallCount = await tokenStorage.saveTokenCallCount
 
