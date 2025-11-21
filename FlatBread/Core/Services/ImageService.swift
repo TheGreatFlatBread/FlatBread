@@ -32,30 +32,16 @@ final class DefaultImageService: ImageService {
                 with: .provider(LocalFileImageDataProvider(fileURL: url)),
                 options: options
             )
-
-            #if DEBUG
-            print("파일 이미지 로드 완료: \(urlString)")
-            #endif
             return result.image
         }
-
-        #if DEBUG
-        print("이미지 캐시 확인: \(urlString)")
-        #endif
-
+        
         let cacheResult = try await ImageCache.default.retrieveImage(forKey: urlString)
 
         switch cacheResult {
         case .disk(let image), .memory(let image):
-            #if DEBUG
-            print("캐시된 이미지 사용: \(urlString)")
-            #endif
             return image
 
         default:
-            #if DEBUG
-            print("서버에서 이미지 다운로드 시작: \(urlString)")
-            #endif
             let imageData = try await downloadImageData(from: urlString)
             let provider = RawImageDataProvider(data: imageData, cacheKey: urlString)
             let options = makeNetworkURLOptions(displayMode: displayMode)
@@ -63,10 +49,6 @@ final class DefaultImageService: ImageService {
                 with: .provider(provider),
                 options: options
             )
-
-            #if DEBUG
-            print("이미지 다운로드 및 캐싱 완료: \(urlString)")
-            #endif
 
             return result.image
         }
