@@ -10,6 +10,10 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = LoginViewModel(tokenStorage: DefaultTokenStorage())
     
+    
+    
+    
+    
     init() {
         let tabBarAppearance = UITabBarAppearance()
         tabBarAppearance.configureWithDefaultBackground()
@@ -33,8 +37,7 @@ struct ContentView: View {
                             Label("홈", systemImage: "house")
                         }
 
-                    Color(.blue)
-                        .ignoresSafeArea()
+                    ShortFormFeedView()
                         .tabItem {
                             Label("숏폼", systemImage: "play.rectangle")
                         }
