@@ -72,17 +72,25 @@ final class PostListViewModel: ObservableObject {
         self.moimId = moim.id
         self.moim = moim
     }
-
-    func loadMoimData() {
-        // TODO: 실제 API 구현
-    }
     
     func loadInitialData() async {
-        await loadCurrentUserId()
+        await loadCurreqntUserId()
         if let memberIds = await fetchMoimData() {
             await fetchLoadMember(memberIds: memberIds)
         }
         posts = await fetchPosts()
+    }
+    
+    private func loadCurreqntUserId() async {
+        do {
+            let profile = try await networkService.request(
+                UserRouter.getMeProfile,
+                responseType: UserProfileResponseDTO.self
+            )
+            currentUserId = profile.userID ?? ""
+        } catch {
+            print("Failed to load current user ID: \(error)")
+        }
     }
     
     func fetchLoadMember(memberIds: [String]) async {
