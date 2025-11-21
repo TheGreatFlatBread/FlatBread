@@ -95,7 +95,6 @@ private extension VideoUploadViewModel {
     private func compressVideo(inputURL: URL) {
         let urlAsset = AVURLAsset(url: inputURL)
         
-        // 10MB 제한을 맞추기 위해 540p (HD) 프리셋 사용
         guard let exportSession = AVAssetExportSession(
             asset: urlAsset,
             presetName: AVAssetExportPreset1280x720
@@ -109,7 +108,7 @@ private extension VideoUploadViewModel {
         
         exportSession.outputURL = outputURL
         exportSession.outputFileType = .mp4
-        exportSession.shouldOptimizeForNetworkUse = true // Fast Start 적용
+        exportSession.shouldOptimizeForNetworkUse = true 
         exportSession.fileLengthLimit = 10 * 1024 * 1024
         
         exportSession.exportAsynchronously {
