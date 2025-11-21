@@ -7,9 +7,9 @@
 
 import Foundation
 
-// 샘플 모델
 struct BannerItem: Identifiable, Equatable {
-    let id = UUID()
+    typealias ID = String
+    let id: ID
     let imageURL: String
     let title: String
     let subtitle: String
