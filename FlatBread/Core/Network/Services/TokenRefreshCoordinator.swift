@@ -50,7 +50,9 @@ actor TokenRefreshCoordinator {
     nonisolated
     private func performRefresh() async throws -> String {
         do {
-            let refreshToken = await tokenStorage.getRefreshToken()
+            guard let refreshToken = await tokenStorage.getRefreshToken() else {
+                throw NetworkError.apiError(.failedReissueToken)
+            }
             let router = await RefreshRouter(refreshToken: refreshToken)
             let request = session.request(router)
             let response = try await request
@@ -73,7 +75,7 @@ actor TokenRefreshCoordinator {
     }
 
     nonisolated func getAccessToken() async -> String {
-        await tokenStorage.getAccessToken()
+        await tokenStorage.getAccessToken() ?? ""
     }
 
     nonisolated func saveTokens(access: String, refresh: String) async {
