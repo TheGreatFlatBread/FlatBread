@@ -9,20 +9,32 @@ import SwiftUI
 
 struct MyMoimView: View {
     @StateObject private var viewModel = MyMoimViewModel()
+    @State private var selectedMoim: MyMoimViewUIModel?
 
     var body: some View {
         NavigationStack {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
-                    RecommendMoimsList(moims: viewModel.recommendMoims)
+                    RecommendMoimsList(
+                        moims: viewModel.recommendMoims,
+                        onMoimTap: { moim in
+                            selectedMoim = moim
+                        }
+                    )
 
                     MyJoinedMoimsList(
                         myMoims: viewModel.myMoims,
                         isLoading: viewModel.isLoading,
                         hasMoreData: viewModel.hasMoreData,
-                        loadMore: viewModel.loadMore
+                        loadMore: viewModel.loadMore,
+                        onMoimTap: { moim in
+                            selectedMoim = moim
+                        }
                     )
                 }
+            }
+            .navigationDestination(item: $selectedMoim) { moim in
+                PostListView(moim: moim.toTempPostMoimModel())
             }
         }
     }

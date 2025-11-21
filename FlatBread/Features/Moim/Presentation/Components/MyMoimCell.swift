@@ -27,26 +27,24 @@ struct MyMoimCell: View {
     // MARK: - Thumbnail
     private var thumbnail: some View {
         Group {
-            if let thumbnailURL = moim.titleImageURL,
-               let url = URL(string: thumbnailURL) {
-                AsyncImage(url: url) { phase in
-                    switch phase {
-                    case .empty:
+            if let thumbnailURL = moim.titleImageURL {
+                RemoteImage(
+                    url: thumbnailURL,
+                    displayMode: .thumbnail(CGSize(
+                        width: 80 * UIScreen.main.scale,
+                        height: 80 * UIScreen.main.scale
+                    )),
+                    placeholder: {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.gray.opacity(0.3))
                             .overlay {
                                 ProgressView()
                             }
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    case .failure:
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.blue)
-                    @unknown default:
-                        EmptyView()
                     }
+                ) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
                 }
                 .frame(width: 80, height: 80)
                 .aspectRatio(1, contentMode: .fit)

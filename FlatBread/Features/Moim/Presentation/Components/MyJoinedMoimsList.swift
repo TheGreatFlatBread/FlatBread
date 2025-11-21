@@ -12,6 +12,21 @@ struct MyJoinedMoimsList: View {
     let isLoading: Bool
     let hasMoreData: Bool
     let loadMore: () -> Void
+    let onMoimTap: ((MyMoimViewUIModel) -> Void)?
+
+    init(
+        myMoims: [MyMoimViewUIModel],
+        isLoading: Bool,
+        hasMoreData: Bool,
+        loadMore: @escaping () -> Void,
+        onMoimTap: ((MyMoimViewUIModel) -> Void)? = nil
+    ) {
+        self.myMoims = myMoims
+        self.isLoading = isLoading
+        self.hasMoreData = hasMoreData
+        self.loadMore = loadMore
+        self.onMoimTap = onMoimTap
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -24,7 +39,7 @@ struct MyJoinedMoimsList: View {
                     LazyVStack(spacing: 12) {
                         ForEach(myMoims) { moim in
                             MyMoimCell(moim: moim) {
-                                print(moim.title)
+                                onMoimTap?(moim)
                             }
                             .frame(height: 80)
                             .padding(.horizontal, 16)

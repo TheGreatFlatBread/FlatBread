@@ -32,12 +32,10 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/DI/.gitkeep,
-				Core/Services/.gitkeep,
 				Core/Utils/.gitkeep,
 				DesignSystem/Components/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Styles/.gitkeep,
-				Resources/FlatBread.xctestplan,
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,
 				Shared/Mappers/.gitkeep,
@@ -47,22 +45,9 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
-/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-		17E9CCBC2EC0835E00EC0B33 /* Exceptions for "FlatBreadTests" folder in "Compile Sources" phase from "FlatBreadTests" target */ = {
-			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
-			buildPhase = 179F97FA2EBE16290057F5D8 /* Sources */;
-			membershipExceptions = (
-				MockData/Single/refresh.json,
-			);
-		};
-/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		179F97FF2EBE16290057F5D8 /* FlatBreadTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				17E9CCBC2EC0835E00EC0B33 /* Exceptions for "FlatBreadTests" folder in "Compile Sources" phase from "FlatBreadTests" target */,
-			);
 			path = FlatBreadTests;
 			sourceTree = "<group>";
 		};
@@ -444,6 +429,8 @@
 				INFOPLIST_FILE = FlatBread/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FlatBread;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "채팅에서 사진을 촬영하고 전송하기 위해 카메라 접근 권한이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "채팅에서 사진을 전송하기 위해 사진 라이브러리 접근 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -487,6 +474,8 @@
 				INFOPLIST_FILE = FlatBread/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FlatBread;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "채팅에서 사진을 촬영하고 전송하기 위해 카메라 접근 권한이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "채팅에서 사진을 전송하기 위해 사진 라이브러리 접근 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

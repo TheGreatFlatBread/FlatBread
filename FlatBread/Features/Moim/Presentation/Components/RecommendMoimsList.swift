@@ -9,6 +9,12 @@ import SwiftUI
 
 struct RecommendMoimsList: View {
     let moims: [MyMoimViewUIModel]
+    let onMoimTap: ((MyMoimViewUIModel) -> Void)?
+
+    init(moims: [MyMoimViewUIModel], onMoimTap: ((MyMoimViewUIModel) -> Void)? = nil) {
+        self.moims = moims
+        self.onMoimTap = onMoimTap
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -17,7 +23,9 @@ struct RecommendMoimsList: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 LazyHStack {
                     ForEach(moims) { item in
-                        MyMoimCell(moim: item)
+                        MyMoimCell(moim: item) {
+                            onMoimTap?(item)
+                        }
                     }
                 }
                 .padding(.horizontal)
