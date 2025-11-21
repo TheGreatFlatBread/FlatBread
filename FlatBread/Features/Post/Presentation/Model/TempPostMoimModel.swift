@@ -22,6 +22,7 @@ struct TempPostMoimModel: Identifiable, Hashable {
     let hashtags: [String]
     let createdAt: Date
     let creator: Creator
+    let memberIds: [String]  // likes2 - 가입한 멤버 ID 리스트
 
     struct Location: Hashable {
         let name: String
@@ -64,7 +65,8 @@ extension TempPostMoimModel {
                 id: "user123",
                 name: "김철수",
                 profileImageURL: nil
-            )
+            ),
+            memberIds: ["user456", "user789", "user012"]
         )
     }
 }

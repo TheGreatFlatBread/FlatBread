@@ -9,54 +9,201 @@ import Foundation
 import Combine
 
 final class PostListViewModel: ObservableObject {
-    @Published var moim: TempPostMoimModel? = .mock
-
-    @Published var posts: [PostUIModel] = PostUIModel.mocks
-    @Published var schedules: [ScheduleUIModel] = ScheduleUIModel.mocks
-    @Published var members: [MemberUIModel] = MemberUIModel.mocks
-
+    @Published var moim: TempPostMoimModel?
+    
+    @Published var posts: [PostUIModel] = []
+    
+    var schedules: [ScheduleUIModel] {
+        posts.compactMap { $0.schedule }
+    }
+    
+    var members: [MemberUIModel] = []
+    
+    var isMember: Bool {
+        guard let moim else { return false }
+        return moim.memberIds.contains(currentUserId)
+    }
+    
+    var isLeader: Bool {
+        guard let moim else { return false }
+        return moim.creator.id == currentUserId
+    }
+    
+    @Published var selectedTab: MoimTab = .posts
     @Published var selectedCategory: PostType = .all
     @Published var isLoading: Bool = false
-
-    let moimId: String
-
-    init(moimId: String) {
-        self.moimId = moimId
+    @Published var errorMessage: String?
+    
+    private let networkService: AsyncNetworkService = NetworkServiceFactory.shared.makeNetworkService()
+    private(set) var currentUserId: String = ""
+    private(set) var moimId: String
+    private var postIdSet: Set<String> = []
+    
+    private var cursors: [PostType: String] = [
+        .all: "", .schedule: "",
+        .greeting: "", .free: ""
+    ]
+    private var hasMore: [PostType: Bool] = [
+        .all: true, .schedule: true,
+        .greeting: true, .free: true
+    ]
+    
+    var filteredPosts: [PostUIModel] {
+        switch selectedCategory {
+        case .all: return posts
+        case .free: return posts.filter { $0.postType == .free }
+        case .greeting: return posts.filter { $0.postType == .greeting }
+        case .schedule: return posts.filter { $0.postType == .schedule }
+        }
     }
-
+    
+    var shouldShowPagination: Bool {
+        switch selectedTab {
+        case .posts:
+            return hasMore[selectedCategory] == true
+        case .schedule:
+            return hasMore[.schedule] == true
+        case .members:
+            return false
+        }
+    }
+    
     init(moim: TempPostMoimModel) {
         self.moimId = moim.id
         self.moim = moim
     }
-
-    func loadMoimData() {
-        // TODO: 실제 API 구현
+    
+    func loadInitialData() async {
+        await loadCurreqntUserId()
+        if let memberIds = await fetchMoimData() {
+            await fetchLoadMember(memberIds: memberIds)
+        }
+        posts = await fetchPosts()
+    }
+    
+    private func loadCurreqntUserId() async {
+        do {
+            let profile = try await networkService.request(
+                UserRouter.getMeProfile,
+                responseType: UserProfileResponseDTO.self
+            )
+            currentUserId = profile.userID ?? ""
+        } catch {
+            print("Failed to load current user ID: \(error)")
+        }
+    }
+    
+    func fetchLoadMember(memberIds: [String]) async {
+        guard let moim else { return }
+        
+        let leader = MemberUIModel(
+            id: moim.creator.id,
+            name: moim.creator.name,
+            profileImageURL: moim.creator.profileImageURL,
+            bio: nil,
+            isLeader: true,
+            joinedAt: moim.createdAt
+        )
+        
+        let memberIdsWithoutLeader = memberIds.filter { $0 != moim.creator.id }
+        let fetchedMembers = await fetchMembersInParallel(memberIds: memberIdsWithoutLeader)
+        members = [leader] + fetchedMembers.sorted { $0.joinedAt < $1.joinedAt }
     }
 
-    func loadPosts() {
-        isLoading = true
-        // TODO: 실제 API 구현
-        isLoading = false
+    private func fetchMembersInParallel(memberIds: [String]) async -> [MemberUIModel] {
+        await withTaskGroup(of: MemberUIModel?.self) { group in
+            for memberId in memberIds {
+                group.addTask {
+                    await self.fetchSingleMember(userId: memberId)
+                }
+            }
+
+            var members: [MemberUIModel] = []
+            for await member in group {
+                if let member {
+                    members.append(member)
+                }
+            }
+            return members
+        }
     }
 
-    func loadSchedules() {
-        // TODO: 실제 API 구현
+    private func fetchSingleMember(userId: String) async -> MemberUIModel? {
+        if let cachedUser = await UserCache.shared.get(userId) {
+            return mapToMemberUIModel(cachedUser, isLeader: false)
+        }
+
+        do {
+            let userProfile = try await networkService.request(
+                UserRouter.getOtherUserProfile(userID: userId),
+                responseType: UserProfileResponseDTO.self
+            )
+            
+            await UserCache.shared.set(userId, user: userProfile)
+
+            return mapToMemberUIModel(userProfile, isLeader: false)
+        } catch {
+            print("Failed to fetch member \(userId): \(error)")
+            return nil
+        }
     }
 
-    func loadMembers() {
-        loadMoimData()
+    private func mapToMemberUIModel(_ user: UserProfileResponseDTO, isLeader: Bool) -> MemberUIModel {
+        MemberUIModel(
+            id: user.userID ?? "",
+            name: user.nick ?? "알 수 없음",
+            profileImageURL: user.profileImage,
+            bio: user.info1,
+            isLeader: isLeader,
+            joinedAt: Date.now
+        )
     }
+    
+    func fetchMoimData() async -> [String]? {
+        do {
+            let response = try await networkService.request(
+                PostRouter.getPost(postID: moimId),
+                responseType: PostResponseDTO.self
+            )
+            
+            if let moimModel = PostMapper.toTempMoimModel(from: response) {
+                moim = moimModel
+                return moimModel.memberIds
+            }
+            return nil
+        } catch {
+            errorMessage = "모임 정보를 불러오는데 실패했습니다."
+            return nil
+        }
+    }
+    
+    func fetchPosts() async -> [PostUIModel] {
+        let category = selectedTab == .schedule ? PostType.schedule : selectedCategory
 
-    var filteredPosts: [PostUIModel] {
-        switch selectedCategory {
-        case .all:
+        guard hasMore[category] == true else {
             return posts
-        case .free:
-            return posts.filter { $0.postType == .free }
-        case .greeting:
-            return posts.filter { $0.postType == .greeting }
-        case .schedule:
-            return posts.filter { $0.postType == .schedule }
+        }
+        isLoading = true
+        defer { isLoading = false }
+
+        do {
+            let cursor = cursors[category] ?? ""
+            let response = try await requestPosts(category: category, cursor: cursor)
+            
+            cursors[category] = response.next_cursor
+            hasMore[category] = response.next_cursor != "0"
+
+            let newPosts = response.data.compactMap {
+                PostMapper.toPostUIModel(from: $0, currentUserId: currentUserId)
+            }
+
+            let unique = newPosts.filter { !postIdSet.contains($0.id) }
+            unique.forEach { postIdSet.insert($0.id) }
+
+            return posts + unique
+        } catch {
+            errorMessage = "게시물을 불러오는데 실패했습니다."
+            return posts
         }
     }
 
@@ -74,5 +221,105 @@ final class PostListViewModel: ObservableObject {
 
     func selectCategory(_ category: PostType) {
         selectedCategory = category
+    }
+    
+    func loadMore() async {
+        guard !isLoading else { return }
+        if selectedTab != .members {
+            posts = await fetchPosts()
+        }
+    }
+    
+    func incrementCommentCount(for postId: String) {
+        guard let index = posts.firstIndex(where: { $0.id == postId }) else { return }
+        posts[index].commentCount += 1
+    }
+
+    func refreshPosts() async {
+        cursors = [.all: "", .schedule: "", .greeting: "", .free: ""]
+        hasMore = [.all: true, .schedule: true, .greeting: true, .free: true]
+        postIdSet = []
+        
+        posts = await fetchPosts()
+    }
+
+    func toggleMoimMembership() async {
+        guard let moim else { return }
+        isLoading = true
+        defer { isLoading = false }
+        let newStatus = !isMember
+        do {
+            _ = try await networkService.request(
+                PostRouter.togglePostLikeV2(postID: moim.id, like_status: newStatus),
+                responseType: LikeResponseDTO.self
+            )
+            _ = await fetchMoimData()
+        } catch {
+            errorMessage = "모임 \(newStatus ? "가입" : "탈퇴")에 실패했습니다."
+        }
+    }
+    
+    func deletePost(_ postId: String) async -> Bool {
+        do {
+            _ = try await networkService.request(
+                PostRouter.deletePost(postID: postId),
+                responseType: EmptyEntity.self
+            )
+            posts.removeAll { $0.id == postId }
+            return true
+        } catch {
+            errorMessage = "게시물 삭제에 실패했습니다."
+            return false
+        }
+    }
+
+    func isMyPost(_ post: PostUIModel) -> Bool {
+        post.author.id == currentUserId
+    }
+
+    func addNewPost(_ response: PostResponseDTO) {
+        guard let newPost = PostMapper.toPostUIModel(from: response, currentUserId: currentUserId) else {
+            return
+        }
+
+        guard !postIdSet.contains(newPost.id) else { return }
+
+        posts.insert(newPost, at: 0)
+        postIdSet.insert(newPost.id)
+    }
+
+    func updateExistingPost(_ response: PostResponseDTO) {
+        guard let updatedPost = PostMapper.toPostUIModel(from: response, currentUserId: currentUserId) else {
+            return
+        }
+
+        if let index = posts.firstIndex(where: { $0.id == updatedPost.id }) {
+            posts[index] = updatedPost
+        }
+    }
+
+    private func requestPosts(category: PostType, cursor: String) async throws -> PostListResponseDTO {
+        switch category {
+        case .all:
+            return try await networkService.request(
+                PostRouter.getPostList(
+                    next: cursor,
+                    limit: "20",
+                    category: [moimId]
+                ),
+                responseType: PostListResponseDTO.self
+            )
+            
+        case .schedule, .greeting, .free:
+            return try await networkService.request(
+                PostRouter.searchHashTagList(
+                    next: cursor,
+                    limit: "20",
+                    category: [moimId],
+                    hashTag: category.categoryHashtag
+                ),
+                responseType: PostListResponseDTO.self
+            )
+        }
     }
 }
