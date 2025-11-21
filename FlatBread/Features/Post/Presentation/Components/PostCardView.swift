@@ -14,20 +14,53 @@ struct PostCardView: View {
     let settingTapped: () -> Void
 
     @State private var isExpanded = false
+    @State private var currentImageIndex = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             PostSectionHeader(
                 authorName: post.author.name,
                 profileImageURL: post.author.profileImageURL ?? "",
-                relativeTime: "방금전", // TODO: FIX this
+                relativeTime: post.createdAt.relativeTimeString(), 
                 settingTapped: settingTapped
             )
 
             if !post.images.isEmpty {
-                PostImage(
-                    image: post.images.first ?? ""
-                )
+                ZStack(alignment: .bottom) {
+                    TabView(selection: $currentImageIndex) {
+                        ForEach(Array(post.images.enumerated()), id: \.element) { index, imageURL in
+                            RemoteImage(
+                                url: imageURL,
+                                displayMode: .thumbnail(CGSize(width: 400, height: 300))
+                            ) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 300)
+                            .clipped()
+                            .tag(index)
+                        }
+                    }
+                    .frame(height: 300)
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+
+                    if post.images.count > 1 {
+                        HStack(spacing: 6) {
+                            ForEach(0..<post.images.count, id: \.self) { index in
+                                Circle()
+                                    .fill(currentImageIndex == index ? Color.white : Color.white.opacity(0.5))
+                                    .frame(width: 6, height: 6)
+                            }
+                        }
+                        .padding(.vertical, 8)
+                        .padding(.horizontal, 12)
+                        .background(Color.black.opacity(0.3))
+                        .clipShape(Capsule())
+                        .padding(.bottom, 12)
+                    }
+                }
             }
 
             VStack(alignment: .leading, spacing: 12) {
@@ -91,27 +124,6 @@ extension PostCardView {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-        }
-    }
-
-    struct PostImage: View {
-        let image: String
-        
-        var body: some View {
-            AsyncImage(url: URL(string: image)) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.2))
-                    .overlay {
-                        ProgressView()
-                    }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: 300)
-            .clipped()
         }
     }
 
