@@ -19,6 +19,31 @@ struct MyMoimViewUIModel: Hashable, Identifiable {
 }
 
 extension MyMoimViewUIModel {
+    /// MyMoimViewUIModel을 TempPostMoimModel로 변환
+    func toTempPostMoimModel() -> TempPostMoimModel {
+        return TempPostMoimModel(
+            id: postID,
+            name: title,
+            category: category,
+            description: content,
+            location: location.isEmpty ? nil : TempPostMoimModel.Location(
+                name: location,
+                coordinate: nil
+            ),
+            imageURLs: titleImageURL.map { [$0] } ?? [],
+            memberCount: Int(memberCount) ?? 0,
+            maxMembers: 100, // 기본값
+            hashtags: [],
+            createdAt: Date(),
+            creator: TempPostMoimModel.Creator(
+                id: "unknown",
+                name: "Unknown",
+                profileImageURL: nil
+            ),
+            memberIds: []  // MyMoimView에서는 memberIds 정보가 없음
+        )
+    }
+
     static func getDummy() -> MyMoimViewUIModel {
         return MyMoimViewUIModel(
             postID: "test01010101",
