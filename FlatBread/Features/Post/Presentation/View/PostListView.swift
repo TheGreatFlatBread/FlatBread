@@ -7,17 +7,54 @@
 
 import SwiftUI
 
+extension PostListView {
+    enum ActiveSheet: Identifiable {
+        case writePost
+        case schedule(ScheduleUIModel)
+        case editPost(PostUIModel)
+
+        var id: String {
+            switch self {
+            case .writePost: return "writePost"
+            case .schedule(let s): return "schedule_\(s.id)"
+            case .editPost(let p): return "editPost_\(p.id)"
+            }
+        }
+    }
+
+    enum ActiveDialog: Identifiable {
+        case postOptions(PostUIModel)
+        case deleteConfirmation(PostUIModel)
+
+        var id: String {
+            switch self {
+            case .postOptions(let p): return "options_\(p.id)"
+            case .deleteConfirmation(let p): return "delete_\(p.id)"
+            }
+        }
+
+        var post: PostUIModel {
+            switch self {
+            case .postOptions(let p), .deleteConfirmation(let p):
+                return p
+            }
+        }
+    }
+
+    enum NavigationDestination: Hashable {
+        case postDetail(PostUIModel)
+        case myProfile
+        case otherProfile(userID: String, moimId: String)
+    }
+}
+
 struct PostListView: View {
     @StateObject private var viewModel: PostListViewModel
-    @State private var isShowWriteView = false
-    @State private var isSelectedSchedule: ScheduleUIModel?
-    @State private var selectedPostForComment: PostUIModel?
-    
-    @State private var showOptions = false
-    @State private var selectedPostForOptions: PostUIModel?
-    @State private var showDeleteConfirmation = false
-    @State private var showEditSheet = false
-    
+
+    @State private var activeSheet: ActiveSheet?
+    @State private var activeDialog: ActiveDialog?
+    @State private var activeNavigation: NavigationDestination?
+
     init(moim: TempPostMoimModel) {
         _viewModel = StateObject(wrappedValue: PostListViewModel(moim: moim))
     }
@@ -52,25 +89,32 @@ struct PostListView: View {
                             case .schedule:
                                 PostListView.ScheduleListView(
                                     schedules: viewModel.schedules,
-                                    selectedSchedule: $isSelectedSchedule
+                                    onScheduleTap: { schedule in
+                                        activeSheet = .schedule(schedule)
+                                    }
                                 )
                             case .posts:
                                 PostListView.PostList(
                                     posts: viewModel.filteredPosts,
                                     onLikeTap: viewModel.toggleLike(for:),
                                     onCommentTap: { post in
-                                        selectedPostForComment = post
+                                        activeNavigation = .postDetail(post)
                                     },
                                     settingTapped: { post in
-                                        showOptions = true
-                                        selectedPostForOptions = post
+                                        activeDialog = .postOptions(post)
                                     }
                                 )
                             case .members:
                                 PostListView.MembersListView(
                                     members: viewModel.members,
                                     currentUserId: viewModel.currentUserId,
-                                    cellTapped: { _ in }
+                                    cellTapped: { member in
+                                        if member.id == viewModel.currentUserId {
+                                            activeNavigation = .myProfile
+                                        } else {
+                                            activeNavigation = .otherProfile(userID: member.id, moimId: viewModel.moimId)
+                                        }
+                                    }
                                 )
                             }
                         } else {
@@ -105,7 +149,9 @@ struct PostListView: View {
                 .background(Color(.systemGroupedBackground))
                 
                 if viewModel.isMember || viewModel.isLeader {
-                    FloatingWriteButton(showWriteView: $isShowWriteView)
+                    FloatingWriteButton {
+                        activeSheet = .writePost
+                    }
                 }
             } else {
                 ProgressView()
@@ -117,61 +163,79 @@ struct PostListView: View {
             toolBarItem
         }
         .navigationBarTitleDisplayMode(.inline)
-        .navigationDestination(item: $selectedPostForComment) { post in
-            PostDetailView(postId: post.id, currentUserId: viewModel.currentUserId)
-                .environmentObject(viewModel)
-        }
-        .sheet(isPresented: $isShowWriteView) {
-            PostWriteView(
-                moimId: viewModel.moimId,
-                onPostCreated: { response in
-                    viewModel.addNewPost(response)
-                }
-            )
-            .interactiveDismissDisabled()
-        }
-        .sheet(item: $isSelectedSchedule) { schedule in
-             ScheduleDetailView(schedule: schedule)
-        }
-        .confirmationDialog(
-            "게시물 옵션",
-            isPresented: $showOptions,
-            presenting: selectedPostForOptions
-        ) { post in
-            if viewModel.isMyPost(post) {
-                Button("수정") {
-                    showEditSheet = true
-                }
-                Button("삭제", role: .destructive) {
-                    showDeleteConfirmation = true
-                }
-            } else {
-                // Button("신고", role: .destructive) { }
+        .navigationDestination(item: $activeNavigation) { destination in
+            switch destination {
+            case .postDetail(let post):
+                PostDetailView(postId: post.id, currentUserId: viewModel.currentUserId)
+                    .environmentObject(viewModel)
+            case .myProfile:
+                UserProfileView(userID: viewModel.currentUserId, moimId: viewModel.moimId, isCurrentUser: true)
+            case .otherProfile(let userID, let moimId):
+                UserProfileView(userID: userID, moimId: moimId, isCurrentUser: false)
             }
         }
-        .alert("게시물을 삭제하시겠습니까?", isPresented: $showDeleteConfirmation) {
-            Button("취소", role: .cancel) { }
-            Button("삭제", role: .destructive) {
-                if let post = selectedPostForOptions {
-                    Task {
-                        let success = await viewModel.deletePost(post.id)
-                        if success {
-                            selectedPostForOptions = nil
-                        } else {
-                            selectedPostForOptions = nil
-                        }
+        .sheet(item: $activeSheet) { sheet in
+            switch sheet {
+            case .writePost:
+                PostWriteView(
+                    moimId: viewModel.moimId,
+                    onPostCreated: { response in
+                        viewModel.addNewPost(response)
                     }
-                }
-            }
-        }
-        .fullScreenCover(isPresented: $showEditSheet) {
-            if let post = selectedPostForOptions {
+                )
+                .interactiveDismissDisabled()
+            case .schedule(let schedule):
+                ScheduleDetailView(schedule: schedule)
+            case .editPost(let post):
                 PostPatchView(
                     post: post,
                     onPostUpdated: { response in
                         viewModel.updateExistingPost(response)
                     }
                 )
+            }
+        }
+        .confirmationDialog(
+            "게시물 옵션",
+            isPresented: Binding(
+                get: {
+                    if case .postOptions = activeDialog { return true }
+                    return false
+                },
+                set: { if !$0 { activeDialog = nil } }
+            ),
+            presenting: activeDialog?.post
+        ) { post in
+            if viewModel.isMyPost(post) {
+                Button("수정") {
+                    activeDialog = nil
+                    activeSheet = .editPost(post)
+                }
+                Button("삭제", role: .destructive) {
+                    activeDialog = .deleteConfirmation(post)
+                }
+            }
+        }
+        .alert(
+            "게시물을 삭제하시겠습니까?",
+            isPresented: Binding(
+                get: {
+                    if case .deleteConfirmation = activeDialog { return true }
+                    return false
+                },
+                set: { if !$0 { activeDialog = nil } }
+            )
+        ) {
+            Button("취소", role: .cancel) {
+                activeDialog = nil
+            }
+            Button("삭제", role: .destructive) {
+                if let post = activeDialog?.post {
+                    Task {
+                        await viewModel.deletePost(post.id)
+                        activeDialog = nil
+                    }
+                }
             }
         }
         .task {
@@ -337,8 +401,8 @@ extension PostListView {
     
     struct ScheduleListView: View {
         let schedules: [ScheduleUIModel]
-        @Binding var selectedSchedule: ScheduleUIModel?
-        
+        let onScheduleTap: (ScheduleUIModel) -> Void
+
         var body: some View {
             if schedules.isEmpty {
                 EmptyScheduleView()
@@ -346,7 +410,7 @@ extension PostListView {
                 LazyVStack(spacing: 12) {
                     ForEach(schedules, id: \.id) { schedule in
                         ScheduleCardView(schedule: schedule) {
-                            selectedSchedule = schedule
+                            onScheduleTap(schedule)
                         }
                         .background(Color(.systemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 16))
@@ -481,12 +545,10 @@ extension PostListView {
     }
     
     struct FloatingWriteButton: View {
-        @Binding var showWriteView: Bool
-        
+        let action: () -> Void
+
         var body: some View {
-            Button {
-                showWriteView = true
-            } label: {
+            Button(action: action) {
                 Image(systemName: "plus")
                     .font(.system(size: 20, weight: .semibold))
                     .foregroundStyle(.white)
