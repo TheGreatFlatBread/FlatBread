@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct MemberUIModel: Identifiable {
+struct MemberUIModel: Identifiable, Hashable {
     let id: String
     let name: String
     let profileImageURL: String?
