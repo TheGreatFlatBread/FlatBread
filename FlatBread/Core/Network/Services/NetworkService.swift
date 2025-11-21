@@ -31,7 +31,7 @@ final class DefaultNetworkService: AsyncNetworkService {
             let request = session.request(router, interceptor: interceptor)
             return try await request
                 .validate(statusCode: 200..<300)
-                .serializingDecodable(T.self)
+                .serializingDecodable(T.self, emptyResponseCodes: [200])
                 .value
         } catch let afError as AFError {
             throw NetworkError.from(afError)
