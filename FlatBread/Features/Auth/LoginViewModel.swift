@@ -26,8 +26,10 @@ final class LoginViewModel: NSObject, ObservableObject {
 
     @MainActor
     func checkLoginStatus() async {
+
+        defer { isCheckingLoginStatus = false }
+
         guard let userID = await tokenStorage.getAppleUserID() else {
-            isCheckingLoginStatus = false
             return
         }
 
@@ -35,16 +37,16 @@ final class LoginViewModel: NSObject, ObservableObject {
 
         switch state {
         case .authorized:
-            guard await tokenStorage.getAccessToken() != nil,
-                  let token = try? await tokenCoordiantor.refreshToken() else {
-                isCheckingLoginStatus = false
-                return
+            do {
+                _ = try await tokenCoordiantor.refreshToken()
+                isLoginSucceed = true
+            } catch {
+                isLoginSucceed = false
+                alertMessage = "세션이 만료되어 다시 로그인해야 합니다."
+                showingAlert = true
             }
-            isCheckingLoginStatus = false
-            isLoginSucceed = true
         case .revoked, .notFound, .transferred:
             await tokenStorage.clearTokens()
-            isCheckingLoginStatus = false
         @unknown default:
             break
         }
