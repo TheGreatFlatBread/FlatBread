@@ -13,6 +13,7 @@ final class LoginViewModel: NSObject, ObservableObject {
     
     private let tokenStorage: any TokenStorage
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
+    private let tokenCoordiantor = NetworkServiceFactory.shared.getTokenCoordinator()
     
     init(tokenStorage: any TokenStorage) {
         self.tokenStorage = tokenStorage
@@ -34,18 +35,19 @@ final class LoginViewModel: NSObject, ObservableObject {
 
         switch state {
         case .authorized:
-            if await tokenStorage.getAccessToken() != nil {
-                isLoginSucceed = true
+            guard await tokenStorage.getAccessToken() != nil,
+                  let token = try? await tokenCoordiantor.refreshToken() else {
+                isCheckingLoginStatus = false
+                return
             }
-
+            isCheckingLoginStatus = false
+            isLoginSucceed = true
         case .revoked, .notFound, .transferred:
             await tokenStorage.clearTokens()
-
+            isCheckingLoginStatus = false
         @unknown default:
             break
         }
-
-        isCheckingLoginStatus = false
     }
 
     private func checkCredentialState(userID: String) async -> ASAuthorizationAppleIDProvider.CredentialState {
