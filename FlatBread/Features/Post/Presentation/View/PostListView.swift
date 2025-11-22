@@ -59,6 +59,10 @@ struct PostListView: View {
         _viewModel = StateObject(wrappedValue: PostListViewModel(moim: moim))
     }
     
+    init(moimId: String) {
+        _viewModel = StateObject(wrappedValue: PostListViewModel(moimId: moimId))
+    }
+    
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             if let moim = viewModel.moim {
