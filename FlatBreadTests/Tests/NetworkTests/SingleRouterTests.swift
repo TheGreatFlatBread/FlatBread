@@ -51,7 +51,7 @@ struct SingleRouterTests {
         MockURLProtocol.setMock(.refresh)
         do {
             let result = try await sut.request(
-                RefreshRouter(refreshToken: ""),
+                RefreshRouter(refreshToken: "", accessToken: ""),
                 responseType: RefreshTokenResponseDTO.self,
                 interceptorType: .networkWithToken
             )

@@ -13,6 +13,7 @@ final class LoginViewModel: NSObject, ObservableObject {
     
     private let tokenStorage: any TokenStorage
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
+    private let tokenCoordiantor = NetworkServiceFactory.shared.getTokenCoordinator()
     
     init(tokenStorage: any TokenStorage) {
         self.tokenStorage = tokenStorage
@@ -25,8 +26,10 @@ final class LoginViewModel: NSObject, ObservableObject {
 
     @MainActor
     func checkLoginStatus() async {
+
+        defer { isCheckingLoginStatus = false }
+
         guard let userID = await tokenStorage.getAppleUserID() else {
-            isCheckingLoginStatus = false
             return
         }
 
@@ -34,18 +37,19 @@ final class LoginViewModel: NSObject, ObservableObject {
 
         switch state {
         case .authorized:
-            if await tokenStorage.getAccessToken() != nil {
+            do {
+                _ = try await tokenCoordiantor.refreshToken()
                 isLoginSucceed = true
+            } catch {
+                isLoginSucceed = false
+                alertMessage = "세션이 만료되어 다시 로그인해야 합니다."
+                showingAlert = true
             }
-
         case .revoked, .notFound, .transferred:
             await tokenStorage.clearTokens()
-
         @unknown default:
             break
         }
-
-        isCheckingLoginStatus = false
     }
 
     private func checkCredentialState(userID: String) async -> ASAuthorizationAppleIDProvider.CredentialState {

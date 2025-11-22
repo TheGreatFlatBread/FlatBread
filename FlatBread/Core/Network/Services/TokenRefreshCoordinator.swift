@@ -50,15 +50,22 @@ actor TokenRefreshCoordinator {
     nonisolated
     private func performRefresh() async throws -> String {
         do {
-            guard let refreshToken = await tokenStorage.getRefreshToken() else {
-                throw NetworkError.apiError(.failedReissueToken)
+            async let accessToken: String? = await tokenStorage.getAccessToken()
+            async let refreshToken: String? = await tokenStorage.getRefreshToken()
+            
+            let (access, refreh) = await (accessToken, refreshToken)
+            
+            guard let access, let refreh else {
+                throw NetworkError.apiError(.accessTokenEmpty)
             }
-            let router = await RefreshRouter(refreshToken: refreshToken)
+            
+            let router = await RefreshRouter(accessToken: access, refreshToken: refreh)
             let request = session.request(router)
             let response = try await request
                 .validate(statusCode: 200..<300)
                 .serializingDecodable(RefreshTokenResponseDTO.self)
                 .value
+            
             if let accessToken = response.accessToken,
                 let refreshToken = response.refreshToken
             {
