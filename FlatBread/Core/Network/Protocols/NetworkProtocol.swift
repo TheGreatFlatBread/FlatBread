@@ -24,7 +24,7 @@ protocol AsyncNetworkService: Sendable {
     func streamVideo(_ router: any VideoStreamableRouter,
                      interceptorType: InterceptorType,
                      responseHandler: @escaping @Sendable (HTTPURLResponse) -> Void,
-                     dataHandler: @escaping DataStreamRequest.Handler<Data, Never>)
+                     dataHandler: @escaping DataStreamRequest.Handler<Data, Never>) -> DataStreamRequest
 }
 
 extension AsyncNetworkService {
@@ -54,8 +54,8 @@ extension AsyncNetworkService {
     func streamVideo(_ router: any VideoStreamableRouter,
                      interceptorType: InterceptorType = .networkWithToken,
                      responseHandler: @escaping @Sendable (HTTPURLResponse) -> Void,
-                     dataHandler: @escaping DataStreamRequest.Handler<Data, Never>) {
-        self.streamVideo(router,
+                     dataHandler: @escaping DataStreamRequest.Handler<Data, Never>) -> DataStreamRequest {
+        return self.streamVideo(router,
                          interceptorType: interceptorType,
                          responseHandler: responseHandler,
                          dataHandler: dataHandler)

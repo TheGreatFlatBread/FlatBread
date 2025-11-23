@@ -113,12 +113,12 @@ final class DefaultNetworkService: AsyncNetworkService {
         interceptorType: InterceptorType,
         responseHandler: @escaping (HTTPURLResponse) -> Void,
         dataHandler: @escaping DataStreamRequest.Handler<Data, Never>
-    ) {
+    ) -> DataStreamRequest {
         let interceptor = interceptorType.wrappingInterceptor(
             networkRetrier: networkRetrier,
             tokenInterceptor: tokenInterceptor
         )
-        session.streamRequest(router, interceptor: interceptor)
+        return session.streamRequest(router, interceptor: interceptor)
             .onHTTPResponse(perform: responseHandler)
             .responseStream(stream: dataHandler)
     }
