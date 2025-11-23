@@ -44,8 +44,8 @@ struct ChatRoomView: View {
                 RefreshableContainer(
                     reverse: true,
                     content: {
-                        ChatSectionConatiner(
-                            chatSection: self.viewModel.groupedMessages,
+                        ChatItemsContainer(
+                            chatItems: self.viewModel.chatItems,
                             currentUserID: self.viewModel.currentUserID,
                             retry: self.viewModel.retryMessage(_:)
                         )
@@ -90,6 +90,9 @@ struct ChatRoomView: View {
                     }
             }
         }
+        .task {
+            await viewModel.fetchChatMessageList()
+        }
     }
 
     private var emptyChatPlaceholder: some View {
@@ -107,34 +110,35 @@ struct ChatRoomView: View {
     }
 }
 
-fileprivate struct ChatSectionConatiner: View {
-    let chatSection: [ChatMessageSection]
+fileprivate struct ChatItemsContainer: View {
+    let chatItems: [ChatItem]
     let currentUserID: String
     let retry: (ChatMessageModel) -> Void
-    
+
     var body: some View {
         LazyVStack(spacing: 8) {
-            ForEach(chatSection, id: \.id) { section in
-                ChatListComponent(
-                    date: section.date,
-                    displayConfigs: section.displayConfigs,
-                    currentUserID: currentUserID,
-                    retry: retry
-                )
+            ForEach(chatItems) { item in
+                switch item {
+                case .dateHeader(_, let dateFormatted):
+                    ChatDateHeader(dateFormatted: dateFormatted)
+                case .message(let config):
+                    ChatBubbleCell(
+                        config: config,
+                        isMyMessage: config.message.sender.id == currentUserID,
+                        onRetry: { message in retry(message) }
+                    )
+                }
             }
         }
         .padding(.vertical, 8)
     }
 }
 
-fileprivate struct ChatListComponent: View {
-    let date: String
-    let displayConfigs: [MessageDisplayConfig]
-    let currentUserID: String
-    let retry: (ChatMessageModel) -> Void
-    
+fileprivate struct ChatDateHeader: View {
+    let dateFormatted: String
+
     var body: some View {
-        Text(self.date)
+        Text(dateFormatted)
             .font(.system(size: 12, weight: .medium))
             .foregroundColor(.gray)
             .padding(.horizontal, 12)
@@ -142,15 +146,5 @@ fileprivate struct ChatListComponent: View {
             .background(Color(uiColor: .systemGray6))
             .cornerRadius(12)
             .padding(.vertical, 8)
-        
-        ForEach(self.displayConfigs, id: \.id) { config in
-            ChatBubbleCell(
-                config: config,
-                isMyMessage: config.message.sender.id == currentUserID,
-                onRetry: { message in
-                    retry(message)
-                }
-            )
-        }
     }
 }
