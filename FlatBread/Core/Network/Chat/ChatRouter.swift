@@ -50,9 +50,8 @@ enum ChatRouter: APIRouter {
     
     var query: [URLQueryItem]? {
         switch self {
-        case .fetchChatMessgeList(let roomID, let cursorDate):
-            [URLQueryItem(name: "room_id", value: roomID),
-            URLQueryItem(name: "cursor_date", value: cursorDate)]
+        case .fetchChatMessgeList(_, let cursorDate):
+            [URLQueryItem(name: "cursor_date", value: cursorDate)]
         default:
             nil
         }
