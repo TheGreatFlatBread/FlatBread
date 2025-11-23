@@ -86,8 +86,8 @@ final class OnBoardingViewModel: ObservableObject {
             defer { Task { @MainActor in self.isProcessingImage = false } }
             let preview: Data? = autoreleasepool { [weak self] in
                 guard let self = self else { return nil }
-                if let cg = self.decodeCGImage(from: data) {
-                    return self.makeThumbnailData(from: cg, maxSide: 200)
+                if let cg = self.decodeUprightThumbnail(from: data, maxPixel: 200) {
+                    return self.jpegData(from: cg, quality: 0.5)
                 }
                 return nil
             }
@@ -135,6 +135,17 @@ final class OnBoardingViewModel: ObservableObject {
         let cfData = data as CFData
         guard let source = CGImageSourceCreateWithData(cfData, nil) else { return nil }
         return CGImageSourceCreateImageAtIndex(source, 0, nil)
+    }
+
+    nonisolated private func decodeUprightThumbnail(from data: Data, maxPixel: CGFloat) -> CGImage? {
+        let cfData = data as CFData
+        guard let source = CGImageSourceCreateWithData(cfData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: Int(maxPixel),
+            kCGImageSourceCreateThumbnailWithTransform: true
+        ]
+        return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
     }
 
     nonisolated private func resizedCGImage(_ image: CGImage, maxSide: CGFloat) -> CGImage? {
@@ -186,7 +197,7 @@ final class OnBoardingViewModel: ObservableObject {
     }
 
     nonisolated func preprocessImageData(_ data: Data) -> Data? {
-        guard let image = decodeCGImage(from: data) else { return nil }
+        guard let image = decodeUprightThumbnail(from: data, maxPixel: 2000) ?? decodeCGImage(from: data) else { return nil }
 
         // Constants
         let maxSize: Int = 200_000 // 200KB
@@ -328,3 +339,4 @@ final class OnBoardingViewModel: ObservableObject {
         }
     }
 }
+
