@@ -56,7 +56,7 @@ enum MultipartRouter: MultipartAPIRouter {
         case .updateProfile: "me/profile"
         case .uploadImages: "files"
         case .uploadVideos: "files"
-        case .uploadChatFiles(let roomID, _): "\(roomID)"
+        case .uploadChatFiles(let roomID, _): "\(roomID)/files"
         }
     }
 
