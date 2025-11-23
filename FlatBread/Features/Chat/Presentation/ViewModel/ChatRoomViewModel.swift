@@ -11,8 +11,13 @@ import Kingfisher
 
 @MainActor
 final class ChatRoomViewModel: ObservableObject {
-    let room: ChatRoomModel
+    private(set) var room: ChatRoomModel?
     let currentUserID: String
+
+    // opponent 정보 (새 채팅방 생성 시 사용)
+    private let opponentID: String?
+    private let opponentNick: String?
+    private let opponentProfileImage: String?
 
     @Published private(set) var messages: [ChatMessageModel] = []
     @Published var messageText: String = ""
@@ -20,24 +25,92 @@ final class ChatRoomViewModel: ObservableObject {
     @Published var scrollPosition: String = ""
     @Published var groupedMessages: [ChatMessageSection] = []
     @Published var selectedImageURLs: [String] = []  // temp file URLs
+    @Published var isCreatingRoom: Bool = false
 
     private var currentPageOffset: Int = 0
     private var cursorDate: String?
 
     private let networkService: AsyncNetworkService
-    
+
+    var displayTitle: String {
+        room?.participants.first { $0.id != currentUserID }?.nick
+            ?? opponentNick
+            ?? "채팅방"
+    }
+
+    var isEmpty: Bool {
+        messages.isEmpty && groupedMessages.isEmpty
+    }
+
+    /// 기존 채팅방으로 초기화
     init(room: ChatRoomModel, currentUserID: String) {
         self.room = room
         self.currentUserID = currentUserID
+        self.opponentID = nil
+        self.opponentNick = nil
+        self.opponentProfileImage = nil
+        self.networkService = NetworkServiceFactory.shared.makeNetworkService()
+    }
+
+    /// 새 채팅 시작 (opponent 정보로 초기화, 첫 메시지 전송 시 room 생성)
+    init(opponentID: String, opponentNick: String, opponentProfileImage: String?, currentUserID: String) {
+        self.room = nil
+        self.currentUserID = currentUserID
+        self.opponentID = opponentID
+        self.opponentNick = opponentNick
+        self.opponentProfileImage = opponentProfileImage
         self.networkService = NetworkServiceFactory.shared.makeNetworkService()
     }
 
     func sendMessage() {
         guard !messageText.isEmpty || !selectedImageURLs.isEmpty else { return }
-        if !selectedImageURLs.isEmpty {
+
+        // room이 없으면 먼저 생성
+        if room == nil {
+            createRoomAndSend()
+        } else if !selectedImageURLs.isEmpty {
             sendMessageWithImages()
         } else {
             sendTextOnly()
+        }
+    }
+
+    private func createRoomAndSend() {
+        guard let opponentID else { return }
+
+        let pendingText = messageText
+        let pendingImages = selectedImageURLs
+
+        messageText = ""
+        selectedImageURLs.removeAll()
+        isCreatingRoom = true
+
+        Task {
+            do {
+                let response = try await networkService.request(
+                    ChatRouter.makeChatRoom(opponent_id: opponentID),
+                    responseType: ChatResponseDTO.self,
+                    interceptorType: .networkWithToken
+                )
+                self.room = response.toVM()
+                isCreatingRoom = false
+
+                // room 생성 후 메시지 전송
+                messageText = pendingText
+                selectedImageURLs = pendingImages
+
+                if !pendingImages.isEmpty {
+                    sendMessageWithImages()
+                } else {
+                    sendTextOnly()
+                }
+            } catch {
+                isCreatingRoom = false
+                // 실패 시 입력 복원
+                messageText = pendingText
+                selectedImageURLs = pendingImages
+                print("채팅방 생성 실패: \(error)")
+            }
         }
     }
 
@@ -53,7 +126,7 @@ final class ChatRoomViewModel: ObservableObject {
     }
     
     func fetchChatMessageList() async {
-        guard !isLoadingMore else { return }
+        guard let room, !isLoadingMore else { return }
         isLoadingMore = true
         defer { isLoadingMore = false }
 
@@ -61,7 +134,7 @@ final class ChatRoomViewModel: ObservableObject {
             let cursor = messages.first?.createdAt ?? Date.now.toISO8601String()
 
             let response = try await networkService.request(
-                ChatRouter.fetchChatMessgeList(roomID: self.room.id, cursorDate: cursor),
+                ChatRouter.fetchChatMessgeList(roomID: room.id, cursorDate: cursor),
                 responseType: ChatMessageListResponseDTO.self,
                 interceptorType: .networkWithToken
             )
@@ -74,7 +147,6 @@ final class ChatRoomViewModel: ObservableObject {
             }
         } catch {
             print("채팅 메시지 로드 실패: \(error)")
-            // TODO: 에러 타입별 처리 (네트워크 에러, 인증 에러 등)
         }
     }
     
@@ -84,6 +156,8 @@ final class ChatRoomViewModel: ObservableObject {
 // MARK: Send Logic
 extension ChatRoomViewModel {
     private func sendTextOnly() {
+        guard let room else { return }
+
         let messageContent = messageText
         let tempMessageID = UUID().uuidString
 
@@ -106,11 +180,15 @@ extension ChatRoomViewModel {
 
         Task { @concurrent in
             do {
-                // TODO: 서버 전송 로직 WebSocket 사용해서 Send
-                // let response = try await NetworkService.shared.request(...)
-                // Mock: 0.5초 대기 후 전송 완료
-                try await Task.sleep(nanoseconds: 500_000_000)
-                await updateMessageStatus(messageID: tempMessageID, status: .sent)
+                let response = try await networkService.request(
+                    ChatRouter.sendMessage(roomID: room.id, content: messageContent, files: []),
+                    responseType: ChatMessageResponseDTO.self
+                )
+                
+                await MainActor.run {
+                    updateMessageID(from: tempMessageID, to: response.chatID ?? tempMessageID)
+                    updateMessageStatus(messageID: response.chatID ?? tempMessageID, status: .sent)
+                }
             } catch {
                 print("텍스트 전송 실패: \(error)")
                 await updateMessageStatus(messageID: tempMessageID, status: .failed)
@@ -119,9 +197,12 @@ extension ChatRoomViewModel {
     }
 
     private func sendMessageWithImages() {
-        let tempLocalURLs = selectedImageURLs  // 이미 temp file로 저장된 상태
+        guard let room else { return }
+
+        let tempLocalURLs = selectedImageURLs
         let messageContent = messageText
         let tempMessageID = UUID().uuidString
+
         let tempMessage = ChatMessageModel(
             id: tempMessageID,
             roomID: room.id,
@@ -138,46 +219,51 @@ extension ChatRoomViewModel {
         addMessage(tempMessage)
         scrollPosition = tempMessage.id
 
+        // 로컬 이미지 미리 표시
         messageText = ""
         selectedImageURLs.removeAll()
 
         Task { @concurrent in
             do {
-//              temp file은 이미 저장되어 있음!
-                await updateMessageFiles(messageID: tempMessageID, files: tempLocalURLs)
+                // 1. 이미지 업로드
+                let uploadRequest = ImageUploadRequestDTO(fileURLs: tempLocalURLs)
+                let uploadResponse = try await networkService.upload(
+                    MultipartRouter.uploadChatFiles(roomID: room.id, request: uploadRequest),
+                    responseType: FileUploadResponseDTO.self,
+                    interceptorType: .networkWithToken,
+                    progress: { progress in
+                        print("업로드 진행: \(Int(progress * 100))%")
+                    }
+                )
 
-//              let localFileURLs = tempLocalURLs.compactMap { URL(string: $0) }
-//              let uploadRequest = ImageUploadRequestDTO(fileURLs: localFileURLs)
-//              let router = MultipartRouter.uploadChatFiles(
-//                  roomID: self.room.id,
-//                  request: uploadRequest
-//              )
-//
-//              let uploadResponse = try await networkService.upload(
-//                  router,
-//                  responseType: FileUploadResponseDTO.self,
-//                  interceptorType: .networkWithToken,
-//                  progress: { progress in
-//                      print("업로드 진행: \(Int(progress * 100))%")
-//                  }
-//              )
-//
-//              let serverImageURLs = uploadResponse.files
-                let tempServerURLs = tempLocalURLs.enumerated().map { value in "http://example\(value.offset).com" }
+                let serverImageURLs = uploadResponse.files
+
+                // 2. 로컬 -> 서버 URL 캐시 매핑
                 await cacheLocalImagesToKingfisher(
                     localURLs: tempLocalURLs,
-                    serverURLs:  tempServerURLs// TODO: server url 로 변경
+                    serverURLs: serverImageURLs
                 )
-//
-                await updateMessageFiles(messageID: tempMessageID, files: tempServerURLs)
-                await updateMessageStatus(messageID: tempMessageID, status: .sent)
-                
-                // await ImageFileManager.shared.deleteImages(at: tempLocalURLs)
-                // TODO: Image URL 와 Text를 같이 Websocket으로 전달 해야함
+
+                // 3. 메시지 전송 (content + file URLs)
+                let response = try await networkService.request(
+                    ChatRouter.sendMessage(roomID: room.id, content: messageContent, files: serverImageURLs),
+                    responseType: ChatMessageResponseDTO.self
+                )
+
+                // 4. UI 업데이트
+                await MainActor.run {
+                    updateMessageID(from: tempMessageID, to: response.chatID ?? tempMessageID)
+                    updateMessageFiles(messageID: response.chatID ?? tempMessageID, files: serverImageURLs)
+                    updateMessageStatus(messageID: response.chatID ?? tempMessageID, status: .sent)
+                }
+
+                // 5. 로컬 임시 파일 삭제
+                for localURL in tempLocalURLs {
+                    await ImageFileManager.shared.deleteImage(at: localURL)
+                }
             } catch {
+                print("이미지 메시지 전송 실패: \(error)")
                 await updateMessageStatus(messageID: tempMessageID, status: .failed)
-                // 실패 시에는 temp file 유지 (이미지 표시 + Retry 가능)
-                // 앱 시작 시 오래된 파일 자동 정리됨
             }
         }
     }
@@ -186,18 +272,15 @@ extension ChatRoomViewModel {
         guard localURLs.count == serverURLs.count else { return }
         for (localURLString, serverURLString) in zip(localURLs, serverURLs) {
             guard let localURL = URL(string: localURLString),
-                  let imageData = try? Data(contentsOf: localURL),
-                  let image = UIImage(data: imageData) else {
+                  let imageData = try? Data(contentsOf: localURL) else {
                 continue
             }
-            
+
             await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-                KingfisherManager.shared.cache.store(
-                    image,  // ← UIImage로 저장!
+                KingfisherManager.shared.cache.storeToDisk(
+                    imageData,
                     forKey: serverURLString,
-                    options: KingfisherParsedOptionsInfo([
-                        .diskCacheExpiration(.days(7))
-                    ])
+                    expiration: .never
                 ) { _ in
                     continuation.resume()
                 }
@@ -267,6 +350,27 @@ extension ChatRoomViewModel {
 
 // MARK: Update Logic
 extension ChatRoomViewModel {
+    @MainActor
+    private func updateMessageID(from oldID: String, to newID: String) {
+        guard let messageIndex = messages.firstIndex(where: { $0.id == oldID }) else { return }
+        messages[messageIndex].id = newID
+
+        let dateKey = messages[messageIndex].createdAt.toDateKey()
+        guard let sectionIndex = groupedMessages.firstIndex(where: { $0.date == dateKey }) else { return }
+
+        var section = groupedMessages[sectionIndex]
+        guard let sectionMsgIndex = section.messages.firstIndex(where: { $0.id == oldID }) else { return }
+
+        section.messages[sectionMsgIndex].id = newID
+
+        groupedMessages[sectionIndex] = ChatMessageSection.create(
+            date: section.date,
+            dateFormatted: section.dateFormatted,
+            messages: section.messages,
+            currentUserID: currentUserID
+        )
+    }
+
     @MainActor
     private func updateMessageStatus(messageID: String, status: MessageSendStatus) {
         guard let messageIndex = messages.firstIndex(where: { $0.id == messageID }) else { return }
