@@ -38,6 +38,7 @@ final class OnBoardingViewModel: ObservableObject {
 
     // Lightweight preview image data for UI rendering
     @Published var previewImageData: Data? = nil
+    @Published var isProcessingImage: Bool = false
 
     @Published var gender: GenderOption = .other
 
@@ -46,6 +47,8 @@ final class OnBoardingViewModel: ObservableObject {
     @Published var uploadProgress: Double = 0
     @Published var errorMessage: String? = nil
     @Published var shouldShowOnboarding: Bool = true
+
+    private var imagePreprocessTask: Task<Void, Never>? = nil
 
     var canSubmit: Bool {
         let nickOK = !nick.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -57,28 +60,40 @@ final class OnBoardingViewModel: ObservableObject {
 
     func setProfileImage(data: Data?) {
         profileImageData = data
+        isProcessingImage = data != nil
 
-        // Set previewImageData immediately with a lightweight thumbnail
+        // Cancel any existing processing task before starting new work
+        imagePreprocessTask?.cancel()
+
         guard let data = data else {
+            isProcessingImage = false
             previewImageData = nil
             processedImageData = nil
             isImageValid = true
             return
         }
 
-        if let cgImage = decodeCGImage(from: data) {
-            previewImageData = makeThumbnailData(from: cgImage, maxSide: 300)
-        } else {
-            previewImageData = nil
-        }
-
-        // Perform preprocessing asynchronously and cache result to avoid blocking UI
-        Task(priority: .background) { [weak self] in
+        imagePreprocessTask = Task(priority: .background) { [weak self] in
             guard let self = self else { return }
-            let preprocessed = self.preprocessImageData(data)
+            defer { Task { @MainActor in self.isProcessingImage = false } }
+            let preview: Data? = autoreleasepool { [weak self] in
+                guard let self = self else { return nil }
+                if let cg = self.decodeCGImage(from: data) {
+                    return self.makeThumbnailData(from: cg, maxSide: 200)
+                }
+                return nil
+            }
+            try? Task.checkCancellation()
+            let preprocessed: Data? = autoreleasepool { [weak self] in
+                guard let self = self else { return nil }
+                return self.preprocessImageData(data)
+            }
+            try? Task.checkCancellation()
             await MainActor.run {
+                self.previewImageData = preview
                 self.processedImageData = preprocessed
                 self.isImageValid = (preprocessed != nil)
+                self.isProcessingImage = false
             }
         }
     }
@@ -136,7 +151,7 @@ final class OnBoardingViewModel: ObservableObject {
 
     private func makeThumbnailData(from cgImage: CGImage, maxSide: CGFloat) -> Data? {
         guard let resized = resizedCGImage(cgImage, maxSide: maxSide) else { return nil }
-        return jpegData(from: resized, quality: 0.6)
+        return jpegData(from: resized, quality: 0.5)
     }
 
     func validateNick(_ nick: String) -> Bool {
@@ -175,8 +190,8 @@ final class OnBoardingViewModel: ObservableObject {
             return data
         }
 
-        // Try resizing with fixed quality 0.8 at various sizes
-        let resizeSteps: [CGFloat] = [1024, 800, 600, 400]
+        // Try resizing with fixed quality 0.8 at various sizes (reduced steps)
+        let resizeSteps: [CGFloat] = [800, 600, 400]
         var bestData: Data? = nil
         var lastResizedImage: CGImage? = image
 
@@ -194,9 +209,9 @@ final class OnBoardingViewModel: ObservableObject {
             }
         }
 
-        // If none met criteria by resizing at quality 0.8, try quality compression on smallest resized or original if no resizing
+        // If none met criteria by resizing at quality 0.8, try quality compression on smallest resized or original if no resizing (reduced qualities)
         if let imageToCompress = lastResizedImage {
-            let qualities: [CGFloat] = [0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+            let qualities: [CGFloat] = [0.6, 0.4, 0.2]
             for quality in qualities {
                 if let compressedData = jpegData(from: imageToCompress, quality: quality) {
                     if compressedData.count <= preferredMaxSize {
