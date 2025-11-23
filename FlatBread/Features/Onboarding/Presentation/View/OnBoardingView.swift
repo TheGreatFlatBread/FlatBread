@@ -15,6 +15,22 @@ struct OnBoardingView: View {
 
     enum Field { case nick, phone, birth }
 
+    // Computed helpers
+    private var formattedBirthDate: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: vm.birthDate)
+    }
+
+    private var isNickValid: Bool {
+        vm.validateNick(vm.nick)
+    }
+
+    private var isProfileImageValid: Bool {
+        guard let data = vm.profileImageData else { return true }
+        return vm.prepareProfileImageData(data) != nil
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack {
@@ -77,6 +93,16 @@ struct OnBoardingView: View {
                                     }
                                 }
                             }
+
+                            Text("이미지 형식: jpg, jpeg, png | 최대 200KB (권장 100KB)")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+
+                            if vm.profileImageData != nil && !isProfileImageValid {
+                                Text("이미지 용량이 너무 큽니다. 200KB 이하로 줄여주세요.")
+                                    .font(.footnote)
+                                    .foregroundStyle(.red)
+                            }
                         }
                         .padding(.horizontal, 16)
 
@@ -93,6 +119,15 @@ struct OnBoardingView: View {
                                         .stroke(Color(.systemGray4), lineWidth: 1)
                                 )
                                 .focused($focusedField, equals: .nick)
+
+                            if !isNickValid {
+                                Text("닉네임은 공백 없이 입력해야 하며,\n특수 문자는 사용할 수 없습니다.")
+                                    .font(.footnote)
+                                    .foregroundStyle(.red)
+                            }
+                            Text("사용 불가 문자: . , ? * - @ + ^ $ { } ( ) | [ ] \\")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
                         }
                         .padding(.horizontal, 16)
 
@@ -124,14 +159,10 @@ struct OnBoardingView: View {
                                         RoundedRectangle(cornerRadius: 12, style: .continuous)
                                             .stroke(Color(.systemGray4), lineWidth: 1)
                                     )
-                                Text(vm.birthDate, formatter: {
-                                    let formatter = DateFormatter()
-                                    formatter.dateFormat = "yyyy-MM-dd"
-                                    return formatter
-                                }())
-                                .font(.footnote)
-                                .foregroundStyle(.secondary)
-                                .padding(.horizontal, 14)
+                                Text(formattedBirthDate)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 14)
                             }
                             .focused($focusedField, equals: .birth)
                         }
@@ -186,6 +217,22 @@ struct OnBoardingView: View {
                 }
                 .disabled(!vm.canSubmit)
                 .background(Color(.systemBackground))
+
+                if !vm.canSubmit {
+                    if !isNickValid {
+                        Text("닉네임 형식이 올바르지 않습니다.")
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .padding(.bottom, 8)
+                            .padding(.horizontal, 16)
+                    } else if vm.profileImageData != nil && !isProfileImageValid {
+                        Text("이미지 용량이 너무 큽니다. 200KB 이하 파일을 선택해 주세요.")
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .padding(.bottom, 8)
+                            .padding(.horizontal, 16)
+                    }
+                }
             } else {
                 // Onboarding not needed, route to Home here
                 ProgressView()
