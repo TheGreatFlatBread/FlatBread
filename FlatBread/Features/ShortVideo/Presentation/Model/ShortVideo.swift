@@ -79,6 +79,7 @@ final class ShortVideo: Identifiable, Hashable {
         let filePath = files.first ?? ""
         self.avURLAsset = AVURLAsset(url: Self.dummyURL)
         let queue = DispatchQueue(label: "com.flatBread.resourceLoader.\(filePath)")
+        resourceLoaderDelegate.shortVideo = self
         resourceLoaderDelegate.videoFilePath = filePath
         self.avURLAsset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: queue)
     }
@@ -242,7 +243,7 @@ extension PostResponseDTO {
                 category: "random_post_id",
                 title: "",
                 price: 0,
-                content: "버클리대학교는 학교 도서관에 공룡 화석을 전시해 둔답니다...클라스 무엇..?",
+                content: "버클리대학교는 학교 도서관에 공룡 화석을 전시해 둔답니다...클라스 무엇..?\n고고학🦖 마니아 환영",
                 value1: nil, value2: nil, value3: nil, value4: nil, value5: nil, value6: nil, value7: nil, value8: nil, value9: nil, value10: nil,
                 createdAt: "2025-11-21T10:30:44.362Z",
                 creator: nil,
@@ -319,6 +320,60 @@ extension PostResponseDTO {
                 createdAt: "2025-11-21T10:30:44.362Z",
                 creator: nil,
                 files: ["/data/posts/videoTest_1763875537750"],
+                likes: ["abcd", "efgh", "ijkl", "mnop"],
+                likes2: [],
+                buyers: [],
+                hashTags: ["FBP_shortVideo"],
+                comment_count: 35,
+                geolocation: nil,
+                distance: nil
+            ),
+            PostResponseDTO(
+                post_id: "7a0e3d6c9b2f5a8e1d4c7b0f3a6e9d2c",
+                category: "random_post_id",
+                title: "",
+                price: 0,
+                content: "이것은 무엇일까요?\n박물관에 전시되어있는 역사적인 구글 최초의 서버랍니다!\n컴퓨터에 관심있는 분들 언제든 환영입니다.",
+                value1: nil, value2: nil, value3: nil, value4: nil, value5: nil, value6: nil, value7: nil, value8: nil, value9: nil, value10: nil,
+                createdAt: "2025-11-21T10:30:44.362Z",
+                creator: nil,
+                files: ["/data/posts/videoTest_1763916819312"],
+                likes: ["abcd", "efgh", "ijkl", "mnop"],
+                likes2: [],
+                buyers: [],
+                hashTags: ["FBP_shortVideo"],
+                comment_count: 35,
+                geolocation: nil,
+                distance: nil
+            ),
+            PostResponseDTO(
+                post_id: "b2f5a8e1d4c7b0f3a6e9d2c5b8a1e4d7",
+                category: "random_post_id",
+                title: "",
+                price: 0,
+                content: "한국에서 포뮬러E 대회가 열린 적이 있다는 사실을 알고 계신가요?\n자동차에 관심있으신 분!🏎️ 환영입니다!",
+                value1: nil, value2: nil, value3: nil, value4: nil, value5: nil, value6: nil, value7: nil, value8: nil, value9: nil, value10: nil,
+                createdAt: "2025-11-21T10:30:44.362Z",
+                creator: nil,
+                files: ["/data/posts/videoTest_1763917178028"],
+                likes: ["abcd", "efgh", "ijkl", "mnop"],
+                likes2: [],
+                buyers: [],
+                hashTags: ["FBP_shortVideo"],
+                comment_count: 35,
+                geolocation: nil,
+                distance: nil
+            ),
+            PostResponseDTO(
+                post_id: "0d3c6b9f1a4e7d0c3b6f8a5e1d4c7b0f",
+                category: "random_post_id",
+                title: "",
+                price: 0,
+                content: "판도라🪐 여행인원 구합니다.",
+                value1: nil, value2: nil, value3: nil, value4: nil, value5: nil, value6: nil, value7: nil, value8: nil, value9: nil, value10: nil,
+                createdAt: "2025-11-21T10:30:44.362Z",
+                creator: nil,
+                files: ["/data/posts/videoTest_1763917549800"],
                 likes: ["abcd", "efgh", "ijkl", "mnop"],
                 likes2: [],
                 buyers: [],
