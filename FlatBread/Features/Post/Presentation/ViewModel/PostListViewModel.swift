@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class PostListViewModel: ObservableObject {
     
     @Published var moim: TempPostMoimModel?
