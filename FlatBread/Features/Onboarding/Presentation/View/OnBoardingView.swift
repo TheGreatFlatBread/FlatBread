@@ -8,6 +8,135 @@
 import SwiftUI
 import PhotosUI
 
+struct OnBoardingView: View {
+    @StateObject private var vm = OnBoardingViewModel()
+    @State private var pickerItem: PhotosPickerItem? = nil
+    @FocusState private var focusedField: Field?
+
+    enum Field { case nick, phone, birth }
+
+    // Computed helpers
+    private static let birthFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+
+    private var formattedBirthDate: String {
+        Self.birthFormatter.string(from: vm.birthDate)
+    }
+
+    private var isNickValid: Bool {
+        vm.validateNick(vm.nick)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("프로필을 완성해요")
+                    .font(.system(size: 28, weight: .bold))
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 12)
+
+            if vm.shouldShowOnboarding {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 20) {
+                        // MARK: - 대표 사진
+                        ProfileImageSection(vm: vm, pickerItem: $pickerItem)
+                            .padding(.horizontal, 16)
+
+                        // MARK: - 닉네임
+                        NicknameSection(vm: vm, focusedField: _focusedField)
+                            .padding(.horizontal, 16)
+
+                        // MARK: - 연락처
+                        PhoneSection(vm: vm, focusedField: _focusedField)
+                            .padding(.horizontal, 16)
+
+                        // MARK: - 생년월일
+                        BirthSection(vm: vm, formattedBirthDate: .constant(formattedBirthDate), focusedField: _focusedField)
+                            .padding(.horizontal, 16)
+
+                        // MARK: - 성별
+                        GenderSection(vm: vm)
+                            .padding(.horizontal, 16)
+
+                        Spacer(minLength: 24)
+                    }
+                    .padding(.vertical, 12)
+                }
+
+                if vm.isUploading {
+                    HStack(spacing: 8) {
+                        ProgressView(value: vm.uploadProgress)
+                        Text("업로드 중…")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 4)
+                }
+
+                Button {
+                    Task {
+                        let success = await vm.submit()
+                        if success {
+                            // On success, server now has info1 set. Route to Home.
+                        }
+                    }
+                } label: {
+                    Text("완료")
+                        .font(.system(size: 17, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 52)
+                        .background(vm.canSubmit ? Color.black : Color(.systemGray5))
+                        .foregroundStyle(vm.canSubmit ? .white : .secondary)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                }
+                .disabled(!vm.canSubmit)
+                .background(Color(.systemBackground))
+
+                if !vm.canSubmit {
+                    if !isNickValid {
+                        Text("닉네임 형식이 올바르지 않습니다.")
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .padding(.bottom, 8)
+                            .padding(.horizontal, 16)
+                    } else if vm.profileImageData != nil && !vm.isImageValid {
+                        Text("이미지 용량이 너무 큽니다. 200KB 이하 파일을 선택해 주세요.")
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .padding(.bottom, 8)
+                            .padding(.horizontal, 16)
+                    }
+                }
+            } else {
+                // Onboarding not needed, route to Home here
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .onTapGesture { focusedField = nil }
+        .background(Color(.systemBackground))
+        .alert("프로필 업데이트 실패", isPresented: Binding(
+            get: { vm.errorMessage != nil },
+            set: { if !$0 { vm.errorMessage = nil } }
+        )) {
+            Button("확인", role: .cancel) { vm.errorMessage = nil }
+        } message: {
+            Text(vm.errorMessage ?? "오류가 발생했습니다. 다시 시도해 주세요.")
+        }
+        .task {
+            await vm.checkOnboardingNeeded()
+        }
+    }
+}
+
 private struct ProfileImageSection: View {
     @ObservedObject var vm: OnBoardingViewModel
     @Binding var pickerItem: PhotosPickerItem?
@@ -178,135 +307,6 @@ private struct GenderSection: View {
                 }
             }
             .pickerStyle(.segmented)
-        }
-    }
-}
-
-struct OnBoardingView: View {
-    @StateObject private var vm = OnBoardingViewModel()
-    @State private var pickerItem: PhotosPickerItem? = nil
-    @FocusState private var focusedField: Field?
-
-    enum Field { case nick, phone, birth }
-
-    // Computed helpers
-    private static let birthFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter
-    }()
-
-    private var formattedBirthDate: String {
-        Self.birthFormatter.string(from: vm.birthDate)
-    }
-
-    private var isNickValid: Bool {
-        vm.validateNick(vm.nick)
-    }
-
-    var body: some View {
-        VStack(spacing: 0) {
-            HStack {
-                Text("프로필을 완성해요")
-                    .font(.system(size: 28, weight: .bold))
-                Spacer()
-            }
-            .padding(.horizontal, 16)
-            .padding(.top, 12)
-
-            if vm.shouldShowOnboarding {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 20) {
-                        // MARK: - 대표 사진
-                        ProfileImageSection(vm: vm, pickerItem: $pickerItem)
-                            .padding(.horizontal, 16)
-
-                        // MARK: - 닉네임
-                        NicknameSection(vm: vm, focusedField: _focusedField)
-                            .padding(.horizontal, 16)
-
-                        // MARK: - 연락처
-                        PhoneSection(vm: vm, focusedField: _focusedField)
-                            .padding(.horizontal, 16)
-
-                        // MARK: - 생년월일
-                        BirthSection(vm: vm, formattedBirthDate: .constant(formattedBirthDate), focusedField: _focusedField)
-                            .padding(.horizontal, 16)
-
-                        // MARK: - 성별
-                        GenderSection(vm: vm)
-                            .padding(.horizontal, 16)
-
-                        Spacer(minLength: 24)
-                    }
-                    .padding(.vertical, 12)
-                }
-
-                if vm.isUploading {
-                    HStack(spacing: 8) {
-                        ProgressView(value: vm.uploadProgress)
-                        Text("업로드 중…")
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 4)
-                }
-
-                Button {
-                    Task {
-                        let success = await vm.submit()
-                        if success {
-                            // On success, server now has info1 set. Route to Home.
-                        }
-                    }
-                } label: {
-                    Text("완료")
-                        .font(.system(size: 17, weight: .semibold))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 52)
-                        .background(vm.canSubmit ? Color.black : Color(.systemGray5))
-                        .foregroundStyle(vm.canSubmit ? .white : .secondary)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                }
-                .disabled(!vm.canSubmit)
-                .background(Color(.systemBackground))
-
-                if !vm.canSubmit {
-                    if !isNickValid {
-                        Text("닉네임 형식이 올바르지 않습니다.")
-                            .font(.footnote)
-                            .foregroundStyle(.red)
-                            .padding(.bottom, 8)
-                            .padding(.horizontal, 16)
-                    } else if vm.profileImageData != nil && !vm.isImageValid {
-                        Text("이미지 용량이 너무 큽니다. 200KB 이하 파일을 선택해 주세요.")
-                            .font(.footnote)
-                            .foregroundStyle(.red)
-                            .padding(.bottom, 8)
-                            .padding(.horizontal, 16)
-                    }
-                }
-            } else {
-                // Onboarding not needed, route to Home here
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
-        }
-        .onTapGesture { focusedField = nil }
-        .background(Color(.systemBackground))
-        .alert("프로필 업데이트 실패", isPresented: Binding(
-            get: { vm.errorMessage != nil },
-            set: { if !$0 { vm.errorMessage = nil } }
-        )) {
-            Button("확인", role: .cancel) { vm.errorMessage = nil }
-        } message: {
-            Text(vm.errorMessage ?? "오류가 발생했습니다. 다시 시도해 주세요.")
-        }
-        .task {
-            await vm.checkOnboardingNeeded()
         }
     }
 }
