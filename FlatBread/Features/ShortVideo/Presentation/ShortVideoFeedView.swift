@@ -1,5 +1,5 @@
 //
-//  ShortFormFeedView.swift
+//  ShortVideoFeedView.swift
 //  FlatBread
 //
 //  Created by 김민성 on 11/20/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ShortFormFeedView: View {
+struct ShortVideoFeedView: View {
     
     @StateObject private var viewModel = ShortVideoFeedViewModel()
     

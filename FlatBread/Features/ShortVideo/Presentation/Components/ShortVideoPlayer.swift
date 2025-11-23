@@ -1,5 +1,5 @@
 //
-//  ShortFormVideoPlayer.swift
+//  ShortVideoPlayer.swift
 //  FlatBread
 //
 //  Created by 김민성 on 11/20/25.
@@ -8,7 +8,7 @@
 import SwiftUI
 import AVFoundation
 
-struct ShortFormVideoPlayer: UIViewRepresentable {
+struct ShortVideoPlayer: UIViewRepresentable {
     let player: AVPlayer
     
     func makeUIView(context: Context) -> PlayerUIView {

@@ -31,7 +31,7 @@ struct FeedVideoCell: View {
         ZStack(alignment: .bottom) {
             if let player = player {
                 VStack(spacing: 0) {
-                    ShortFormVideoPlayer(player: player)
+                    ShortVideoPlayer(player: player)
                     // 동영상 간 separator 역할
                     Color.black
                         .frame(height: 2)
@@ -65,9 +65,9 @@ struct FeedVideoCell: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
                 VStack(spacing: 25) {
-                    ShortFormActionButton(icon: "heart", text: "Like")
-                    ShortFormActionButton(icon: "message", text: "Reply")
-                    ShortFormActionButton(icon: "paperplane", text: "Share")
+                    ShortVideoActionButton(icon: "heart", text: "Like")
+                    ShortVideoActionButton(icon: "message", text: "Reply")
+                    ShortVideoActionButton(icon: "paperplane", text: "Share")
                     
                     Image(systemName: "opticaldisc.fill")
                         .resizable()

@@ -44,7 +44,7 @@ struct ContentView: View {
                             Label("홈", systemImage: "house")
                         }
                     
-                    ShortFormFeedView()
+                    ShortVideoFeedView()
                         .tabItem {
                             Label("숏폼", systemImage: "play.rectangle")
                         }
