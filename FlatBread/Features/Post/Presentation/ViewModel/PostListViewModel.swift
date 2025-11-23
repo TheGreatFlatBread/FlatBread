@@ -79,10 +79,12 @@ final class PostListViewModel: ObservableObject {
     }
     
     func loadInitialData() async {
+        isLoading = true
         await loadCurreqntUserId()
         if let memberIds = await fetchMoimData() {
             await fetchLoadMember(memberIds: memberIds)
         }
+        isLoading = false
         posts = await fetchPosts()
     }
     
