@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import UIKit
 
 @MainActor
 final class OnBoardingViewModel: ObservableObject {
@@ -85,21 +86,40 @@ final class OnBoardingViewModel: ObservableObject {
         let maxSize: Int = 200_000 // 200KB
         let preferredMaxSize: Int = 100_000 // 100KB preferred
 
-        if isPNG {
-            // For PNG: if size <= maxSize, return original
-            if data.count <= maxSize {
-                return data
-            }
-            // Else try JPEG compression instead below
+        // Early return if PNG and already small enough
+        if isPNG && data.count <= maxSize {
+            return data
         }
 
-        // Compress as JPEG with quality steps from 0.8 down to 0.4
-        let qualities: [CGFloat] = [0.8, 0.7, 0.6, 0.5, 0.4]
+        // Helper to resize UIImage maintaining aspect ratio
+        func resizedImage(_ image: UIImage, maxSide: CGFloat) -> UIImage {
+            let size = image.size
+            let aspectRatio = size.width / size.height
+            var newSize: CGSize
+            if size.width > size.height {
+                newSize = CGSize(width: maxSide, height: maxSide / aspectRatio)
+            } else {
+                newSize = CGSize(width: maxSide * aspectRatio, height: maxSide)
+            }
+            let format = UIGraphicsImageRendererFormat.default()
+            format.opaque = false
+            let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
+            return renderer.image { _ in
+                image.draw(in: CGRect(origin: .zero, size: newSize))
+            }
+        }
+
+        // Try resizing with fixed quality 0.8 at various sizes
+        let resizeSteps: [CGFloat] = [1024, 800, 600, 400]
         var bestData: Data? = nil
-        for quality in qualities {
-            if let compressedData = image.jpegData(compressionQuality: quality) {
+        var lastResizedImage = image
+
+        for maxSide in resizeSteps {
+            let resized = resizedImage(image, maxSide: maxSide)
+            lastResizedImage = resized
+            if let compressedData = resized.jpegData(compressionQuality: 0.8) {
                 if compressedData.count <= preferredMaxSize {
-                    return compressedData // preferred size reached
+                    return compressedData
                 }
                 if compressedData.count <= maxSize {
                     bestData = compressedData
@@ -107,12 +127,24 @@ final class OnBoardingViewModel: ObservableObject {
             }
         }
 
-        // If no compressed data <= maxSize, try returning bestData if any
+        // If none met criteria by resizing at quality 0.8, try quality compression on smallest resized or original if no resizing
+        let imageToCompress = lastResizedImage
+        let qualities: [CGFloat] = [0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+        for quality in qualities {
+            if let compressedData = imageToCompress.jpegData(compressionQuality: quality) {
+                if compressedData.count <= preferredMaxSize {
+                    return compressedData
+                }
+                if compressedData.count <= maxSize {
+                    bestData = compressedData
+                }
+            }
+        }
+
         if let bestData = bestData {
             return bestData
         }
 
-        // Cannot compress below maxSize
         return nil
     }
 
@@ -209,3 +241,4 @@ final class OnBoardingViewModel: ObservableObject {
         }
     }
 }
+
