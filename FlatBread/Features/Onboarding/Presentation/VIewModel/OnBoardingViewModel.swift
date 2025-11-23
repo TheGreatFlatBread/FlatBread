@@ -14,6 +14,7 @@ import UniformTypeIdentifiers
 
 @MainActor
 final class OnBoardingViewModel: ObservableObject {
+    // 타입
     enum GenderOption: String, CaseIterable, Identifiable {
         case male, female, other
         var id: String { rawValue }
@@ -26,38 +27,45 @@ final class OnBoardingViewModel: ObservableObject {
         }
     }
 
-    // Inputs
+    // 입력 값
     @Published var nick: String = ""
     @Published var phoneNum: String = ""
     @Published var birthDate: Date = Date()
     @Published var profileImageData: Data? = nil
+    @Published var gender: GenderOption = .other
 
-    // Cached processed image data and validity state
+    // 이미지 상태
     @Published var processedImageData: Data? = nil
     @Published var isImageValid: Bool = true
-
-    // Lightweight preview image data for UI rendering
     @Published var previewImageData: Data? = nil
     @Published var isProcessingImage: Bool = false
 
-    @Published var gender: GenderOption = .other
-
-    // State
+    // UI 상태
     @Published var isUploading: Bool = false
     @Published var uploadProgress: Double = 0
     @Published var errorMessage: String? = nil
     @Published var shouldShowOnboarding: Bool = true
 
+    // 작업(Task)
     private var imagePreprocessTask: Task<Void, Never>? = nil
+
+    private static let birthFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+    private static let forbiddenNickCharacters = CharacterSet(charactersIn: ".,?*\\-@+^${}()|[]\\")
+    private static let phoneRegexPattern = "^[0-9]{9,12}$"
 
     var canSubmit: Bool {
         let nickOK = !nick.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        let phoneOK = phoneNum.isEmpty || phoneNum.range(of: "^[0-9]{9,12}$", options: .regularExpression) != nil
+        let phoneOK = phoneNum.isEmpty || phoneNum.range(of: Self.phoneRegexPattern, options: .regularExpression) != nil
         let containsInvalidNick = !validateNick(nick)
         let imageOK = isImageValid
         return nickOK && phoneOK && !containsInvalidNick && !isUploading && imageOK
     }
 
+    // Actions
     func setProfileImage(data: Data?) {
         profileImageData = data
         isProcessingImage = data != nil
@@ -98,8 +106,31 @@ final class OnBoardingViewModel: ObservableObject {
         }
     }
 
-    // MARK: - Private helpers
+    // 검증
+    func validateNick(_ nick: String) -> Bool {
+        let trimmed = nick.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        // Check no whitespace inside
+        if trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) != nil {
+            return false
+        }
+        // Exclude characters: [.,?*\-@+^${}()|\[\]\\]
+        if trimmed.rangeOfCharacter(from: Self.forbiddenNickCharacters) != nil {
+            return false
+        }
+        return true
+    }
 
+    func sanitizedNick(_ nick: String) -> String {
+        nick.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    func prepareProfileImageData(_ data: Data?) -> Data? {
+        guard let data = data else { return nil }
+        return preprocessImageData(data)
+    }
+
+    // 이미지 처리 (Nonisolated 헬퍼)
     nonisolated private func decodeCGImage(from data: Data) -> CGImage? {
         let cfData = data as CFData
         guard let source = CGImageSourceCreateWithData(cfData, nil) else { return nil }
@@ -152,30 +183,6 @@ final class OnBoardingViewModel: ObservableObject {
     private func makeThumbnailData(from cgImage: CGImage, maxSide: CGFloat) -> Data? {
         guard let resized = resizedCGImage(cgImage, maxSide: maxSide) else { return nil }
         return jpegData(from: resized, quality: 0.5)
-    }
-
-    func validateNick(_ nick: String) -> Bool {
-        let trimmed = nick.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else { return false }
-        // Check no whitespace inside
-        if trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) != nil {
-            return false
-        }
-        // Exclude characters: [.,?*\-@+^${}()|\[\]\\]
-        let forbiddenCharacters = CharacterSet(charactersIn: ".,?*\\-@+^${}()|[]\\")
-        if trimmed.rangeOfCharacter(from: forbiddenCharacters) != nil {
-            return false
-        }
-        return true
-    }
-
-    func sanitizedNick(_ nick: String) -> String {
-        nick.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    func prepareProfileImageData(_ data: Data?) -> Data? {
-        guard let data = data else { return nil }
-        return preprocessImageData(data)
     }
 
     nonisolated func preprocessImageData(_ data: Data) -> Data? {
@@ -231,10 +238,9 @@ final class OnBoardingViewModel: ObservableObject {
         return nil
     }
 
+    // DTO / 포맷팅
     private func formattedBirthDay() -> String? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: birthDate)
+        Self.birthFormatter.string(from: birthDate)
     }
 
     private var dto: UserProfileUpdateDTO {
@@ -252,6 +258,7 @@ final class OnBoardingViewModel: ObservableObject {
         )
     }
 
+    // 네트워킹
     func checkOnboardingNeeded() async {
         let networkService = NetworkServiceFactory.shared.makeNetworkService()
         do {
