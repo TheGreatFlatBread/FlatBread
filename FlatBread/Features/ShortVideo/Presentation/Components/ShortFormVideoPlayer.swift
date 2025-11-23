@@ -16,9 +16,7 @@ struct ShortFormVideoPlayer: UIViewRepresentable {
     }
     
     func updateUIView(_ uiView: PlayerUIView, context: Context) {
-        if uiView.playerLayer.player != player {
-            uiView.playerLayer.player = player
-        }
+        uiView.playerLayer.player = player
     }
 }
 

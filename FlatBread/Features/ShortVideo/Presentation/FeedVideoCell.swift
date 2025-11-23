@@ -7,19 +7,24 @@
 
 import SwiftUI
 import AVFoundation
+import Combine
 import Alamofire
 
 struct FeedVideoCell: View {
-    let video: ShortFormVideo
+    let shortVideo: ShortVideo
     let bottomInset: CGFloat
-    @Binding var currentVideoID: UUID?
+    @Binding var currentVideoID: String?
     
     @State private var player: AVPlayer?
-    @State private var resourceLoaderDelegate = CustomResourceLoaderDelegate()
+    @State private var playerLooper: NSObjectProtocol?
+    @State private var statusObserver: NSKeyValueObservation?
+    @State private var cancellables: Set<AnyCancellable> = []
+    
+    private let playerManager = PlayerManager.shared
     
     /// 이 뷰가 지금 화면에 보이고 있는지 여부
     var isVisible: Bool {
-        return currentVideoID == video.id
+        return currentVideoID == shortVideo.id
     }
     
     var body: some View {
@@ -46,9 +51,9 @@ struct FeedVideoCell: View {
                         Text("@user_id")
                             .font(.headline).bold()
                     }
-                    Text(video.description)
+                    Text(shortVideo.content)
                         .font(.subheadline)
-                        .lineLimit(2)
+                        .lineLimit(3)
                     
                     HStack {
                         Image(systemName: "music.note")
@@ -76,52 +81,56 @@ struct FeedVideoCell: View {
             .padding(.bottom, bottomInset + 20)
         }
         .onAppear {
-            setupPlayer()
+            setupPlayer(with: shortVideo)
         }
         .onDisappear {
-            player?.pause()
+            releasePlayer()
         }
         .onChange(of: isVisible) { _, newValue in
             if newValue {
                 player?.play()
             } else {
-                player?.pause()
-                player?.seek(to: .zero)
+                playerManager.pause(for: shortVideo)
             }
         }
     }
     
-    private func setupPlayer() {
-        if player == nil {
-            // 오디오 세션 설정 (매너모드에서도 소리 나게)
-            try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
-            try? AVAudioSession.sharedInstance().setActive(true)
-            
-            // 더미 URL.
-            // 실제 URL은 resourceLoaderDelegate에서 filePath를 Network Layer에 넘겨줌.
-            // AVPlayer가 사용할 URL을 직접 사용하지 않고 Delegate에 위임하도록 가짜 URL 커스텀
-            let dummyURL = URL(string: "custom-https://www.dummyURL.com/sample/video.mp4")!
-            let asset = AVURLAsset(url: dummyURL)
-            let queue = DispatchQueue(label: "com.flatBread.resourceLoader")
-            
-            resourceLoaderDelegate.videoFilePath = video.filePath
-            asset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: queue)
-            let item = AVPlayerItem(asset: asset)
-            player = AVPlayer(playerItem: item)
+    private func setupPlayer(with video: ShortVideo) {
+        // 오디오 세션 설정 (매너모드에서도 소리 나게)
+        try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [])
+        try? AVAudioSession.sharedInstance().setActive(true)
+        
+        let player = playerManager.player(for: video)
+        self.player = player
+        
+        if let playerLooper {
+            NotificationCenter.default.removeObserver(playerLooper)
         }
         
-        // 무한 반복
-        NotificationCenter.default.addObserver(
+        playerLooper = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
-            object: player?.currentItem,
+            object: player.currentItem,
             queue: .main
         ) { _ in
-            player?.seek(to: .zero)
-            player?.play()
+            player.seek(to: .zero)
+            player.play()
         }
         
         if isVisible {
-            player?.play()
+            player.play()
         }
     }
+    
+    private func releasePlayer() {
+        playerManager.deactivatePlayer(for: shortVideo)
+        self.player = nil
+        
+        if let playerLooper {
+            NotificationCenter.default.removeObserver(playerLooper)
+            self.playerLooper = nil
+        }
+        
+        cancellables = []
+    }
+    
 }
