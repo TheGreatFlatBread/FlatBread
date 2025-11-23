@@ -12,6 +12,8 @@ struct OnBoardingView: View {
     @StateObject private var vm = OnBoardingViewModel()
     @State private var pickerItem: PhotosPickerItem? = nil
     @FocusState private var focusedField: Field?
+    @Environment(\.dismiss) private var dismiss
+    @State private var showSuccessAlert: Bool = false
 
     enum Field { case nick, phone, birth }
 
@@ -83,7 +85,7 @@ struct OnBoardingView: View {
                     Task {
                         let success = await vm.submit()
                         if success {
-                            // On success, server now has info1 set. Route to Home.
+                            showSuccessAlert = true
                         }
                     }
                 } label: {
@@ -130,6 +132,13 @@ struct OnBoardingView: View {
             Button("확인", role: .cancel) { vm.errorMessage = nil }
         } message: {
             Text(vm.errorMessage ?? "오류가 발생했습니다. 다시 시도해 주세요.")
+        }
+        .alert("프로필 설정 완료", isPresented: $showSuccessAlert) {
+            Button("확인") {
+                dismiss()
+            }
+        } message: {
+            Text("프로필 설정이 완료되었습니다.")
         }
         .task {
             await vm.checkOnboardingNeeded()
