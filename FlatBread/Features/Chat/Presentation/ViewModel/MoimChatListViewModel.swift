@@ -9,7 +9,7 @@ import Foundation
 import Combine
 
 final class MoimChatListViewModel: ObservableObject {
-    @Published var chatRooms: [ChatRoomModel] = ChatRoomModel.mockList
+    @Published var chatRooms: [ChatRoomModel] = []
     @Published var chatError: ChatFeatureError?
     
     private let networkService: AsyncNetworkService

@@ -30,7 +30,6 @@ final class ChatRoomViewModel: ObservableObject {
         self.room = room
         self.currentUserID = currentUserID
         self.networkService = NetworkServiceFactory.shared.makeNetworkService()
-        loadInitialMessage()
     }
 
     func sendMessage() {
@@ -50,19 +49,7 @@ final class ChatRoomViewModel: ObservableObject {
     }
     
     func loadMoreMessages() async {
-        guard !isLoadingMore else { return }
-        isLoadingMore = true
-        try? await Task.sleep(nanoseconds: 1_000_000_000)
-        currentPageOffset += 4
-        let moreMessages = ChatMessageModel.dummyMessages(
-            roomID: room.id,
-            currentUserID: currentUserID,
-            otherUser: room.participants.first ?? .mock,
-            startDaysAgo: currentPageOffset,
-            count: 20
-        )
-        insertMessages(moreMessages, at: 0)
-        isLoadingMore = false
+        await fetchChatMessageList()
     }
     
     func fetchChatMessageList() async {
@@ -91,27 +78,6 @@ final class ChatRoomViewModel: ObservableObject {
         }
     }
     
-    private func loadInitialMessage() {
-        let mockMessages = ChatMessageModel.dummyMessages(
-            roomID: room.id,
-            currentUserID: currentUserID,
-            otherUser: room.participants.first ?? .mock
-        )
-
-        messages = mockMessages
-        let grouped = Dictionary(grouping: messages) { message -> String in
-            message.createdAt.toDateKey()
-        }
-        let sections = grouped.map { dateString, messages in
-            ChatMessageSection.create(
-                date: dateString,
-                dateFormatted: dateString.toChatSectionHeader(),
-                messages: messages.sorted { $0.createdAt < $1.createdAt },
-                currentUserID: currentUserID
-            )
-        }
-        groupedMessages = sections.sorted { $0.date < $1.date }
-    }
 }
 
 
