@@ -50,7 +50,7 @@ struct OnBoardingView: View {
                                 .font(.headline)
 
                             ZStack {
-                                if let data = vm.profileImageData, let uiImage = UIImage(data: data) {
+                                if let data = vm.previewImageData, let uiImage = UIImage(data: data) {
                                     Image(uiImage: uiImage)
                                         .resizable()
                                         .scaledToFill()
@@ -98,7 +98,7 @@ struct OnBoardingView: View {
                                 .font(.footnote)
                                 .foregroundStyle(.secondary)
 
-                            if vm.profileImageData != nil && !isProfileImageValid {
+                            if vm.profileImageData != nil && !vm.isImageValid {
                                 Text("이미지 용량이 너무 큽니다. 200KB 이하로 줄여주세요.")
                                     .font(.footnote)
                                     .foregroundStyle(.red)
@@ -225,7 +225,7 @@ struct OnBoardingView: View {
                             .foregroundStyle(.red)
                             .padding(.bottom, 8)
                             .padding(.horizontal, 16)
-                    } else if vm.profileImageData != nil && !isProfileImageValid {
+                    } else if vm.profileImageData != nil && !vm.isImageValid {
                         Text("이미지 용량이 너무 큽니다. 200KB 이하 파일을 선택해 주세요.")
                             .font(.footnote)
                             .foregroundStyle(.red)

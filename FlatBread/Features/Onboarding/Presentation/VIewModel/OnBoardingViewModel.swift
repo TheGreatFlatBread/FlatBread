@@ -8,7 +8,9 @@
 import Foundation
 import SwiftUI
 import Combine
-import UIKit
+import CoreGraphics
+import ImageIO
+import UniformTypeIdentifiers
 
 @MainActor
 final class OnBoardingViewModel: ObservableObject {
@@ -29,6 +31,14 @@ final class OnBoardingViewModel: ObservableObject {
     @Published var phoneNum: String = ""
     @Published var birthDate: Date = Date()
     @Published var profileImageData: Data? = nil
+
+    // Cached processed image data and validity state
+    @Published var processedImageData: Data? = nil
+    @Published var isImageValid: Bool = true
+
+    // Lightweight preview image data for UI rendering
+    @Published var previewImageData: Data? = nil
+
     @Published var gender: GenderOption = .other
 
     // State
@@ -41,15 +51,93 @@ final class OnBoardingViewModel: ObservableObject {
         let nickOK = !nick.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let phoneOK = phoneNum.isEmpty || phoneNum.range(of: "^[0-9]{9,12}$", options: .regularExpression) != nil
         let containsInvalidNick = !validateNick(nick)
-        let imageOK = profileImageData == nil || prepareProfileImageData(profileImageData) != nil
+        let imageOK = isImageValid
         return nickOK && phoneOK && !containsInvalidNick && !isUploading && imageOK
     }
 
     func setProfileImage(data: Data?) {
         profileImageData = data
+
+        // Set previewImageData immediately with a lightweight thumbnail
+        guard let data = data else {
+            previewImageData = nil
+            processedImageData = nil
+            isImageValid = true
+            return
+        }
+
+        if let cgImage = decodeCGImage(from: data) {
+            previewImageData = makeThumbnailData(from: cgImage, maxSide: 300)
+        } else {
+            previewImageData = nil
+        }
+
+        // Perform preprocessing asynchronously and cache result to avoid blocking UI
+        Task(priority: .background) { [weak self] in
+            guard let self = self else { return }
+            let preprocessed = self.preprocessImageData(data)
+            await MainActor.run {
+                self.processedImageData = preprocessed
+                self.isImageValid = (preprocessed != nil)
+            }
+        }
     }
 
     // MARK: - Private helpers
+
+    nonisolated private func decodeCGImage(from data: Data) -> CGImage? {
+        let cfData = data as CFData
+        guard let source = CGImageSourceCreateWithData(cfData, nil) else { return nil }
+        return CGImageSourceCreateImageAtIndex(source, 0, nil)
+    }
+
+    nonisolated private func resizedCGImage(_ image: CGImage, maxSide: CGFloat) -> CGImage? {
+        let width = CGFloat(image.width)
+        let height = CGFloat(image.height)
+        let aspectRatio = width / height
+        var newSize: CGSize
+        if width > height {
+            newSize = CGSize(width: maxSide, height: maxSide / aspectRatio)
+        } else {
+            newSize = CGSize(width: maxSide * aspectRatio, height: maxSide)
+        }
+
+        guard let colorSpace = image.colorSpace else { return nil }
+        guard let context = CGContext(
+            data: nil,
+            width: Int(newSize.width),
+            height: Int(newSize.height),
+            bitsPerComponent: image.bitsPerComponent,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: image.bitmapInfo.rawValue
+        ) else { return nil }
+
+        context.interpolationQuality = .high
+        context.draw(image, in: CGRect(origin: .zero, size: newSize))
+        return context.makeImage()
+    }
+
+    nonisolated private func jpegData(from image: CGImage, quality: CGFloat) -> Data? {
+        let data = NSMutableData()
+        guard let destination = CGImageDestinationCreateWithData(data, UTType.jpeg.identifier as CFString, 1, nil) else { return nil }
+        let options = [kCGImageDestinationLossyCompressionQuality: quality] as CFDictionary
+        CGImageDestinationAddImage(destination, image, options)
+        guard CGImageDestinationFinalize(destination) else { return nil }
+        return data as Data
+    }
+
+    nonisolated private func isPNG(_ data: Data) -> Bool {
+        let pngSignature: [UInt8] = [0x89, 0x50, 0x4E, 0x47]
+        guard data.count >= 4 else { return false }
+        let header = [data[0], data[1], data[2], data[3]]
+        return header == pngSignature
+    }
+
+    private func makeThumbnailData(from cgImage: CGImage, maxSide: CGFloat) -> Data? {
+        guard let resized = resizedCGImage(cgImage, maxSide: maxSide) else { return nil }
+        return jpegData(from: resized, quality: 0.6)
+    }
 
     func validateNick(_ nick: String) -> Bool {
         let trimmed = nick.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -72,71 +160,51 @@ final class OnBoardingViewModel: ObservableObject {
 
     func prepareProfileImageData(_ data: Data?) -> Data? {
         guard let data = data else { return nil }
-        guard let image = UIImage(data: data) else { return nil }
+        return preprocessImageData(data)
+    }
 
-        // Detect PNG or JPEG by header bytes
-        let isPNG: Bool = {
-            let pngSignature: [UInt8] = [0x89, 0x50, 0x4E, 0x47]
-            guard data.count >= 4 else { return false }
-            let header = [data[0], data[1], data[2], data[3]]
-            return header == pngSignature
-        }()
-        
+    nonisolated func preprocessImageData(_ data: Data) -> Data? {
+        guard let image = decodeCGImage(from: data) else { return nil }
+
         // Constants
         let maxSize: Int = 200_000 // 200KB
         let preferredMaxSize: Int = 100_000 // 100KB preferred
 
         // Early return if PNG and already small enough
-        if isPNG && data.count <= maxSize {
+        if isPNG(data) && data.count <= maxSize {
             return data
-        }
-
-        // Helper to resize UIImage maintaining aspect ratio
-        func resizedImage(_ image: UIImage, maxSide: CGFloat) -> UIImage {
-            let size = image.size
-            let aspectRatio = size.width / size.height
-            var newSize: CGSize
-            if size.width > size.height {
-                newSize = CGSize(width: maxSide, height: maxSide / aspectRatio)
-            } else {
-                newSize = CGSize(width: maxSide * aspectRatio, height: maxSide)
-            }
-            let format = UIGraphicsImageRendererFormat.default()
-            format.opaque = false
-            let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
-            return renderer.image { _ in
-                image.draw(in: CGRect(origin: .zero, size: newSize))
-            }
         }
 
         // Try resizing with fixed quality 0.8 at various sizes
         let resizeSteps: [CGFloat] = [1024, 800, 600, 400]
         var bestData: Data? = nil
-        var lastResizedImage = image
+        var lastResizedImage: CGImage? = image
 
         for maxSide in resizeSteps {
-            let resized = resizedImage(image, maxSide: maxSide)
-            lastResizedImage = resized
-            if let compressedData = resized.jpegData(compressionQuality: 0.8) {
-                if compressedData.count <= preferredMaxSize {
-                    return compressedData
-                }
-                if compressedData.count <= maxSize {
-                    bestData = compressedData
+            if let resized = resizedCGImage(image, maxSide: maxSide) {
+                lastResizedImage = resized
+                if let compressedData = jpegData(from: resized, quality: 0.8) {
+                    if compressedData.count <= preferredMaxSize {
+                        return compressedData
+                    }
+                    if compressedData.count <= maxSize {
+                        bestData = compressedData
+                    }
                 }
             }
         }
 
         // If none met criteria by resizing at quality 0.8, try quality compression on smallest resized or original if no resizing
-        let imageToCompress = lastResizedImage
-        let qualities: [CGFloat] = [0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
-        for quality in qualities {
-            if let compressedData = imageToCompress.jpegData(compressionQuality: quality) {
-                if compressedData.count <= preferredMaxSize {
-                    return compressedData
-                }
-                if compressedData.count <= maxSize {
-                    bestData = compressedData
+        if let imageToCompress = lastResizedImage {
+            let qualities: [CGFloat] = [0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1]
+            for quality in qualities {
+                if let compressedData = jpegData(from: imageToCompress, quality: quality) {
+                    if compressedData.count <= preferredMaxSize {
+                        return compressedData
+                    }
+                    if compressedData.count <= maxSize {
+                        bestData = compressedData
+                    }
                 }
             }
         }
@@ -196,14 +264,11 @@ final class OnBoardingViewModel: ObservableObject {
             return false
         }
 
-        var processedImageData: Data? = nil
-        if let originalImageData = profileImageData {
-            guard let compressed = prepareProfileImageData(originalImageData) else {
-                isUploading = false
-                errorMessage = "프로필 이미지는 PNG 또는 JPEG 형식이어야 하며 최대 크기는 200KB를 초과할 수 없습니다."
-                return false
-            }
-            processedImageData = compressed
+        let processedImageData = self.processedImageData
+        if profileImageData != nil && processedImageData == nil {
+            isUploading = false
+            errorMessage = "프로필 이미지는 PNG 또는 JPEG 형식이어야 하며 최대 크기는 200KB를 초과할 수 없습니다."
+            return false
         }
 
         // Build DTO with sanitized nick and processed image
@@ -241,4 +306,3 @@ final class OnBoardingViewModel: ObservableObject {
         }
     }
 }
-
