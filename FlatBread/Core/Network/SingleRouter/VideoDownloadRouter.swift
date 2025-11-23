@@ -9,18 +9,16 @@ import AVFoundation
 import Foundation
 import Alamofire
 
-enum VideoDownloadRouter: APIRouter {
+enum VideoDownloadRouter: VideoStreamableRouter {
     
     case downloadVideos(loadingRequest: AVAssetResourceLoadingRequest, filePath: String)
+    case streamVideo(filePath: String, lowerRange: Int64, upperRange: Int64?)
     
     var baseURL: URL {
-        switch self {
-        case .downloadVideos:
-            guard let url = URL(string: APIConfig.baseURL) else {
-                assert(false, "is not valid Video Downloading URL")
-            }
-            return url
+        guard let url = URL(string: APIConfig.baseURL) else {
+            assert(false, "is not valid Video Downloading URL")
         }
+        return url
     }
     
     var method: Alamofire.HTTPMethod {
@@ -29,7 +27,7 @@ enum VideoDownloadRouter: APIRouter {
     
     var path: String {
         switch self {
-        case .downloadVideos(_, let filePath):
+        case .downloadVideos(_, let filePath), .streamVideo(let filePath, _, _):
             return filePath
         }
     }
@@ -50,12 +48,27 @@ enum VideoDownloadRouter: APIRouter {
                 print("requestedOffset: \(dataRequest.requestedOffset)")
             }
             return HTTPHeaders(apiHeaderTypes.map(\.httpHeader) + headerTypes)
+            
+        case .streamVideo(_, let lowerRange, let upperRange):
+            let apiHeaderTypes: [APIHeader] = [.apiKey, .productID]
+            var headerTypes: [HTTPHeader] = []
+            
+            let rangeHeaderValue: String
+            if let upperRange {
+                rangeHeaderValue = "bytes=\(lowerRange)-\(upperRange)"
+            } else {
+                rangeHeaderValue = "bytes=\(lowerRange)-"
+            }
+            let rangeHeader = HTTPHeader(name: "Range", value: rangeHeaderValue)
+            headerTypes.append(rangeHeader)
+            print("Range 요청: \(rangeHeaderValue)")
+            return HTTPHeaders(apiHeaderTypes.map(\.httpHeader) + headerTypes)
         }
     }
     
     func asURLRequest() throws -> URLRequest {
         switch self {
-        case .downloadVideos:
+        case .downloadVideos, .streamVideo:
             guard let url = URL(string: self.baseURL.appendingPathComponent(self.path).absoluteString) else {
                 throw URLError(.badURL)
             }
@@ -66,5 +79,12 @@ enum VideoDownloadRouter: APIRouter {
         }
     }
     
+    func asURL() throws -> URL {
+        if let url = URL(string: self.baseURL.appendingPathComponent(self.path).absoluteString) {
+            return url
+        } else {
+            throw NetworkError.invalidURL
+        }
+    }
     
 }
