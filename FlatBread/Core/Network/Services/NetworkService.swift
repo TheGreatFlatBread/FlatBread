@@ -107,6 +107,21 @@ final class DefaultNetworkService: AsyncNetworkService {
             throw NetworkError.from(afError)
         }
     }
+    
+    func streamVideo(
+        _ router: any VideoStreamableRouter,
+        interceptorType: InterceptorType,
+        responseHandler: @escaping (HTTPURLResponse) -> Void,
+        dataHandler: @escaping DataStreamRequest.Handler<Data, Never>
+    ) {
+        let interceptor = interceptorType.wrappingInterceptor(
+            networkRetrier: networkRetrier,
+            tokenInterceptor: tokenInterceptor
+        )
+        session.streamRequest(router, interceptor: interceptor)
+            .onHTTPResponse(perform: responseHandler)
+            .responseStream(stream: dataHandler)
+    }
 }
 
 extension DefaultNetworkService: ReactiveNetworkService {

@@ -27,3 +27,5 @@ protocol ParameterAPIRouter: APIRouter {
     var parameters: Parameters? { get }
     var encoding: ParameterEncoding { get }
 }
+
+typealias VideoStreamableRouter = APIRouter & URLConvertible
