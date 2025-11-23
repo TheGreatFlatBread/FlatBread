@@ -449,10 +449,10 @@ extension PostListView {
     
     struct PostList: View {
         let posts: [PostUIModel]
-        let onLikeTap: (PostUIModel) -> Void
+        let onLikeTap: (PostUIModel) async -> Void
         let onCommentTap: (PostUIModel) -> Void
         let settingTapped: (PostUIModel) -> Void
-        
+
         var body: some View {
             if posts.isEmpty {
                 EmptyPostView()
@@ -460,7 +460,9 @@ extension PostListView {
                 ForEach(posts, id: \.id) { post in
                     PostCardView(
                         post: post,
-                        onLikeTap: { onLikeTap(post) },
+                        onLikeTap: {
+                            Task { await onLikeTap(post) }
+                        },
                         onCommentTap: { onCommentTap(post) },
                         settingTapped: { settingTapped(post) }
                     )

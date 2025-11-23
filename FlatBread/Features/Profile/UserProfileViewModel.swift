@@ -28,7 +28,7 @@ final class UserProfileViewModel: ObservableObject {
     private let pageLimit = "5"
 
     var hasMorePosts: Bool {
-        !nextCursor.isEmpty
+        !nextCursor.isEmpty && nextCursor != "0"
     }
 
     init(userID: String, moimId: String? = nil, isCurrentUser: Bool = false) {
@@ -110,7 +110,9 @@ final class UserProfileViewModel: ObservableObject {
             let newPosts = response.data.compactMap {
                 PostMapper.toPostUIModel(from: $0, currentUserId: userID)
             }
-            userPosts.append(contentsOf: newPosts)
+            if !newPosts.isEmpty {
+                userPosts.append(contentsOf: newPosts)
+            }
             nextCursor = response.next_cursor
         } catch {
             #if DEBUG
