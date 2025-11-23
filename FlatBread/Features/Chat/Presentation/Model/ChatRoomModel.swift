@@ -48,7 +48,7 @@ enum MessageType: Hashable {
 }
 
 struct ChatMessageModel: Identifiable, Hashable {
-    let id: String
+    var id: String
     let roomID: String
     var messegeType: MessageType
     let createdAt: String
