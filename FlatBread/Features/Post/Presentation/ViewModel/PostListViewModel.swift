@@ -262,9 +262,11 @@ final class PostListViewModel: ObservableObject {
     
     func loadMore() async {
         guard !isLoading else { return }
+        isLoading = true
         if selectedTab != .members {
             posts = await fetchPosts()
         }
+        isLoading = false
     }
     
     func incrementCommentCount(for postId: String) {
