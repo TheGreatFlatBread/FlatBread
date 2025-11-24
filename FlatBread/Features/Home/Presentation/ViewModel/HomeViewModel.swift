@@ -50,8 +50,43 @@ final class HomeViewModel: ObservableObject {
     
     @MainActor
     func refreshHome() async {
-        await fetchBanners()
-        await fetchMoimGroups()
+        async let bannersTask: [BannerItem] = { @Sendable in
+            do {
+                return try await loadBanners()
+            } catch {
+                return []
+            }
+        }()
+        async let groupsTask: [MoimGroupItem] = { @Sendable in
+            do {
+                return try await loadMoimGroups()
+            } catch {
+                return []
+            }
+        }()
+
+        let (banners, groups) = await (bannersTask, groupsTask)
+        self.banners = banners
+        self.moimGroups = groups
+    }
+
+    private func loadBanners() async throws -> [BannerItem] {
+        let response = try await networkService.request(
+            PostRouter.getPostList(next: "", limit: "50", category: []),
+            responseType: PostListResponseDTO.self,
+            interceptorType: .networkWithToken
+        )
+        return mapPostsToBanners(response)
+    }
+
+    private func loadMoimGroups() async throws -> [MoimGroupItem] {
+        let response = try await networkService.request(
+            PostRouter.getPostList(next: "", limit: "50", category: []),
+            responseType: PostListResponseDTO.self,
+            interceptorType: .networkWithToken
+        )
+        return mapPostsToMoimGroups(response)
+            .sorted { $0.memberCount > $1.memberCount }
     }
 
     func didTapCategory(_ item: CategoryItem, _ onMoveToCategory: @escaping () -> Void) {
