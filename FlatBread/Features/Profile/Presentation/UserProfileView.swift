@@ -14,6 +14,7 @@ struct UserProfileView: View {
     @State private var showEditProfile = false
     @State private var chatRoomToNavigate: ChatRoomModel?
     @State private var showChatRoom = false
+    @State private var showChatList = false
 
     init(userID: String, moimId: String? = nil, isCurrentUser: Bool = false) {
         _viewModel = StateObject(wrappedValue: UserProfileViewModel(
@@ -50,11 +51,20 @@ struct UserProfileView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if viewModel.isCurrentUser {
-                    Button {
-                        showEditProfile = true
-                    } label: {
-                        Image(systemName: "pencil")
-                            .foregroundStyle(.orange)
+                    HStack(spacing: 16) {
+                        Button {
+                            showChatList = true
+                        } label: {
+                            Image(systemName: "bubble.left.and.bubble.right")
+                                .foregroundStyle(.orange)
+                        }
+
+                        Button {
+                            showEditProfile = true
+                        } label: {
+                            Image(systemName: "pencil")
+                                .foregroundStyle(.orange)
+                        }
                     }
                 } else {
                     Button {
@@ -81,6 +91,9 @@ struct UserProfileView: View {
             if let room = chatRoomToNavigate {
                 ChatRoomView(room: room, currentUserID: viewModel.currentUserId)
             }
+        }
+        .navigationDestination(isPresented: $showChatList) {
+            MoimChatListView(currentUserID: viewModel.currentUserId)
         }
         .sheet(isPresented: $showEditProfile) {
             if let profile = viewModel.userProfile {

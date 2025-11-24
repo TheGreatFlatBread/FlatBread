@@ -9,7 +9,15 @@ import SwiftUI
 
 struct MoimChatListView: View {
     @StateObject private var viewModel = MoimChatListViewModel()
-    
+    let currentUserID: String
+
+    @State private var selectedRoom: ChatRoomModel?
+    @State private var showChatRoom = false
+
+    init(currentUserID: String) {
+        self.currentUserID = currentUserID
+    }
+
     var body: some View {
         NavigationStack {
             List(viewModel.chatRooms, id: \.id) { room in
@@ -124,6 +132,6 @@ private struct UserDescription: View {
 
 #Preview {
     NavigationStack {
-        MoimChatListView()
+        MoimChatListView(currentUserID: "preview_user")
     }
 }
