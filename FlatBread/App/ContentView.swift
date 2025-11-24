@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @StateObject private var viewModel = LoginViewModel(tokenStorage: DefaultTokenStorage())
+    @State private var showOnboarding = false
     
     init() {
         let tabBarAppearance = UITabBarAppearance()
@@ -16,6 +17,17 @@ struct ContentView: View {
         
         UITabBar.appearance().standardAppearance = tabBarAppearance
         UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
+    }
+    
+    private func checkOnboardingNeeded() async {
+        do {
+            let response = try await NetworkServiceFactory.shared
+                .makeNetworkService()
+                .request(UserRouter.getMeProfile, responseType: UserProfileResponseDTO.self, interceptorType: .networkWithToken)
+            showOnboarding = (response.info1 == nil)
+        } catch {
+            showOnboarding = true
+        }
     }
     
     var body: some View {
@@ -55,6 +67,16 @@ struct ContentView: View {
                         }
                 }
                 .tint(.black)
+                .task {
+                    await checkOnboardingNeeded()
+                }
+                .fullScreenCover(isPresented: $showOnboarding, onDismiss: {
+                    Task {
+                        await checkOnboardingNeeded()
+                    }
+                }) {
+                    OnBoardingView()
+                }
             } else {
                 LoginView(
                     isLoginSucceed: $viewModel.isLoginSucceed,

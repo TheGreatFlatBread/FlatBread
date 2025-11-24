@@ -19,7 +19,6 @@ final class HomeViewModel: ObservableObject {
     // Category detail navigation & data
     @Published var selectedCategoryTitle: String? = nil
     @Published var selectedCategoryGroups: [MoimGroupItem] = []
-    @Published var isShowingCategoryDetail: Bool = false
 
     @Published var categoryItems: [CategoryItem] = [
         .init(title: "운동/스포츠",    symbol: "sportscourt.fill",        tint: .blue),
@@ -43,9 +42,9 @@ final class HomeViewModel: ObservableObject {
     ]
 
     init() {
-        Task { [weak self] in
-            await self?.fetchBanners()
-            await self?.fetchMoimGroups()
+        Task {
+            await self.fetchBanners()
+            await self.fetchMoimGroups()
         }
     }
     
@@ -54,20 +53,9 @@ final class HomeViewModel: ObservableObject {
         await fetchBanners()
         await fetchMoimGroups()
     }
-    
-    func didTapMoimGroup(_ moim: MoimGroupItem) {
-        // TODO: 모임 상세 이동
-        print("Tapped moimGroup: \(moim.title)")
-    }
-    
-    func didTapBanner(_ banner: BannerItem) {
-        // TODO: 배너 상세 이동 / 웹뷰 열기 등
-        print("Tapped banner: \(banner.title)")
-    }
 
-    func didTapCategory(_ item: CategoryItem) {
-        Task { [weak self] in
-            guard let self else { return }
+    func didTapCategory(_ item: CategoryItem, _ onMoveToCategory: @escaping () -> Void) {
+        Task {
             self.selectedCategoryTitle = item.title
             do {
                 let categories: [String] = [item.title]
@@ -80,7 +68,7 @@ final class HomeViewModel: ObservableObject {
                     .sorted { $0.memberCount > $1.memberCount }
                 await MainActor.run {
                     self.selectedCategoryGroups = groups
-                    self.isShowingCategoryDetail = true
+                    onMoveToCategory()
                 }
             } catch {
                 #if DEBUG
