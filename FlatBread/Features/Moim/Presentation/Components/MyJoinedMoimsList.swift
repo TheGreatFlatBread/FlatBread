@@ -12,6 +12,7 @@ struct MyJoinedMoimsList: View {
     let isLoading: Bool
     let hasMoreData: Bool
     let loadMore: () -> Void
+    let onMoimTap: (String) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -27,7 +28,7 @@ struct MyJoinedMoimsList: View {
                                 .frame(height: 80)
                                 .padding(.horizontal, 16)
                                 .onTapGesture {
-                                    print(moim.title ?? "")
+                                    onMoimTap(moim.id)
                                 }
                                 .onAppear {
                                     // 마지막 아이템이 보이면 다음 페이지 로드
@@ -62,6 +63,9 @@ struct MyJoinedMoimsList: View {
         hasMoreData: true,
         loadMore: {
             print("Load more")
+        },
+        onMoimTap: { moimId in
+            print("Moim tapped: \(moimId)")
         }
     )
 }
