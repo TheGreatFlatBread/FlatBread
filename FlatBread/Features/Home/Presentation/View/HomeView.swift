@@ -12,6 +12,8 @@ struct HomeView: View {
     @EnvironmentObject var viewModel: HomeViewModel
     
     let onTapCreateMoim: () -> Void // 모임 생성 버튼 탭시
+    let onMoveToCategory: () -> Void // 카테고리 섹션 탭시
+    let onMoveToMoimDetail: (String) -> Void // 모임 탭시 모임 디테일로 이동
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -29,17 +31,17 @@ struct HomeView: View {
                     VStack(spacing: 24) {
                         BannerCarouselView( // 배너 캐러셀
                             items: viewModel.banners,
-                            onTapBanner: { viewModel.didTapBanner($0) }
+                            onTapBanner: { onMoveToMoimDetail($0.id) }
                         )
                         
                         CategorySectionCard( // 카테고리 섹션
                             items: viewModel.categoryItems,
-                            onTapCategory: { viewModel.didTapCategory($0) }
+                            onTapCategory: { viewModel.didTapCategory($0, onMoveToCategory) }
                         )
+                        
                         MoimGroupSectionView(
                             items: viewModel.moimGroups,
-                            onTapRow: { viewModel.didTapMoimGroup($0)
-                            }
+                            onTapRow: { onMoveToMoimDetail($0.id) }
                         )
                     }
                     .padding(.vertical, 4)

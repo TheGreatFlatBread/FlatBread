@@ -9,26 +9,9 @@ import Foundation
 import Combine
 
 final class PostListViewModel: ObservableObject {
+    
     @Published var moim: TempPostMoimModel?
-    
     @Published var posts: [PostUIModel] = []
-    
-    var schedules: [ScheduleUIModel] {
-        posts.compactMap { $0.schedule }
-    }
-    
-    var members: [MemberUIModel] = []
-    
-    var isMember: Bool {
-        guard let moim else { return false }
-        return moim.memberIds.contains(currentUserId)
-    }
-    
-    var isLeader: Bool {
-        guard let moim else { return false }
-        return moim.creator.id == currentUserId
-    }
-    
     @Published var selectedTab: MoimTab = .posts
     @Published var selectedCategory: PostType = .all
     @Published var isLoading: Bool = false
@@ -68,9 +51,29 @@ final class PostListViewModel: ObservableObject {
         }
     }
     
+    var schedules: [ScheduleUIModel] {
+        posts.compactMap { $0.schedule }
+    }
+    
+    var members: [MemberUIModel] = []
+    
+    var isMember: Bool {
+        guard let moim else { return false }
+        return moim.memberIds.contains(currentUserId)
+    }
+    
+    var isLeader: Bool {
+        guard let moim else { return false }
+        return moim.creator.id == currentUserId
+    }
+    
     init(moim: TempPostMoimModel) {
         self.moimId = moim.id
         self.moim = moim
+    }
+    
+    init(moimId: String) {
+        self.moimId = moimId
     }
     
     func loadInitialData() async {
