@@ -38,6 +38,11 @@ struct ChatRoomView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // WebSocket 연결 상태 인디케이터
+            if !viewModel.isWebSocketConnected {
+                connectionStatusBanner
+            }
+
             if viewModel.isEmpty {
                 emptyChatPlaceholder
             } else {
@@ -107,6 +112,21 @@ struct ChatRoomView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var connectionStatusBanner: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+                .controlSize(.small)
+
+            Text("연결 중...")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
+        .background(.yellow.opacity(0.2))
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 }
 

@@ -26,6 +26,7 @@ final class ChatRoomViewModel: ObservableObject {
     @Published var groupedMessages: [ChatMessageSection] = []
     @Published var selectedImageURLs: [String] = []  // temp file URLs
     @Published var isCreatingRoom: Bool = false
+    @Published var isWebSocketConnected: Bool = false
 
     private var currentPageOffset: Int = 0
     private var cursorDate: String?
