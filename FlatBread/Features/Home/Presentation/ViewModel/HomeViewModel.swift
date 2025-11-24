@@ -114,11 +114,6 @@ final class HomeViewModel: ObservableObject {
             }
         }
     }
-    
-    @MainActor
-    private func updateBanners(_ items: [BannerItem]) {
-        self.banners = items
-    }
 
     private func mapPostsToBanners(_ dto: PostListResponseDTO) -> [BannerItem] {
         let posts = dto.data
@@ -189,28 +184,4 @@ final class HomeViewModel: ObservableObject {
             #endif
         }
     }
-    
-    private func fetchMoimGroups(category: String?) async {
-        do {
-            let categories: [String] = {
-                if let c = category, !c.isEmpty { return [c] }
-                return []
-            }()
-            let response = try await networkService.request(
-                PostRouter.getPostList(next: "", limit: "50", category: categories),
-                responseType: PostListResponseDTO.self,
-                interceptorType: .networkWithToken
-            )
-            let groups = mapPostsToMoimGroups(response)
-                .sorted { $0.memberCount > $1.memberCount }
-            await MainActor.run {
-                self.moimGroups = groups
-            }
-        } catch {
-            #if DEBUG
-            print("[HomeViewModel] Failed to fetch moim groups for category (\(category ?? "")): \(error)")
-            #endif
-        }
-    }
 }
-
