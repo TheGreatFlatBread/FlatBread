@@ -40,6 +40,8 @@ final class HomeViewModel: ObservableObject {
         .init(title: "게임/오락",     symbol: "gamecontroller.fill",     tint: .green),
         .init(title: "반려동물",      symbol: "pawprint.fill",           tint: .brown)
     ]
+    
+    private var allCategories: [String] { categoryItems.map { $0.title } }
 
     init() {
         Task {
@@ -72,7 +74,7 @@ final class HomeViewModel: ObservableObject {
 
     private func loadBanners() async throws -> [BannerItem] {
         let response = try await networkService.request(
-            PostRouter.getPostList(next: "", limit: "50", category: []),
+            PostRouter.getPostList(next: "", limit: "50", category: allCategories),
             responseType: PostListResponseDTO.self,
             interceptorType: .networkWithToken
         )
@@ -81,7 +83,7 @@ final class HomeViewModel: ObservableObject {
 
     private func loadMoimGroups() async throws -> [MoimGroupItem] {
         let response = try await networkService.request(
-            PostRouter.getPostList(next: "", limit: "50", category: []),
+            PostRouter.getPostList(next: "", limit: "50", category: allCategories),
             responseType: PostListResponseDTO.self,
             interceptorType: .networkWithToken
         )
@@ -154,7 +156,7 @@ final class HomeViewModel: ObservableObject {
     private func fetchBanners() async {
         do {
             let response = try await networkService.request(
-                PostRouter.getPostList(next: "", limit: "50", category: []),
+                PostRouter.getPostList(next: "", limit: "50", category: allCategories),
                 responseType: PostListResponseDTO.self,
                 interceptorType: .networkWithToken
             )
@@ -172,7 +174,7 @@ final class HomeViewModel: ObservableObject {
     private func fetchMoimGroups() async {
         do {
             let response = try await networkService.request(
-                PostRouter.getPostList(next: "", limit: "50", category: []),
+                PostRouter.getPostList(next: "", limit: "50", category: allCategories),
                 responseType: PostListResponseDTO.self,
                 interceptorType: .networkWithToken
             )
