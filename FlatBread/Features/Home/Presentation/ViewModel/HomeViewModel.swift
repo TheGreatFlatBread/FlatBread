@@ -74,7 +74,7 @@ final class HomeViewModel: ObservableObject {
 
     private func loadBanners() async throws -> [BannerItem] {
         let response = try await networkService.request(
-            PostRouter.getPostList(next: "", limit: "50", category: allCategories),
+            PostRouter.getPostList(next: "", limit: "10", category: allCategories),
             responseType: PostListResponseDTO.self,
             interceptorType: .networkWithToken
         )
@@ -156,7 +156,7 @@ final class HomeViewModel: ObservableObject {
     private func fetchBanners() async {
         do {
             let response = try await networkService.request(
-                PostRouter.getPostList(next: "", limit: "50", category: allCategories),
+                PostRouter.getPostList(next: "", limit: "10", category: allCategories),
                 responseType: PostListResponseDTO.self,
                 interceptorType: .networkWithToken
             )
