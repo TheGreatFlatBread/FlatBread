@@ -11,9 +11,16 @@ import Combine
 import Alamofire
 
 struct FeedVideoCell: View {
-    let shortVideo: ShortVideo
+    
     let bottomInset: CGFloat
-    @Binding var currentVideoID: String?
+    
+    @Binding var shortVideo: ShortVideo
+    @Binding var currentVideo: ShortVideo?
+    @Binding var myProfile: ShortVideoProfile?
+    
+    // UI 상태 관리 (낙관적 UI용)
+    @State private var localIsLiked: Bool = false
+    @State private var localLikeCount: Int = 0
     
     @State private var player: AVPlayer?
     @State private var playerLooper: NSObjectProtocol?
@@ -22,10 +29,11 @@ struct FeedVideoCell: View {
     @State private var cancellables: Set<AnyCancellable> = []
     
     private let playerManager = PlayerManager.shared
+    let networkService = NetworkServiceFactory.shared.makeNetworkService()
     
     /// 이 뷰가 지금 화면에 보이고 있는지 여부
     var isVisible: Bool {
-        return currentVideoID == shortVideo.id
+        return currentVideo?.id == shortVideo.id
     }
     
     var body: some View {
@@ -74,7 +82,14 @@ struct FeedVideoCell: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
                 VStack(spacing: 25) {
-                    ShortVideoActionButton(icon: "heart", text: "Like")
+                    ShortVideoLikeButton(
+                        isLiked: $localIsLiked,
+                        count: $localLikeCount,
+                        action: { newValue in
+                            handleLikeAction(isLiked: newValue)
+                        }
+                    )
+                    
                     ShortVideoActionButton(icon: "message", text: "Reply")
                     ShortVideoActionButton(icon: "paperplane", text: "Share")
                     
@@ -91,6 +106,8 @@ struct FeedVideoCell: View {
         }
         .onAppear {
             setupPlayer(with: shortVideo)
+            syncLikeState()
+            updateVideoInfo()
         }
         .onDisappear {
             releasePlayer()
@@ -100,6 +117,79 @@ struct FeedVideoCell: View {
                 player?.play()
             } else {
                 playerManager.pause(for: shortVideo)
+            }
+        }
+        .onChange(of: shortVideo.likes) { oldValue, newValue in
+            syncLikeState()
+        }
+    }
+    
+    // MARK: - Like Logic
+    
+    private func syncLikeState() {
+        guard let myProfile else { return }
+        self.localIsLiked = shortVideo.likes.contains(myProfile.id)
+        self.localLikeCount = shortVideo.likes.count
+    }
+    
+    private func handleLikeAction(isLiked: Bool) {
+        guard let myProfile else { return }
+
+        // 데이터 모델 즉시 업데이트 (로컬 반영) -> 나갔다 들어와도 유지되게
+        if isLiked {
+            if !shortVideo.likes.contains(myProfile.id) {
+                shortVideo.likes.append(myProfile.id)
+            }
+        } else {
+            shortVideo.likes.removeAll { $0 == myProfile.id }
+        }
+        
+        // 서버에 좋아요 변경 요청
+        Task {
+            let router = PostRouter.togglePostLikeV1(
+                postID: shortVideo.id,
+                like_status: isLiked
+            )
+            do {
+                let _ = try await networkService.request(router, responseType: LikeResponseDTO.self).likeStatus
+            } catch {
+                print("❌ 좋아요 요청 실패: \(error)")
+                rollbackLikeState(to: !isLiked)
+            }
+        }
+    }
+    
+    private func rollbackLikeState(to failedState: Bool) {
+        guard let myProfile else { return }
+        
+        Task { @MainActor in
+            let originalState = !failedState
+            self.localIsLiked = originalState
+            
+            // 숫자 및 데이터 모델 원복
+            if originalState {
+                if !shortVideo.likes.contains(myProfile.id) {
+                    shortVideo.likes.append(myProfile.id)
+                    self.localLikeCount += 1
+                }
+            } else {
+                if shortVideo.likes.contains(myProfile.id) {
+                    shortVideo.likes.removeAll { $0 == myProfile.id }
+                    self.localLikeCount -= 1
+                }
+            }
+            print("⚠️ 네트워크 오류로 좋아요 상태가 복구되었습니다.")
+        }
+    }
+    
+    private func updateVideoInfo() {
+        let router = PostRouter.getPost(postID: shortVideo.id)
+        Task {
+            if let updatedDTO = try? await networkService.request(router, responseType: PostResponseDTO.self) {
+                await MainActor.run {
+                    self.shortVideo.likes = updatedDTO.likes
+                    self.syncLikeState()
+                }
             }
         }
     }

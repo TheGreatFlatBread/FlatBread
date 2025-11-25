@@ -12,8 +12,9 @@ import Foundation
 final class ShortVideoFeedViewModel: ObservableObject {
     
     // 현재 스크롤 위치(비디오 ID) 추적
-    @Published var currentVideoID: String?
+    @Published var currentVideo: ShortVideo?
     @Published var shortVideos: [ShortVideo] = []
+    @Published var myProfile: ShortVideoProfile?
     
     private let playerManager = PlayerManager.shared
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
@@ -30,11 +31,12 @@ final class ShortVideoFeedViewModel: ObservableObject {
     
     init(preloader: ShortVideoPreloader = ShortVideoMemoryPreloader.shared) {
         self.preloader = preloader
+        self.getMyProfile()
         
-        $currentVideoID
-            .sink { [weak self] newID in
-                guard let self, let newID else { return }
-                handleScrollChange(currentID: newID)
+        $currentVideo
+            .sink { [weak self] newVideo in
+                guard let self, let newVideo else { return }
+                handleScrollChange(currentID: newVideo.id)
             }
             .store(in: &cancellables)
     }
@@ -88,6 +90,19 @@ final class ShortVideoFeedViewModel: ObservableObject {
             print(error.localizedDescription)
         }
         isLoading = false
+    }
+    
+    private func getMyProfile() {
+        Task {
+            do {
+                myProfile = try await networkService.request(
+                    UserRouter.getMeProfile,
+                    responseType: UserProfileResponseDTO.self
+                ).asShortVideoProfile
+            } catch {
+                print("Failed to load current user profile: \(error)")
+            }
+        }
     }
     
 }

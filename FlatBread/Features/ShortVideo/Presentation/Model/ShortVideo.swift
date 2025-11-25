@@ -31,7 +31,7 @@ final class ShortVideo: Identifiable, Hashable {
     let createdDate: String?
     let creator: CreatorResponseDTO?
     let files: [String]
-    let likes: [String]
+    var likes: [String]
     let likes2: [String]
     let buyers: [String]
     let hashTags: [String]
