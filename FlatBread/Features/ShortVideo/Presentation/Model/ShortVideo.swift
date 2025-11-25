@@ -84,6 +84,10 @@ final class ShortVideo: Identifiable, Hashable {
         self.avURLAsset.resourceLoader.setDelegate(resourceLoaderDelegate, queue: queue)
     }
     
+    func setPreloader(_ preloader: ShortVideoPreloader) {
+        resourceLoaderDelegate.preloader = preloader
+}
+
 }
 
 
