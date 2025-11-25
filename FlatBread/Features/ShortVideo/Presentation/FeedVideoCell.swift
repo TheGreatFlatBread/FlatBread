@@ -17,6 +17,7 @@ struct FeedVideoCell: View {
     
     @State private var player: AVPlayer?
     @State private var playerLooper: NSObjectProtocol?
+    @State private var isBuffering: Bool = true
     @State private var statusObserver: NSKeyValueObservation?
     @State private var cancellables: Set<AnyCancellable> = []
     
@@ -29,6 +30,8 @@ struct FeedVideoCell: View {
     
     var body: some View {
         ZStack(alignment: .bottom) {
+            Color.black
+            
             if let player = player {
                 VStack(spacing: 0) {
                     ShortVideoPlayer(player: player)
@@ -36,8 +39,14 @@ struct FeedVideoCell: View {
                     Color.black
                         .frame(height: 2)
                 }
-            } else {
-                Color.black
+            }
+            
+            if isBuffering {
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle())
+                    .tint(.white)
+                    .scaleEffect(1.5)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             
             LinearGradient(colors: [.clear, .black.opacity(0.5)], startPoint: .center, endPoint: .bottom)
@@ -103,6 +112,22 @@ struct FeedVideoCell: View {
         let player = playerManager.player(for: video)
         self.player = player
         
+        isBuffering = (player.timeControlStatus != .playing)
+        
+        player.publisher(for: \.timeControlStatus)
+            .receive(on: RunLoop.main)
+            .sink { status in
+                switch status {
+                case .waitingToPlayAtSpecifiedRate:
+                    self.isBuffering = true
+                case .playing, .paused:
+                    self.isBuffering = false
+                @unknown default:
+                    break
+                }
+            }
+            .store(in: &cancellables)
+        
         if let playerLooper {
             NotificationCenter.default.removeObserver(playerLooper)
         }
@@ -122,6 +147,7 @@ struct FeedVideoCell: View {
     }
     
     private func releasePlayer() {
+        cancellables = []
         playerManager.deactivatePlayer(for: shortVideo)
         self.player = nil
         
@@ -130,7 +156,6 @@ struct FeedVideoCell: View {
             self.playerLooper = nil
         }
         
-        cancellables = []
     }
     
 }
