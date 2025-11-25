@@ -63,7 +63,7 @@ struct ContentView: View {
                     ProfileView()
                         .ignoresSafeArea()
                         .tabItem {
-                            Label("지도", systemImage: "person")
+                            Label("내 프로필", systemImage: "person")
                         }
                 }
                 .tint(.black)
