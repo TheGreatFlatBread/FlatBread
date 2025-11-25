@@ -16,7 +16,7 @@ struct ShortVideoFeedView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(spacing: 0) {
                     ForEach($viewModel.shortVideos) { video in
-                        FeedVideoCell(bottomInset: proxy.safeAreaInsets.bottom,
+                        ShortVideoFeedCell(bottomInset: proxy.safeAreaInsets.bottom,
                                       shortVideo: video,
                                       currentVideo: $viewModel.currentVideo,
                                       myProfile: $viewModel.myProfile)
