@@ -27,7 +27,7 @@ struct ShortVideoLikeButton: View {
                 Image(systemName: isLiked ? "heart.fill" : "heart")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
-                    .frame(width: 28, height: 28)
+                    .frame(width: 24, height: 24)
                     .foregroundStyle(isLiked ? .red : baseForegroundStyle)
                     .scaleEffect(isLiked ? 1.0 : 1.0)
                     .symbolEffect(.bounce, value: isLiked)

@@ -22,6 +22,7 @@ struct ShortVideoFeedCell: View {
     @State private var localIsLiked: Bool = false
     @State private var localLikeCount: Int = 0
     
+    @State private var moimInfo: MoimSearchResultUIModel?
     @State private var player: AVPlayer?
     @State private var playerLooper: NSObjectProtocol?
     @State private var isBuffering: Bool = true
@@ -63,20 +64,34 @@ struct ShortVideoFeedCell: View {
             HStack(alignment: .bottom, spacing: 14) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Image(systemName: "person.circle.fill")
-                            .resizable().frame(width: 32, height: 32)
-                        Text("@user_id")
-                            .font(.headline).bold()
+                        RemoteImage(
+                            url: moimInfo?.imageURL ?? "",
+                            displayMode: .thumbnail(CGSize(width: 16, height: 16))
+                        ) { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                        }
+                        .background(.white.opacity(0.5))
+                        .frame(width: 32, height: 32)
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        
+                        Text((moimInfo == nil) ? "--" : moimInfo?.title ?? "모임 이름 없음")
+                            .font(.system(size: 13)).bold()
+                            .lineLimit(2)
                     }
-                    Text(shortVideo.content)
-                        .font(.subheadline)
+                    .frame(height: 50)
+                    
+                    Text(shortVideo.content.components(separatedBy: "#").first ?? "")
+                        .font(.system(size: 13))
                         .lineLimit(3)
                     
                     HStack {
                         Image(systemName: "calendar")
                         Text(shortVideo.createdDate?.toString(format: "yy년 MM월 dd일") ?? "")
-                            .font(.caption)
+                            .font(.system(size: 12))
                     }
+                    .foregroundStyle(.gray)
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -90,7 +105,20 @@ struct ShortVideoFeedCell: View {
                         }
                     )
                     
-                    ShortVideoActionButton(icon: "message", text: "Reply")
+                    Button {
+                        print("댓글 버튼 탭")
+                    } label: {
+                        VStack {
+                            Image(systemName: "message")
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(width: 24, height: 24)
+                            
+                            Text("\(shortVideo.commentCount)")
+                                .font(.system(size: 14)).fontWeight(.medium)
+                        }
+                    }
+                    
                 }
                 .foregroundColor(.white)
             }
@@ -101,6 +129,7 @@ struct ShortVideoFeedCell: View {
             setupPlayer(with: shortVideo)
             syncLikeState()
             updateVideoInfo()
+            updateMoimInfo()
         }
         .onDisappear {
             releasePlayer()
@@ -183,6 +212,17 @@ struct ShortVideoFeedCell: View {
                     self.shortVideo.likes = updatedDTO.likes
                     self.syncLikeState()
                 }
+            }
+        }
+    }
+    
+    private func updateMoimInfo() {
+        let router = PostRouter.getPost(postID: shortVideo.moimID)
+        Task {
+            do {
+                moimInfo = try await networkService.request(router, responseType: PostResponseDTO.self).asSearchResultUIModel
+            } catch {
+                print("숏폼에서 모임 정보 가져오기 에러: \(error.localizedDescription)")
             }
         }
     }
