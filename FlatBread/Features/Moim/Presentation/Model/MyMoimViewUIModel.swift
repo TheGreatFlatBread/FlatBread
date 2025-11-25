@@ -40,7 +40,8 @@ extension MyMoimViewUIModel {
                 name: "Unknown",
                 profileImageURL: nil
             ),
-            memberIds: []  // MyMoimView에서는 memberIds 정보가 없음
+            memberIds: [],  // MyMoimView에서는 memberIds 정보가 없음
+            membershipFee: 0
         )
     }
 

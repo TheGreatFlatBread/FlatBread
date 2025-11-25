@@ -52,6 +52,8 @@ struct PostListView: View {
     @StateObject private var viewModel: PostListViewModel
 
     @State private var activeSheet: ActiveSheet?
+    @State private var showPaymentSheet: Bool = false
+    @State private var paymentInput: IamportPaymentInput?
     @State private var activeDialog: ActiveDialog?
     @State private var activeNavigation: NavigationDestination?
 
@@ -73,8 +75,17 @@ struct PostListView: View {
                             isLeader: viewModel.isLeader,
                             isMember: viewModel.isMember,
                             onJoinTap: {
-                                Task {
-                                    await viewModel.toggleMoimMembership()
+                                // 결제 필요 여부 확인
+                                if let input = viewModel.makePaymentInputForMoimJoin(), input.price > 0 {
+                                    DispatchQueue.main.async {
+                                        self.paymentInput = input
+                                        // paymentInput 세팅 이후 시트를 올려 순서 보장
+                                        self.showPaymentSheet = true
+                                    }
+                                } else {
+                                    Task {
+                                        await viewModel.toggleMoimMembership()
+                                    }
                                 }
                             }
                         )
@@ -198,6 +209,17 @@ struct PostListView: View {
                     }
                 )
             }
+        }
+        .sheet(isPresented: Binding(
+            get: { showPaymentSheet && paymentInput != nil },
+            set: { newValue in
+                if !newValue {
+                    showPaymentSheet = false
+                    paymentInput = nil
+                }
+            }
+        )) {
+            PaymentSheetView(input: paymentInput!)
         }
         .confirmationDialog(
             "게시물 옵션",
@@ -625,6 +647,13 @@ extension PostListView {
                 .clipShape(Capsule())
             }
         }
+    }
+}
+
+private struct PaymentSheetView: View {
+    let input: IamportPaymentInput
+    var body: some View {
+        IamportPaymentView(input: input)
     }
 }
 

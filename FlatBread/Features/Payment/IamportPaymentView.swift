@@ -9,10 +9,19 @@ import SwiftUI
 import iamport_ios
 import Then
 
+struct IamportPaymentInput {
+    let postId: String
+    let price: Int
+    let title: String
+    let buyerName: String
+}
+
 struct IamportPaymentView: UIViewControllerRepresentable {
+    let input: IamportPaymentInput
+    var onCompleted: ((IamportResponse?) -> Void)? = nil
     
     func makeUIViewController(context: Context) -> UIViewController {
-        let view = IamportPaymentViewController()
+        let view = IamportPaymentViewController(input: input, onCompleted: onCompleted)
         return view
     }
     
@@ -22,9 +31,22 @@ struct IamportPaymentView: UIViewControllerRepresentable {
 final class IamportPaymentViewController: UIViewController {
     
     private var didRequest = false
+    private let input: IamportPaymentInput
+    private let onCompleted: ((IamportResponse?) -> Void)?
+    
+    init(input: IamportPaymentInput, onCompleted: ((IamportResponse?) -> Void)? = nil) {
+        self.input = input
+        self.onCompleted = onCompleted
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        print("[IMP] viewDidAppear - didRequest: \(didRequest)")
         guard !didRequest else { return }
         didRequest = true
         requestIamportPayment()
@@ -32,25 +54,45 @@ final class IamportPaymentViewController: UIViewController {
     
     // 아임포트 SDK 결제 요청
     func requestIamportPayment() {
+        print("[IMP] requestIamportPayment - start")
         let userCode = "imp14511373" // iamport 에서 부여받은 가맹점 식별코드
+        print("[IMP] userCode: imp14511373")
         let payment = createPaymentData()
         
         Iamport.shared.payment(viewController: self,
                                userCode: userCode, payment: payment) { [weak self] response in
-            print("결과 : \(response)")
+            if let response {
+                print("[IMP] payment callback - success: \(response.success == true), imp_uid: \(response.imp_uid ?? "nil"), merchant_uid: \(response.merchant_uid ?? "nil"), error_msg: \(response.error_msg ?? "nil")")
+            } else {
+                print("[IMP] payment callback - response is nil")
+            }
+            self?.onCompleted?(response)
+            // 결제 화면 닫기
+            self?.dismiss(animated: true)
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in
+            guard let self else { return }
+            if self.didRequest {
+                print("[IMP] Timeout: payment callback not received within 10s. If no result printed above, check URL Scheme / PG settings.")
+            }
         }
     }
     
     // 아임포트 결제 데이터 생성
     func createPaymentData() -> IamportPayment {
+        let timestamp = Int(Date().timeIntervalSince1970)
+        let merchantUID = "\(input.postId)_\(timestamp)"
+        print("[IMP] createPaymentData - merchant_uid: \(merchantUID), amount: \(input.price), name: \(input.title), buyer: \(input.buyerName)")
         return IamportPayment(
             pg: PG.html5_inicis.makePgRawName(pgId: "INIpayTest"), //PG사: KG이니시스
-            merchant_uid: "swiftui_ios_\(Int(Date().timeIntervalSince1970))", //고유한 주문 번호
-            amount: "100").then { //결제 금액
-                $0.pay_method = PayMethod.card.rawValue //결제 수단
-                $0.name = "SwiftUI 에서 주문입니다" //결제할 상품명
-                $0.buyer_name = "SwiftUI" //주문자 이름
-                $0.app_scheme = "iamporttest" // 결제 후 돌아올 앱스킴
-            }
+            merchant_uid: merchantUID, //고유한 주문 번호
+            amount: String(input.price)
+        ).then { //결제 금액
+            $0.pay_method = PayMethod.card.rawValue //결제 수단
+            $0.name = input.title //결제할 상품명
+            $0.buyer_name = input.buyerName //주문자 이름
+            $0.app_scheme = "FlatBread" // 결제 후 돌아올 앱스킴
+        }
     }
 }
