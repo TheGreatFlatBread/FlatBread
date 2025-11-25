@@ -28,7 +28,10 @@ final class ShortVideoMemoryCacheService: ShortVideoCacheService {
     func removeCache(for id: String) {
         cacheLock.lock()
         defer { cacheLock.unlock() }
-        cacheList.removeValue(forKey: id)
+        if cacheList[id] != nil {
+            cacheList.removeValue(forKey: id)
+            print("\(id) 메모리에서 캐시 삭제됨")
+        }
     }
     
     func clearAll() {

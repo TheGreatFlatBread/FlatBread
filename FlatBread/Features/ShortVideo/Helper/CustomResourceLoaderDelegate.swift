@@ -5,11 +5,12 @@ import Alamofire
 
 class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
     
-    private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     weak var shortVideo: ShortVideo?
     var videoFilePath: String? = nil
     
-    private let cacheService = ShortVideoCacheService.shared
+    var preloader: ShortVideoPreloader?
+    
+    private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     private var activeRequest: DataStreamRequest? // 현재 플레이어 재생용 요청
     
     func resourceLoader(
@@ -17,9 +18,7 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
         shouldWaitForLoadingOfRequestedResource loadingRequest: AVAssetResourceLoadingRequest
     ) -> Bool {
         guard let videoFilePath else { return false }
-        guard let dataRequest = loadingRequest.dataRequest, let shortVideo else {
-            return false
-        }
+        guard let dataRequest = loadingRequest.dataRequest, let shortVideo else { return false }
         
         let lower = dataRequest.requestedOffset
         let requestedOffset = dataRequest.requestedOffset
@@ -29,45 +28,50 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
             upperRange = lower + Int64(dataRequest.requestedLength) - 1
         }
         
-        let cachedSize = cacheService.getCachedSize(for: shortVideo.id)
-        let fileURL = cacheService.getFileURL(for: shortVideo.id)
+        let cachedSize = preloader?.getCachedSize(videoID: shortVideo.id) ?? 0
         
-        if loadingRequest.contentInformationRequest != nil {
-            fillContentInfo(loadingRequest: loadingRequest, response: nil)
+        // ContentInfo 채우기
+        if let cache = preloader?.getPreloadData(videoID: shortVideo.id) {
+            print("\(shortVideo.files.first!) 캐시가 발견되어 contentInfo를 채웁니다.")
+            fillContentInfo(loadingRequest: loadingRequest, cache: cache)
+        } else {
+            print("\(shortVideo.files.first!) 캐시가 없어 contentInfo를 임시로 채웁니다.")
+            if loadingRequest.contentInformationRequest != nil {
+                loadingRequest.contentInformationRequest?.contentType = "public.mpeg-4"
+                loadingRequest.contentInformationRequest?.isByteRangeAccessSupported = true
+                loadingRequest.contentInformationRequest?.contentLength = 100_000_000
+            }
         }
         
-        #if DEBUG
+#if DEBUG
         var log = "🔄 [AVPlayer] 요청 들어옴. id: \(shortVideo.id), range: \(lower)-"
         if let upperRange { log += String(upperRange) }
         print(log)
-        #endif
+#endif
         
-        // 로컬 캐시 Hit
-        if requestedOffset < cachedSize,
-           cacheService.checkCacheExist(for: shortVideo.id) {
+        // 캐시 조회
+        if let cache = preloader?.getPreloadData(videoID: shortVideo.id),
+           requestedOffset < cachedSize {
             
-            print("💾 [Delegate] 로컬 캐시 사용: \(shortVideo.id) (Offset: \(requestedOffset))")
-            fillContentInfo(loadingRequest: loadingRequest, response: nil)
-            do {
-                let fileHandle = try FileHandle(forReadingFrom: fileURL)
-                defer { try? fileHandle.close() }
-                
-                try fileHandle.seek(toOffset: UInt64(requestedOffset))
-                
-                let availableBytes = cachedSize - requestedOffset
-                let lengthToRead = min(availableBytes, requestedLength)
-                
-                let data = fileHandle.readData(ofLength: Int(lengthToRead))
-                loadingRequest.dataRequest?.respond(with: data)
-                loadingRequest.finishLoading()
-                return true
-            } catch {
-                print("❌ 파일 읽기 실패")
-            }
+            print("💾 [Delegate] 캐시 히트: \(shortVideo.id)")
+            
+            let dataCount = Int64(cache.data.count)
+            let availableBytes = dataCount - requestedOffset
+            let lengthToRead = min(availableBytes, requestedLength)
+            
+            // Data slicing
+            let startIndex = Int(requestedOffset)
+            let endIndex = startIndex + Int(lengthToRead)
+            let chunk = cache.data[startIndex..<endIndex]
+            
+            dataRequest.respond(with: chunk)
+            loadingRequest.finishLoading()
+            return true
         }
         
         if loadingRequest.isFinished { return true }
         
+        print("\(shortVideo.files.first!) 캐시가 없어서 네트워크에서 스트리밍으로 받아옵니다.")
         let startOffset = max(requestedOffset, cachedSize)
         let router = VideoDownloadRouter.streamVideo(
             filePath: videoFilePath,
@@ -79,7 +83,7 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
             router,
             responseHandler: { [weak self] httpResponse in
                 guard let self else { return }
-                self.fillContentInfo(loadingRequest: loadingRequest, response: httpResponse)
+                self.fillContentInfo(loadingRequest: loadingRequest, httpResponse: httpResponse)
             },
             dataHandler: { stream in
                 switch stream.event {
@@ -88,15 +92,15 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
                     case .success(let data):
                         loadingRequest.dataRequest?.respond(with: data)
                     case .failure(let error):
-                        print("❌ 스트리밍 중 에러: \(error), id: \(self.shortVideo!.id)")
+                        print("❌ 스트리밍 중 에러: \(error), id: \(shortVideo.id)")
                         loadingRequest.finishLoading(with: error)
                     }
                 case .complete(let completion):
                     if let error = completion.error {
-                        print("❌ 다운로드 완료 실패: \(error), id: \(self.shortVideo!.id)")
+                        print("❌ 다운로드 완료 실패: \(error), id: \(shortVideo.id)")
                         loadingRequest.finishLoading(with: error)
                     } else {
-                        print("✅ 다운로드 및 전달 완료, id: \(self.shortVideo!.id)")
+                        print("✅ 다운로드 및 전달 완료, id: \(shortVideo.id)")
                         loadingRequest.finishLoading()
                     }
                 }
@@ -107,7 +111,7 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
     
     func resourceLoader(_ resourceLoader: AVAssetResourceLoader, didCancel loadingRequest: AVAssetResourceLoadingRequest) {
         activeRequest?.cancel()
-        #if DEBUG
+#if DEBUG
         guard let dataRequest = loadingRequest.dataRequest else {
             return
         }
@@ -120,57 +124,48 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
         var log = "🔄 [AVPlayer] 요청 취소됨. range: \(lower)-"
         if let upperRange { log += String(upperRange) }
         print(log)
-        #endif
+#endif
     }
     
+}
+
+// contentInfo 설정 관련
+private extension CustomResourceLoaderDelegate {
     
-    private func fillContentInfo(loadingRequest: AVAssetResourceLoadingRequest, response: HTTPURLResponse?) {
+    // 캐시를 사용하여 contentInfo를 채움.
+    func fillContentInfo(loadingRequest: AVAssetResourceLoadingRequest, cache: ShortVideoPreloadCache) {
+        guard let info = loadingRequest.contentInformationRequest else { return }
+        info.contentType = cache.contentType
+        info.contentLength = cache.totalLength
+        info.isByteRangeAccessSupported = true
+    }
+    
+    // 네트워크 응답값을 사용하여 contentInfo를 채움.
+    func fillContentInfo(loadingRequest: AVAssetResourceLoadingRequest, httpResponse: HTTPURLResponse) {
         guard let contentInfo = loadingRequest.contentInformationRequest else { return }
         
-        // httpResponse가 있을 경우 먼저 시도
-        if let httpResponse = response {
-            if let mimeType = httpResponse.mimeType, let utType = UTType(mimeType: mimeType) {
-                contentInfo.contentType = utType.identifier
-            } else {
-                contentInfo.contentType = "public.mpeg-4"
-            }
-            
-            contentInfo.isByteRangeAccessSupported = true
-            
-            // 전체 길이(Content-Length) 파싱
-            let rangeHeader = (httpResponse.allHeaderFields["Content-Range"] as? String) ??
-            (httpResponse.allHeaderFields["content-range"] as? String)
-            
-            if let rangeHeader {
-                let components = rangeHeader.components(separatedBy: "/")
-                if components.count > 1,
-                   let totalLengthString = components.last?.trimmingCharacters(in: .whitespaces),
-                   let totalLength = Int64(totalLengthString) {
-                    contentInfo.contentLength = totalLength
-                }
-            } else {
-                contentInfo.contentLength = httpResponse.expectedContentLength
-            }
+        if let mimeType = httpResponse.mimeType, let utType = UTType(mimeType: mimeType) {
+            contentInfo.contentType = utType.identifier
+        } else {
+            contentInfo.contentType = "public.mpeg-4"
         }
         
-        // httpResponse가 없을 경우 프리로딩 시에 저장한 UserDefaults에서 검색
-        if let videoID = shortVideo?.id {
-            let savedLength = UserDefaults.standard.integer(forKey: "\(videoID)_totalLength")
-            let savedType = UserDefaults.standard.string(forKey: "\(videoID)_contentType")
-            
-            if savedLength > 0 {
-                contentInfo.contentLength = Int64(savedLength)
-                contentInfo.contentType = savedType ?? "public.mpeg-4"
-                contentInfo.isByteRangeAccessSupported = true
-                // print("ℹ️ [Delegate] 저장된 메타데이터 적용: \(savedLength) bytes")
-                return
-            }
-        }
-        
-        // httpResponse도 없고 UserDefaults에도 없는 경우 임의 값 할당.
-        contentInfo.contentType = "public.mpeg-4"
         contentInfo.isByteRangeAccessSupported = true
-        contentInfo.contentLength = 100_000_000 // 임시 큰 값 (이래도 괜찮은 건지는 모르겠음..)
+        
+        // 전체 길이(Content-Length) 파싱
+        let rangeHeader = (httpResponse.allHeaderFields["Content-Range"] as? String) ??
+        (httpResponse.allHeaderFields["content-range"] as? String)
+        
+        if let rangeHeader {
+            let components = rangeHeader.components(separatedBy: "/")
+            if components.count > 1,
+               let totalLengthString = components.last?.trimmingCharacters(in: .whitespaces),
+               let totalLength = Int64(totalLengthString) {
+                contentInfo.contentLength = totalLength
+            }
+        } else {
+            contentInfo.contentLength = httpResponse.expectedContentLength
+        }
     }
     
 }
