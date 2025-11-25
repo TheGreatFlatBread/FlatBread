@@ -9,31 +9,6 @@ import SwiftUI
 import iamport_ios
 import Then
 
-struct IamportPaymentInput {
-    let postId: String
-    let price: Int
-    let title: String
-    let buyerName: String
-}
-
-struct PaymentValidationRequestDTO {
-    let imp_uid: String
-    let post_id: String
-}
-
-struct PaymentValidationResponseDTO {
-    let buyer_id: String?
-    let post_id: String?
-    let merchant_uid: String?
-    let productName: String?
-    let price: Int?
-    let paidAt: String?
-    let message: String?
-}
-
-nonisolated extension PaymentValidationRequestDTO: Encodable {}
-nonisolated extension PaymentValidationResponseDTO: Decodable {}
-
 struct IamportPaymentView: UIViewControllerRepresentable {
     let input: IamportPaymentInput
     var onCompleted: ((IamportResponse?) -> Void)? = nil
