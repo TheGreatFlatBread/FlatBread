@@ -28,7 +28,7 @@ final class ShortVideo: Identifiable, Hashable {
     let title: String
     let price: Int
     let content: String
-    let createdDate: String?
+    let createdDate: Date?
     let creator: CreatorResponseDTO?
     let files: [String]
     var likes: [String]
@@ -65,7 +65,7 @@ final class ShortVideo: Identifiable, Hashable {
         self.title = title
         self.price = price
         self.content = content
-        self.createdDate = createdDate
+        self.createdDate = createdDate?.toDate()
         self.creator = creator
         self.files = files
         self.likes = likes

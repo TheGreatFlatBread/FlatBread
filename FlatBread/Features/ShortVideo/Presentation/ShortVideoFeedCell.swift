@@ -73,15 +73,15 @@ struct ShortVideoFeedCell: View {
                         .lineLimit(3)
                     
                     HStack {
-                        Image(systemName: "music.note")
-                        Text("Original Audio - Trending")
+                        Image(systemName: "calendar")
+                        Text(shortVideo.createdDate?.toString(format: "yy년 MM월 dd일") ?? "")
                             .font(.caption)
                     }
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
-                VStack(spacing: 25) {
+                VStack(spacing: 15) {
                     ShortVideoLikeButton(
                         isLiked: $localIsLiked,
                         count: $localLikeCount,
@@ -91,13 +91,6 @@ struct ShortVideoFeedCell: View {
                     )
                     
                     ShortVideoActionButton(icon: "message", text: "Reply")
-                    ShortVideoActionButton(icon: "paperplane", text: "Share")
-                    
-                    Image(systemName: "opticaldisc.fill")
-                        .resizable()
-                        .frame(width: 30, height: 30)
-                        .rotationEffect(.degrees(isVisible ? 360 : 0))
-                        .animation(isVisible ? .linear(duration: 5).repeatForever(autoreverses: false) : .default, value: isVisible)
                 }
                 .foregroundColor(.white)
             }
