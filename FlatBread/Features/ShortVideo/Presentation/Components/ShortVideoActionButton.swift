@@ -1,5 +1,5 @@
 //
-//  ShortFormActionButton.swift
+//  ShortVideoActionButton.swift
 //  FlatBread
 //
 //  Created by 김민성 on 11/21/25.
@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct ShortFormActionButton: View {
+struct ShortVideoActionButton: View {
     let icon: String
     let text: String
     
@@ -26,5 +26,5 @@ struct ShortFormActionButton: View {
 }
 
 #Preview {
-    ShortFormActionButton(icon: "heart.fill", text: "Like")
+    ShortVideoActionButton(icon: "heart.fill", text: "Like")
 }

@@ -7,6 +7,7 @@
 
 import Foundation
 import Combine
+import Alamofire
 
 protocol AsyncNetworkService: Sendable {
     func request<T: Decodable & Sendable>(_ router: APIRouter,
@@ -20,6 +21,10 @@ protocol AsyncNetworkService: Sendable {
                   interceptorType: InterceptorType) async throws(NetworkError) -> URL
     func downloadVideo(_ router: any APIRouter,
                        interceptorType: InterceptorType) async throws(NetworkError) -> (HTTPURLResponse?, Data?)
+    func streamVideo(_ router: any VideoStreamableRouter,
+                     interceptorType: InterceptorType,
+                     responseHandler: @escaping @Sendable (HTTPURLResponse) -> Void,
+                     dataHandler: @escaping DataStreamRequest.Handler<Data, Never>) -> DataStreamRequest
 }
 
 extension AsyncNetworkService {
@@ -44,6 +49,16 @@ extension AsyncNetworkService {
     func downloadVideo(_ router: any APIRouter,
                        interceptorType: InterceptorType = .networkWithToken) async throws(NetworkError) -> (HTTPURLResponse?, Data?) {
         try await self.downloadVideo(router, interceptorType: interceptorType)
+    }
+    
+    func streamVideo(_ router: any VideoStreamableRouter,
+                     interceptorType: InterceptorType = .networkWithToken,
+                     responseHandler: @escaping @Sendable (HTTPURLResponse) -> Void,
+                     dataHandler: @escaping DataStreamRequest.Handler<Data, Never>) -> DataStreamRequest {
+        return self.streamVideo(router,
+                         interceptorType: interceptorType,
+                         responseHandler: responseHandler,
+                         dataHandler: dataHandler)
     }
 }
 
