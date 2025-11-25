@@ -16,17 +16,21 @@ final class ShortVideoFeedViewModel: ObservableObject {
     @Published var shortVideos: [ShortVideo] = []
     
     private let playerManager = PlayerManager.shared
-    let shortVideosResponseDummy: [PostResponseDTO] = PostResponseDTO.shortVideosDummy
+    private let networkService = NetworkServiceFactory.shared.makeNetworkService()
+    private var isLoading: Bool = false
+    private var scrollCursor: String = ""
     
-    private let preloader = ShortVideoPreloader.shared
+    private let preloader: any ShortVideoPreloader
     private var cancellables: Set<AnyCancellable> = []
     
-    private let preloadPrevCount = 2
-    private let preloadNextCount = 3
-    private let keepPrevCount = 5
-    private let keepNexCount = 10
+    private let preloadPrevCount = 3
+    private let preloadNextCount = 4
+    private let keepPrevCount = 7
+    private let keepNexCount = 7
     
-    init() {
+    init(preloader: ShortVideoPreloader = ShortVideoMemoryPreloader.shared) {
+        self.preloader = preloader
+        
         $currentVideoID
             .sink { [weak self] newID in
                 guard let self, let newID else { return }
@@ -56,13 +60,34 @@ final class ShortVideoFeedViewModel: ObservableObject {
         for (index, video) in shortVideos.enumerated() {
             if index < keepStart || index > keepEnd {
                 preloader.cancelAndRemoveCache(videoID: video.id)
-            } else {
-                let isPreloadTarget = (index > currentIndex && index <= preloadEnd)
-                if !isPreloadTarget {
-                    preloader.cancelPreload(videoID: video.id)
-                }
             }
         }
+    }
+    
+    func updateShortVideos() async {
+        isLoading = true
+        let router = PostRouter.searchHashTagList(
+            next: scrollCursor,
+            limit: "100",
+            category: [],
+            hashTag: "FBP_shortVideo"
+        )
+        do {
+            let newVideos = try await networkService
+                .request(router, responseType: PostListResponseDTO.self).data
+                .map { dto in
+                    let video = dto.asShortVideoItem
+                    video.setPreloader(self.preloader)
+                    return video
+                }
+            
+            await MainActor.run {
+                self.shortVideos = newVideos
+            }
+        } catch {
+            print(error.localizedDescription)
+        }
+        isLoading = false
     }
     
 }

@@ -32,7 +32,9 @@ struct ShortVideoFeedView: View {
             .background(Color.black)
             .onAppear {
                 UIScrollView.appearance().scrollsToTop = false
-                viewModel.shortVideos = viewModel.shortVideosResponseDummy.map(\.asShortVideoItem)
+            }
+            .task {
+                await viewModel.updateShortVideos()
                 if viewModel.currentVideoID == nil {
                     viewModel.currentVideoID = viewModel.shortVideos.first?.id
                 }
