@@ -40,6 +40,8 @@ final class HomeViewModel: ObservableObject {
         .init(title: "게임/오락",     symbol: "gamecontroller.fill",     tint: .green),
         .init(title: "반려동물",      symbol: "pawprint.fill",           tint: .brown)
     ]
+    
+    private var allCategories: [String] { categoryItems.map { $0.title } }
 
     init() {
         Task {
@@ -50,8 +52,43 @@ final class HomeViewModel: ObservableObject {
     
     @MainActor
     func refreshHome() async {
-        await fetchBanners()
-        await fetchMoimGroups()
+        async let bannersTask: [BannerItem] = { @Sendable in
+            do {
+                return try await loadBanners()
+            } catch {
+                return []
+            }
+        }()
+        async let groupsTask: [MoimGroupItem] = { @Sendable in
+            do {
+                return try await loadMoimGroups()
+            } catch {
+                return []
+            }
+        }()
+
+        let (banners, groups) = await (bannersTask, groupsTask)
+        self.banners = banners
+        self.moimGroups = groups
+    }
+
+    private func loadBanners() async throws -> [BannerItem] {
+        let response = try await networkService.request(
+            PostRouter.getPostList(next: "", limit: "10", category: allCategories),
+            responseType: PostListResponseDTO.self,
+            interceptorType: .networkWithToken
+        )
+        return mapPostsToBanners(response)
+    }
+
+    private func loadMoimGroups() async throws -> [MoimGroupItem] {
+        let response = try await networkService.request(
+            PostRouter.getPostList(next: "", limit: "50", category: allCategories),
+            responseType: PostListResponseDTO.self,
+            interceptorType: .networkWithToken
+        )
+        return mapPostsToMoimGroups(response)
+            .sorted { $0.memberCount > $1.memberCount }
     }
 
     func didTapCategory(_ item: CategoryItem, _ onMoveToCategory: @escaping () -> Void) {
@@ -77,11 +114,6 @@ final class HomeViewModel: ObservableObject {
             }
         }
     }
-    
-    @MainActor
-    private func updateBanners(_ items: [BannerItem]) {
-        self.banners = items
-    }
 
     private func mapPostsToBanners(_ dto: PostListResponseDTO) -> [BannerItem] {
         let posts = dto.data
@@ -102,7 +134,7 @@ final class HomeViewModel: ObservableObject {
             let title = post.title ?? ""
             let subtitle = post.content ?? ""
             let category = post.category ?? ""
-            let memberCount = post.buyers.count
+            let memberCount = (post.buyers.count) + 1
             let imageURL = post.files.first ?? ""
             if id.isEmpty && title.isEmpty && subtitle.isEmpty && imageURL.isEmpty { return nil }
             return MoimGroupItem(
@@ -119,7 +151,7 @@ final class HomeViewModel: ObservableObject {
     private func fetchBanners() async {
         do {
             let response = try await networkService.request(
-                PostRouter.getPostList(next: "", limit: "50", category: []),
+                PostRouter.getPostList(next: "", limit: "10", category: allCategories),
                 responseType: PostListResponseDTO.self,
                 interceptorType: .networkWithToken
             )
@@ -137,7 +169,7 @@ final class HomeViewModel: ObservableObject {
     private func fetchMoimGroups() async {
         do {
             let response = try await networkService.request(
-                PostRouter.getPostList(next: "", limit: "50", category: []),
+                PostRouter.getPostList(next: "", limit: "50", category: allCategories),
                 responseType: PostListResponseDTO.self,
                 interceptorType: .networkWithToken
             )
@@ -152,28 +184,4 @@ final class HomeViewModel: ObservableObject {
             #endif
         }
     }
-    
-    private func fetchMoimGroups(category: String?) async {
-        do {
-            let categories: [String] = {
-                if let c = category, !c.isEmpty { return [c] }
-                return []
-            }()
-            let response = try await networkService.request(
-                PostRouter.getPostList(next: "", limit: "50", category: categories),
-                responseType: PostListResponseDTO.self,
-                interceptorType: .networkWithToken
-            )
-            let groups = mapPostsToMoimGroups(response)
-                .sorted { $0.memberCount > $1.memberCount }
-            await MainActor.run {
-                self.moimGroups = groups
-            }
-        } catch {
-            #if DEBUG
-            print("[HomeViewModel] Failed to fetch moim groups for category (\(category ?? "")): \(error)")
-            #endif
-        }
-    }
 }
-
