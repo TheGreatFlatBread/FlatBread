@@ -10,6 +10,7 @@
 		1745BC0A2EC8B88600611C61 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 1745BC092EC8B88600611C61 /* Kingfisher */; };
 		17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 17BCDA8C2EBA291E00451DBF /* Alamofire */; };
 		4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 4E037CE72EBC4CFC00965D62 /* NMapsMap */; };
+		FE815B792ED56C9D006BA907 /* iamport-ios in Frameworks */ = {isa = PBXBuildFile; productRef = FE815B782ED56C9D006BA907 /* iamport-ios */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -90,6 +91,7 @@
 				1745BC0A2EC8B88600611C61 /* Kingfisher in Frameworks */,
 				17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */,
 				4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */,
+				FE815B792ED56C9D006BA907 /* iamport-ios in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -160,6 +162,7 @@
 				17BCDA8C2EBA291E00451DBF /* Alamofire */,
 				4E037CE72EBC4CFC00965D62 /* NMapsMap */,
 				1745BC092EC8B88600611C61 /* Kingfisher */,
+				FE815B782ED56C9D006BA907 /* iamport-ios */,
 			);
 			productName = FlatBread;
 			productReference = FE6110272EB9D4AD006E4243 /* FlatBread.app */;
@@ -197,6 +200,7 @@
 				17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */,
 				4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
 				1745BC082EC8B88600611C61 /* XCRemoteSwiftPackageReference "Kingfisher" */,
+				FE815B772ED56C9D006BA907 /* XCRemoteSwiftPackageReference "iamport-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FE6110282EB9D4AD006E4243 /* Products */;
@@ -341,6 +345,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = TW973AVL26;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -406,6 +411,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = TW973AVL26;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = YES;
@@ -576,6 +582,14 @@
 				minimumVersion = 3.23.0;
 			};
 		};
+		FE815B772ED56C9D006BA907 /* XCRemoteSwiftPackageReference "iamport-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/iamport/iamport-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.4.7;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -593,6 +607,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */;
 			productName = NMapsMap;
+		};
+		FE815B782ED56C9D006BA907 /* iamport-ios */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = FE815B772ED56C9D006BA907 /* XCRemoteSwiftPackageReference "iamport-ios" */;
+			productName = "iamport-ios";
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
