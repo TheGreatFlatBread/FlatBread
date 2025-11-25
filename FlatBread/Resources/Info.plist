@@ -59,6 +59,16 @@
 	<string>$(API_KEY)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>lslp.sesac.co.kr</key>
+			<dict>
+				<key>Includes Subdomains</key>
+				<true/>
+				<key>NSTemporaryExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+			</dict>
+		</dict>
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
 		<key>NSAllowsArbitraryLoads</key>
