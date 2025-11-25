@@ -16,6 +16,24 @@ struct IamportPaymentInput {
     let buyerName: String
 }
 
+struct PaymentValidationRequestDTO {
+    let imp_uid: String
+    let post_id: String
+}
+
+struct PaymentValidationResponseDTO {
+    let buyer_id: String?
+    let post_id: String?
+    let merchant_uid: String?
+    let productName: String?
+    let price: Int?
+    let paidAt: String?
+    let message: String?
+}
+
+nonisolated extension PaymentValidationRequestDTO: Encodable {}
+nonisolated extension PaymentValidationResponseDTO: Decodable {}
+
 struct IamportPaymentView: UIViewControllerRepresentable {
     let input: IamportPaymentInput
     var onCompleted: ((IamportResponse?) -> Void)? = nil
@@ -33,6 +51,7 @@ final class IamportPaymentViewController: UIViewController {
     private var didRequest = false
     private let input: IamportPaymentInput
     private let onCompleted: ((IamportResponse?) -> Void)?
+    private let networkService: AsyncNetworkService = NetworkServiceFactory.shared.makeNetworkService()
     
     init(input: IamportPaymentInput, onCompleted: ((IamportResponse?) -> Void)? = nil) {
         self.input = input
@@ -63,6 +82,11 @@ final class IamportPaymentViewController: UIViewController {
                                userCode: userCode, payment: payment) { [weak self] response in
             if let response {
                 print("[IMP] payment callback - success: \(response.success == true), imp_uid: \(response.imp_uid ?? "nil"), merchant_uid: \(response.merchant_uid ?? "nil"), error_msg: \(response.error_msg ?? "nil")")
+                if response.success == true, let imp = response.imp_uid {
+                    Task { [weak self] in
+                        await self?.validatePayment(impUID: imp, postID: self?.input.postId ?? "")
+                    }
+                }
             } else {
                 print("[IMP] payment callback - response is nil")
             }
@@ -93,6 +117,20 @@ final class IamportPaymentViewController: UIViewController {
             $0.name = input.title //결제할 상품명
             $0.buyer_name = input.buyerName //주문자 이름
             $0.app_scheme = "FlatBread" // 결제 후 돌아올 앱스킴
+        }
+    }
+    
+    private func validatePayment(impUID: String, postID: String) async {
+        let body = PaymentValidationRequestDTO(imp_uid: impUID, post_id: postID)
+        do {
+            let result = try await networkService.request(
+                PaymentRouter.validatePayment(request: body),
+                responseType: PaymentValidationResponseDTO.self
+            )
+            print("[IMP] validation 200: buyer_id=\(result.buyer_id ?? "nil"), post_id=\(result.post_id ?? "nil"), merchant_uid=\(result.merchant_uid ?? "nil"), productName=\(result.productName ?? "nil"), price=\(String(describing: result.price)), paidAt=\(result.paidAt ?? "nil")")
+        } catch {
+            // Try to decode error body if available
+            print("[IMP] validation failed: \(error)")
         }
     }
 }
