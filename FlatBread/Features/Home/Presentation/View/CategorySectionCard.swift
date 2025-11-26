@@ -18,7 +18,7 @@ struct CategorySectionCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("넓적빵 모임")
+            Text("이런 모임 어때요?")
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(.primary)
                 .padding(.horizontal, 4)
