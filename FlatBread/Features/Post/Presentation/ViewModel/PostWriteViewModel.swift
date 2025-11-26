@@ -8,7 +8,7 @@
 import Foundation
 import SwiftUI
 import Combine
-import Kingfisher
+import HwanCache
 
 @MainActor
 final class PostWriteViewModel: ObservableObject {
@@ -27,6 +27,7 @@ final class PostWriteViewModel: ObservableObject {
     @Published var errorActions: [ErrorAction] = []
 
     private let networkService: AsyncNetworkService = NetworkServiceFactory.shared.makeNetworkService()
+    private let imageService: HWImageService
     private let moimId: String
     private let postToEdit: PostUIModel?
 
@@ -38,7 +39,7 @@ final class PostWriteViewModel: ObservableObject {
         !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
-    init(moimId: String, postToEdit: PostUIModel? = nil) {
+    init(moimId: String, postToEdit: PostUIModel? = nil, imageService: HWImageService) {
         self.moimId = moimId
         self.postToEdit = postToEdit
 
@@ -55,6 +56,7 @@ final class PostWriteViewModel: ObservableObject {
                 self.maxParticipants = schedule.maxParticipants
             }
         }
+        self.imageService = imageService
     }
     
     func removeImage(at index: Int) {
@@ -64,11 +66,10 @@ final class PostWriteViewModel: ObservableObject {
 
         if urlToRemove.hasPrefix("file://") {
             ImageFileManager.shared.deleteImage(at: urlToRemove)
-        } else {
-            if let url = URL(string: urlToRemove) {
-                KingfisherManager.shared.cache.removeImage(forKey: urlToRemove)
-                KingfisherManager.shared.cache.removeImage(forKey: url.absoluteString)
-            }
+        }
+        
+        Task {
+            await imageService.removeFromCache(url: urlToRemove)
         }
     }
     
