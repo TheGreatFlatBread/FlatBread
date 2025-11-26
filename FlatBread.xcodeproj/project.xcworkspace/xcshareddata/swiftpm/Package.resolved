@@ -1,5 +1,9 @@
 {
+<<<<<<< HEAD
   "originHash" : "f602d5c6812a29128ee6ef15d04a991ba3ebe2e4cc5749a70cbe4b1c766e7d24",
+=======
+  "originHash" : "bbf2f7428796205436cc02675c9619d3d81cfe9a6665ec07e3ca37fccb4be13c",
+>>>>>>> ee97df9 (chore: package resolved)
   "pins" : [
     {
       "identity" : "alamofire",
@@ -29,12 +33,39 @@
       }
     },
     {
+<<<<<<< HEAD
       "identity" : "rxswift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ReactiveX/RxSwift.git",
       "state" : {
         "revision" : "5004a18539bd68905c5939aa893075f578f4f03d",
         "version" : "6.9.1"
+=======
+      "identity" : "realm-core",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/realm/realm-core.git",
+      "state" : {
+        "revision" : "cccb3ca9e26ec452a29f2f0d4050d1e38b8a3d43",
+        "version" : "14.14.0"
+      }
+    },
+    {
+      "identity" : "realm-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/realm/realm-swift",
+      "state" : {
+        "branch" : "master",
+        "revision" : "c22f9303d446fc3c044e4c151ed19597464b6bd7"
+      }
+    },
+    {
+      "identity" : "socket.io-client-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/socketio/socket.io-client-swift",
+      "state" : {
+        "branch" : "master",
+        "revision" : "42da871d9369f290d6ec4930636c40672143905b"
+>>>>>>> ee97df9 (chore: package resolved)
       }
     },
     {
@@ -56,12 +87,21 @@
       }
     },
     {
+<<<<<<< HEAD
       "identity" : "then",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/devxoul/Then.git",
       "state" : {
         "revision" : "e421a7b3440a271834337694e6050133a3958bc7",
         "version" : "2.7.0"
+=======
+      "identity" : "starscream",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/daltoniam/Starscream",
+      "state" : {
+        "revision" : "c6bfd1af48efcc9a9ad203665db12375ba6b145a",
+        "version" : "4.0.8"
+>>>>>>> ee97df9 (chore: package resolved)
       }
     }
   ],
