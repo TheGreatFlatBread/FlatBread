@@ -26,6 +26,8 @@ struct ShortVideoFeedCell: View {
     @State private var player: AVPlayer?
     @State private var playerLooper: NSObjectProtocol?
     @State private var isBuffering: Bool = true
+    @State private var showingAlert: Bool = false
+    @State private var alertMessage: String = ""
     @State private var statusObserver: NSKeyValueObservation?
     @State private var cancellables: Set<AnyCancellable> = []
     
@@ -91,7 +93,7 @@ struct ShortVideoFeedCell: View {
                         Text(shortVideo.createdDate?.toString(format: "yy년 MM월 dd일") ?? "")
                             .font(.system(size: 12))
                     }
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(.white.opacity(0.7))
                 }
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -144,6 +146,11 @@ struct ShortVideoFeedCell: View {
         .onChange(of: shortVideo.likes) { oldValue, newValue in
             syncLikeState()
         }
+        .alert("에러 발생", isPresented: $showingAlert) {
+            Button("확인", role: .cancel) { return }
+        } message: {
+            Text(alertMessage)
+        }
     }
     
     // MARK: - Like Logic
@@ -176,6 +183,8 @@ struct ShortVideoFeedCell: View {
                 let _ = try await networkService.request(router, responseType: LikeResponseDTO.self).likeStatus
             } catch {
                 print("❌ 좋아요 요청 실패: \(error)")
+                alertMessage = error.localizedDescription
+                showingAlert = true
                 rollbackLikeState(to: !isLiked)
             }
         }
@@ -228,6 +237,8 @@ struct ShortVideoFeedCell: View {
                 moimInfo = try await networkService.request(router, responseType: PostResponseDTO.self).asSearchResultUIModel
             } catch {
                 print("숏폼에서 모임 정보 가져오기 에러: \(error.localizedDescription)")
+                alertMessage = error.localizedDescription
+                showingAlert = true
             }
         }
     }
