@@ -26,6 +26,7 @@ struct ShortVideoFeedCell: View {
     @State private var player: AVPlayer?
     @State private var playerLooper: NSObjectProtocol?
     @State private var isBuffering: Bool = true
+    @State private var showCommentSheet: Bool = false
     @State private var showingAlert: Bool = false
     @State private var alertMessage: String = ""
     @State private var statusObserver: NSKeyValueObservation?
@@ -109,6 +110,7 @@ struct ShortVideoFeedCell: View {
                     
                     Button {
                         print("댓글 버튼 탭")
+                        showCommentSheet = true
                     } label: {
                         VStack {
                             Image(systemName: "message")
@@ -145,6 +147,12 @@ struct ShortVideoFeedCell: View {
         }
         .onChange(of: shortVideo.likes) { oldValue, newValue in
             syncLikeState()
+        }
+        .sheet(isPresented: $showCommentSheet) {
+            ShortVideoCommentView(videoID: shortVideo.id)
+                .presentationDetents([.fraction(0.7), .large])
+                .presentationCornerRadius(30)
+                .presentationDragIndicator(.visible)
         }
         .alert("에러 발생", isPresented: $showingAlert) {
             Button("확인", role: .cancel) { return }
