@@ -17,7 +17,13 @@ struct PostWriteView: View {
         moimId: String,
         onPostCreated: ((PostResponseDTO) -> Void)? = nil
     ) {
-        _viewModel = StateObject(wrappedValue: PostWriteViewModel(moimId: moimId, postToEdit: nil))
+        _viewModel = StateObject(
+            wrappedValue: PostWriteViewModel(
+                moimId: moimId,
+                postToEdit: nil,
+                imageService: ImageServiceKey.defaultValue
+            )g
+        )
         self.onPostCreated = onPostCreated
     }
 
@@ -46,7 +52,13 @@ struct PostPatchView: View {
         post: PostUIModel,
         onPostUpdated: ((PostResponseDTO) -> Void)? = nil
     ) {
-        _viewModel = StateObject(wrappedValue: PostWriteViewModel(moimId: post.moimId, postToEdit: post))
+        _viewModel = StateObject(
+            wrappedValue: PostWriteViewModel(
+                moimId: post.moimId,
+                postToEdit: post,
+                imageService: ImageServiceKey.defaultValue
+            )
+        )
         self.onPostUpdated = onPostUpdated
     }
 
@@ -66,6 +78,8 @@ struct PostPatchView: View {
 }
 
 private struct PostFormView: View {
+    
+    @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: PostWriteViewModel
     @State private var showImagePicker = false
     @State private var showSchedulePicker = false
@@ -172,7 +186,7 @@ private struct PostFormView: View {
     var toolBarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button {
-                
+                dismiss()
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 16, weight: .medium))
