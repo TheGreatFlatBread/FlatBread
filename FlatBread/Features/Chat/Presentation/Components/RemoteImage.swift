@@ -6,23 +6,21 @@
 //
 
 import SwiftUI
+import HwanCache
 
-enum ImageSource {
+enum ImageSource: Hashable {
     case url(String)
     case uiImage(UIImage)
-}
-
-enum ImageDisplayMode {
-    case thumbnail(CGSize)
-    case original
 }
 
 struct RemoteImage<Content: View>: View {
     let source: ImageSource
     let displayMode: ImageDisplayMode
+    let cacheStretagy: CacheStrategy
     let content: (Image) -> Content
     let placeholder: AnyView?
-    private let imageService: ImageService
+
+    @Environment(\.imageService) var imageService: HWImageService
 
     @State private var loadedImage: UIImage?
     @State private var isLoading = false
@@ -31,27 +29,27 @@ struct RemoteImage<Content: View>: View {
     init<PlaceholderContent: View>(
         source: ImageSource,
         displayMode: ImageDisplayMode = .original,
+        cacheStretagy: CacheStrategy = .both(diskExpiration: 7 * 3600 * 24),
         @ViewBuilder placeholder: () -> PlaceholderContent,
-        imageService: ImageService = DefaultImageService.shared,
         @ViewBuilder content: @escaping (Image) -> Content
     ) {
         self.source = source
         self.displayMode = displayMode
+        self.cacheStretagy = cacheStretagy
         self.placeholder = AnyView(placeholder())
-        self.imageService = imageService
         self.content = content
     }
 
     init(
         source: ImageSource,
         displayMode: ImageDisplayMode = .original,
-        imageService: ImageService = DefaultImageService.shared,
+        cacheStretagy: CacheStrategy = .both(diskExpiration: 7 * 3600 * 24),
         @ViewBuilder content: @escaping (Image) -> Content
     ) {
         self.source = source
         self.displayMode = displayMode
+        self.cacheStretagy = cacheStretagy
         self.placeholder = nil
-        self.imageService = imageService
         self.content = content
     }
     
@@ -101,7 +99,11 @@ struct RemoteImage<Content: View>: View {
 
             Task {
                 do {
-                    let image = try await imageService.loadImage(from: url, displayMode: displayMode)
+                    let image = try await imageService.loadImage(
+                        from: url,
+                        displayMode: displayMode.toHWImageDisplayMode(),
+                        cacheStrategy: cacheStretagy.toHWCacheStrategy()
+                    )
                     await MainActor.run {
                         loadedImage = image
                         isLoading = false
@@ -126,20 +128,18 @@ extension RemoteImage {
         url: String,
         displayMode: ImageDisplayMode = .original,
         @ViewBuilder placeholder: @escaping () -> PlaceholderContent,
-        imageService: ImageService = DefaultImageService.shared,
         @ViewBuilder content: @escaping (Image) -> Content
     ) {
-        self.init(source: .url(url), displayMode: displayMode, placeholder: placeholder, imageService: imageService, content: content)
+        self.init(source: .url(url), displayMode: displayMode, placeholder: placeholder, content: content)
     }
 
     // placeholder 없는 버전
     init(
         url: String,
         displayMode: ImageDisplayMode = .original,
-        imageService: ImageService = DefaultImageService.shared,
         @ViewBuilder content: @escaping (Image) -> Content
     ) {
-        self.init(source: .url(url), displayMode: displayMode, imageService: imageService, content: content)
+        self.init(source: .url(url), displayMode: displayMode, content: content)
     }
 
     // UIImage placeholder 있는 버전
@@ -147,19 +147,17 @@ extension RemoteImage {
         uiImage: UIImage,
         displayMode: ImageDisplayMode = .original,
         @ViewBuilder placeholder: @escaping () -> PlaceholderContent,
-        imageService: ImageService = DefaultImageService.shared,
         @ViewBuilder content: @escaping (Image) -> Content
     ) {
-        self.init(source: .uiImage(uiImage), displayMode: displayMode, placeholder: placeholder, imageService: imageService, content: content)
+        self.init(source: .uiImage(uiImage), displayMode: displayMode, placeholder: placeholder, content: content)
     }
 
     // UIImage placeholder 없는 버전
     init(
         uiImage: UIImage,
         displayMode: ImageDisplayMode = .original,
-        imageService: ImageService = DefaultImageService.shared,
         @ViewBuilder content: @escaping (Image) -> Content
     ) {
-        self.init(source: .uiImage(uiImage), displayMode: displayMode, imageService: imageService, content: content)
+        self.init(source: .uiImage(uiImage), displayMode: displayMode, content: content)
     }
 }
