@@ -75,14 +75,22 @@ struct PostListView: View {
                             isLeader: viewModel.isLeader,
                             isMember: viewModel.isMember,
                             onJoinTap: {
-                                // 결제 필요 여부 확인
+                                // 1) 유료 + 이미 멤버(= 탈퇴 의도): 결제 시트로 이동하지 않음, 개발용 Alert 표시
+                                if viewModel.isMember, let input = viewModel.makePaymentInputForMoimJoin(), input.price > 0 {
+                                    viewModel.devAlertMessage = "들어올 땐 맘대로지만 나갈 땐 아니란다"
+                                    return
+                                }
+
+                                // 2) 가입 플로우
                                 if let input = viewModel.makePaymentInputForMoimJoin(), input.price > 0 {
+                                    // 유료 + 아직 미가입: 결제 필요 → 시트 오픈
                                     DispatchQueue.main.async {
                                         self.paymentInput = input
                                         // paymentInput 세팅 이후 시트를 올려 순서 보장
                                         self.showPaymentSheet = true
                                     }
                                 } else {
+                                    // 무료: 기존 likeV2 기반 가입/탈퇴 토글
                                     Task {
                                         await viewModel.toggleMoimMembership()
                                     }
@@ -266,6 +274,17 @@ struct PostListView: View {
         }
         .task {
             await viewModel.loadInitialData()
+        }
+        .alert(
+            viewModel.devAlertMessage ?? "",
+            isPresented: Binding(
+                get: { viewModel.devAlertMessage != nil },
+                set: { if !$0 { viewModel.devAlertMessage = nil } }
+            )
+        ) {
+            Button("확인", role: .cancel) {
+                viewModel.devAlertMessage = nil
+            }
         }
     }
     

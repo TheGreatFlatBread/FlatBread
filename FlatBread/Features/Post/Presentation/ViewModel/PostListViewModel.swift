@@ -17,6 +17,7 @@ final class PostListViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var currentUserNick: String = ""
+    @Published var devAlertMessage: String?
     
     private let networkService: AsyncNetworkService = NetworkServiceFactory.shared.makeNetworkService()
     private(set) var currentUserId: String = ""
@@ -290,6 +291,12 @@ final class PostListViewModel: ObservableObject {
         guard let moim else { return }
         isLoading = true
         defer { isLoading = false }
+
+        // Paid + already a member: show development alert instead of starting payment/cancel flow
+        if moim.membershipFee > 0, isMember {
+            devAlertMessage = "들어올 땐 맘대로지만 나갈 땐 아니란다"
+            return
+        }
 
         if moim.membershipFee <= 0 {
             let newStatus = !isMember
