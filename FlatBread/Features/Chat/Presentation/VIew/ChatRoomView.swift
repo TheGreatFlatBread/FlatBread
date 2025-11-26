@@ -13,21 +13,24 @@ struct ChatRoomView: View {
     @FocusState private var isTextFieldFocused: Bool
     @State private var showImageSourcePicker = false
 
-    /// 기존 채팅방으로 진입
     init(room: ChatRoomModel, currentUserID: String) {
         _viewModel = StateObject(
-            wrappedValue: ChatRoomViewModel(room: room, currentUserID: currentUserID)
+            wrappedValue: ChatRoomViewModel(
+                room: room,
+                currentUserID: currentUserID,
+                imageService: ImageServiceKey.defaultValue
+            )
         )
     }
 
-    /// 새 채팅 시작 (opponent 정보로 진입, 첫 메시지 전송 시 room 생성)
     init(opponentID: String, opponentNick: String, opponentProfileImage: String?, currentUserID: String) {
         _viewModel = StateObject(
             wrappedValue: ChatRoomViewModel(
                 opponentID: opponentID,
                 opponentNick: opponentNick,
                 opponentProfileImage: opponentProfileImage,
-                currentUserID: currentUserID
+                currentUserID: currentUserID,
+                imageService: ImageServiceKey.defaultValue
             )
         )
     }
@@ -38,7 +41,6 @@ struct ChatRoomView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // WebSocket 연결 상태 인디케이터
             if !viewModel.isWebSocketConnected {
                 connectionStatusBanner
             }
@@ -56,9 +58,7 @@ struct ChatRoomView: View {
                         )
                     },
                     onRefresh: {
-                        Task {
-                            await viewModel.loadMoreMessages()
-                        }
+                        viewModel.loadOlderMessages()
                     },
                     scrollPosition: $viewModel.scrollPosition
                 )
@@ -75,11 +75,12 @@ struct ChatRoomView: View {
                 onImageButtonTap: { showImageSourcePicker = true },
                 onVoiceButtonTap: { /* print("Voice tapped") */ },
                 onEmojiButtonTap: { /* print("Emoji tapped") */},
-                onPlusButtonTap: { /* print("Plus tapped") */ }
+                onPlusButtonTap:  { /* print("Plus tapped") */ }
             )
         }
         .navigationTitle(viewModel.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .imagePicker(
             selectedImageURLs: $viewModel.selectedImageURLs,
             showPicker: $showImageSourcePicker
@@ -96,7 +97,11 @@ struct ChatRoomView: View {
             }
         }
         .task {
-            await viewModel.fetchChatMessageList()
+            viewModel.fetchMessagesFromRealm()
+            viewModel.connectWebSocket()
+        }
+        .onDisappear {
+            viewModel.disconnectWebSocket()
         }
     }
 
