@@ -7,8 +7,6 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct BannerCarouselView: View {
 
     let items: [BannerItem]
