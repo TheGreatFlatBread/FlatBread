@@ -231,7 +231,11 @@ struct PostListView: View {
             PaymentSheetView(input: paymentInput!) { response in
                 if response?.success == true {
                     Task {
+                        // 최신 데이터 반영 후 성공 알림
                         await viewModel.loadInitialData()
+                        await MainActor.run {
+                            viewModel.devAlertMessage = "결제 및 가입이 완료되었습니다."
+                        }
                     }
                 }
             }
