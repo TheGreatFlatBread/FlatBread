@@ -35,7 +35,7 @@
       "state" : {
         "revision" : "5004a18539bd68905c5939aa893075f578f4f03d",
         "version" : "6.9.1"
-    }
+      }
     },
     {
       "identity" : "realm-core",
