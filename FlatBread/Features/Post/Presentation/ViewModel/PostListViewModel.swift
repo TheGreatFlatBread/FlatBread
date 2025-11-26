@@ -16,6 +16,7 @@ final class PostListViewModel: ObservableObject {
     @Published var selectedCategory: PostType = .all
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
+    @Published var currentUserNick: String = ""
     
     private let networkService: AsyncNetworkService = NetworkServiceFactory.shared.makeNetworkService()
     private(set) var currentUserId: String = ""
@@ -91,6 +92,7 @@ final class PostListViewModel: ObservableObject {
                 responseType: UserProfileResponseDTO.self
             )
             currentUserId = profile.userID ?? ""
+            currentUserNick = profile.nick ?? ""
         } catch {
             print("Failed to load current user ID: \(error)")
         }
@@ -170,8 +172,24 @@ final class PostListViewModel: ObservableObject {
             )
             
             if let moimModel = PostMapper.toTempMoimModel(from: response) {
-                moim = moimModel
-                return moimModel.memberIds
+                let fee = response.price ?? moimModel.membershipFee
+                let adjusted = TempPostMoimModel(
+                    id: moimModel.id,
+                    name: moimModel.name,
+                    category: moimModel.category,
+                    description: moimModel.description,
+                    location: moimModel.location,
+                    imageURLs: moimModel.imageURLs,
+                    memberCount: moimModel.memberCount,
+                    maxMembers: moimModel.maxMembers,
+                    hashtags: moimModel.hashtags,
+                    createdAt: moimModel.createdAt,
+                    creator: moimModel.creator,
+                    memberIds: moimModel.memberIds,
+                    membershipFee: fee
+                )
+                moim = adjusted
+                return adjusted.memberIds
             }
             return nil
         } catch {
@@ -262,6 +280,15 @@ final class PostListViewModel: ObservableObject {
         }
     }
     
+    func makePaymentInputForMoimJoin() -> IamportPaymentInput? {
+        guard let moim else { return nil }
+        let postId = moim.id
+        let title = moim.name
+        let price = moim.membershipFee
+        let buyerName = currentUserNick
+        return IamportPaymentInput(postId: postId, price: price, title: title, buyerName: buyerName)
+    }
+    
     func deletePost(_ postId: String) async -> Bool {
         do {
             _ = try await networkService.request(
@@ -326,3 +353,4 @@ final class PostListViewModel: ObservableObject {
         }
     }
 }
+

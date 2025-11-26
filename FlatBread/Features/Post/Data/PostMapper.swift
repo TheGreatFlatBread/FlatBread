@@ -176,7 +176,8 @@ struct PostMapper {
                 name: creator.nick ?? "알 수 없음",
                 profileImageURL: creator.profileImage
             ),
-            memberIds: dto.likes2
+            memberIds: dto.likes2,
+            membershipFee: 0
         )
     }
 
