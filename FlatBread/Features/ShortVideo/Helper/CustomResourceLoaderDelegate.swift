@@ -71,7 +71,7 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
         
         if loadingRequest.isFinished { return true }
         
-        print("\(shortVideo.files.first!) 캐시가 없어서 네트워크에서 스트리밍으로 받아옵니다.")
+        print("\(shortVideo.id) 캐시가 없어서 네트워크에서 스트리밍으로 받아옵니다.")
         let startOffset = max(requestedOffset, cachedSize)
         let router = VideoDownloadRouter.streamVideo(
             filePath: videoFilePath,

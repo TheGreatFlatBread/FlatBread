@@ -207,9 +207,14 @@ struct ShortVideoFeedCell: View {
     private func updateVideoInfo() {
         let router = PostRouter.getPost(postID: shortVideo.id)
         Task {
-            if let updatedDTO = try? await networkService.request(router, responseType: PostResponseDTO.self) {
+            if let updatedVideo = try? await networkService.request(router, responseType: PostResponseDTO.self).asShortVideoItem {
                 await MainActor.run {
-                    self.shortVideo.likes = updatedDTO.likes
+                    // shortVideo 객체를 새 객체로 갈아끼울 때, 원래의 preloader를 이용해서 delegate의 preloader를 다시 세팅해 주어야 한다.
+                    // 만에 하나 없는 경우에는 메모리를 사용하도록 구현
+                    // 이러한 구조는 개선이 필요하긴 할 듯..
+                    let originalPreloader = self.shortVideo.resourceLoaderDelegate.preloader ?? ShortVideoMemoryPreloader.shared
+                    updatedVideo.setPreloader(originalPreloader)
+                    self.shortVideo = updatedVideo
                     self.syncLikeState()
                 }
             }
