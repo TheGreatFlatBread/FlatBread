@@ -7,7 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		172547D12ED44897003E46FE /* SocketIO in Frameworks */ = {isa = PBXBuildFile; productRef = 172547D02ED44897003E46FE /* SocketIO */; };
+		173151D32ED3080C009C14B8 /* RealmSwift in Frameworks */ = {isa = PBXBuildFile; productRef = 173151D22ED3080C009C14B8 /* RealmSwift */; };
+		173151D82ED30B4D009C14B8 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 173151D22ED3080C009C14B8 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1745BC0A2EC8B88600611C61 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 1745BC092EC8B88600611C61 /* Kingfisher */; };
+		17780DA62ED5D28D00D36AFA /* HwanCache in Frameworks */ = {isa = PBXBuildFile; productRef = 17780DA52ED5D28D00D36AFA /* HwanCache */; };
 		17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 17BCDA8C2EBA291E00451DBF /* Alamofire */; };
 		4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 4E037CE72EBC4CFC00965D62 /* NMapsMap */; };
 		FE815B792ED56C9D006BA907 /* iamport-ios in Frameworks */ = {isa = PBXBuildFile; productRef = FE815B782ED56C9D006BA907 /* iamport-ios */; };
@@ -23,6 +27,20 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		173151D92ED30B4D009C14B8 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				173151D82ED30B4D009C14B8 /* RealmSwift in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		179F97FE2EBE16290057F5D8 /* FlatBreadTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FlatBreadTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		FE6110272EB9D4AD006E4243 /* FlatBread.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FlatBread.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -33,7 +51,6 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Core/DI/.gitkeep,
-				Core/Services/.gitkeep,
 				Core/Utils/.gitkeep,
 				DesignSystem/Components/.gitkeep,
 				DesignSystem/Modifiers/.gitkeep,
@@ -90,8 +107,11 @@
 			files = (
 				1745BC0A2EC8B88600611C61 /* Kingfisher in Frameworks */,
 				17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */,
+				173151D32ED3080C009C14B8 /* RealmSwift in Frameworks */,
+				172547D12ED44897003E46FE /* SocketIO in Frameworks */,
 				4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */,
 				FE815B792ED56C9D006BA907 /* iamport-ios in Frameworks */,
+				17780DA62ED5D28D00D36AFA /* HwanCache in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -149,6 +169,7 @@
 				FE6110232EB9D4AD006E4243 /* Sources */,
 				FE6110242EB9D4AD006E4243 /* Frameworks */,
 				FE6110252EB9D4AD006E4243 /* Resources */,
+				173151D92ED30B4D009C14B8 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -163,6 +184,9 @@
 				4E037CE72EBC4CFC00965D62 /* NMapsMap */,
 				1745BC092EC8B88600611C61 /* Kingfisher */,
 				FE815B782ED56C9D006BA907 /* iamport-ios */,
+				173151D22ED3080C009C14B8 /* RealmSwift */,
+				172547D02ED44897003E46FE /* SocketIO */,
+				17780DA52ED5D28D00D36AFA /* HwanCache */,
 			);
 			productName = FlatBread;
 			productReference = FE6110272EB9D4AD006E4243 /* FlatBread.app */;
@@ -201,6 +225,9 @@
 				4E037CE62EBC4CFC00965D62 /* XCRemoteSwiftPackageReference "SPM-NMapsMap" */,
 				1745BC082EC8B88600611C61 /* XCRemoteSwiftPackageReference "Kingfisher" */,
 				FE815B772ED56C9D006BA907 /* XCRemoteSwiftPackageReference "iamport-ios" */,
+				173151CF2ED3080C009C14B8 /* XCRemoteSwiftPackageReference "realm-swift" */,
+				172547CF2ED44897003E46FE /* XCRemoteSwiftPackageReference "socket" */,
+				17780DA42ED5D28D00D36AFA /* XCRemoteSwiftPackageReference "HwanCache" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FE6110282EB9D4AD006E4243 /* Products */;
@@ -439,6 +466,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = FlatBread/FlatBread.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
@@ -558,12 +586,36 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		172547CF2ED44897003E46FE /* XCRemoteSwiftPackageReference "socket" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/socketio/socket.io-client-swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		173151CF2ED3080C009C14B8 /* XCRemoteSwiftPackageReference "realm-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/realm/realm-swift";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
 		1745BC082EC8B88600611C61 /* XCRemoteSwiftPackageReference "Kingfisher" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/onevcat/Kingfisher";
 			requirement = {
 				kind = upToNextMajorVersion;
 				minimumVersion = 8.6.1;
+			};
+		};
+		17780DA42ED5D28D00D36AFA /* XCRemoteSwiftPackageReference "HwanCache" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/hyeonghwan/HwanCache.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.1.0;
 			};
 		};
 		17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */ = {
@@ -593,10 +645,25 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		172547D02ED44897003E46FE /* SocketIO */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 172547CF2ED44897003E46FE /* XCRemoteSwiftPackageReference "socket" */;
+			productName = SocketIO;
+		};
+		173151D22ED3080C009C14B8 /* RealmSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 173151CF2ED3080C009C14B8 /* XCRemoteSwiftPackageReference "realm-swift" */;
+			productName = RealmSwift;
+		};
 		1745BC092EC8B88600611C61 /* Kingfisher */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 1745BC082EC8B88600611C61 /* XCRemoteSwiftPackageReference "Kingfisher" */;
 			productName = Kingfisher;
+		};
+		17780DA52ED5D28D00D36AFA /* HwanCache */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 17780DA42ED5D28D00D36AFA /* XCRemoteSwiftPackageReference "HwanCache" */;
+			productName = HwanCache;
 		};
 		17BCDA8C2EBA291E00451DBF /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;
