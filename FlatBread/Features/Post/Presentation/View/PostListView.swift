@@ -75,6 +75,7 @@ struct PostListView: View {
                             moim: moim,
                             isLeader: viewModel.isLeader,
                             isMember: viewModel.isMember,
+                            memberDisplayCount: viewModel.displayedMemberCount,
                             onJoinTap: {
                                 // 1) 유료 + 이미 멤버(= 탈퇴 의도): 결제 시트로 이동하지 않음, 개발용 Alert 표시
                                 if viewModel.isMember, let input = viewModel.makePaymentInputForMoimJoin(), input.price > 0 {
@@ -325,6 +326,7 @@ extension PostListView {
         let moim: TempPostMoimModel
         let isLeader: Bool
         let isMember: Bool
+        let memberDisplayCount: Int
         let onJoinTap: () -> Void
         
         var body: some View {
@@ -377,7 +379,7 @@ extension PostListView {
                                 Image(systemName: "person.2.fill")
                                     .font(.system(size: 12))
                                     .foregroundStyle(.secondary)
-                                Text("\(moim.memberCount + 1)명")
+                                Text("\(memberDisplayCount)명")
                                     .font(.system(size: 14))
                                     .foregroundStyle(.secondary)
                             }

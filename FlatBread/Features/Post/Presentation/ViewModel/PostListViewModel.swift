@@ -58,6 +58,17 @@ final class PostListViewModel: ObservableObject {
         posts.compactMap { $0.schedule }
     }
     
+    var displayedMemberCount: Int {
+        guard let moim else { return 0 }
+        if moim.membershipFee > 0 {
+            // Paid: buyers count (+1 for leader)
+            return lastFetchedBuyers.count + 1
+        } else {
+            // Free: likeV2-based memberCount mapped already into moim.memberCount; display +1 for leader
+            return moim.memberCount + 1
+        }
+    }
+    
     var members: [MemberUIModel] = []
     
     var isMember: Bool {
@@ -388,3 +399,4 @@ final class PostListViewModel: ObservableObject {
         }
     }
 }
+
