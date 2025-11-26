@@ -55,19 +55,25 @@ final class IamportPaymentViewController: UIViewController {
         
         Iamport.shared.payment(viewController: self,
                                userCode: userCode, payment: payment) { [weak self] response in
+            guard let self else { return }
             if let response {
                 print("[IMP] payment callback - success: \(response.success == true), imp_uid: \(response.imp_uid ?? "nil"), merchant_uid: \(response.merchant_uid ?? "nil"), error_msg: \(response.error_msg ?? "nil")")
                 if response.success == true, let imp = response.imp_uid {
+                    // 성공: 서버 검증 완료 후 콜백 및 닫기
                     Task { [weak self] in
-                        await self?.validatePayment(impUID: imp, postID: self?.input.postId ?? "")
+                        guard let self else { return }
+                        await self.validatePayment(impUID: imp, postID: self.input.postId)
+                        self.onCompleted?(response)
+                        self.dismiss(animated: true)
                     }
+                    return
                 }
             } else {
                 print("[IMP] payment callback - response is nil")
             }
-            self?.onCompleted?(response)
-            // 결제 화면 닫기
-            self?.dismiss(animated: true)
+            // 실패/취소: 즉시 콜백 및 닫기
+            self.onCompleted?(response)
+            self.dismiss(animated: true)
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) { [weak self] in

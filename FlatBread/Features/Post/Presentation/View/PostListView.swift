@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import iamport_ios
 
 extension PostListView {
     enum ActiveSheet: Identifiable {
@@ -227,7 +228,13 @@ struct PostListView: View {
                 }
             }
         )) {
-            PaymentSheetView(input: paymentInput!)
+            PaymentSheetView(input: paymentInput!) { response in
+                if response?.success == true {
+                    Task {
+                        await viewModel.loadInitialData()
+                    }
+                }
+            }
         }
         .confirmationDialog(
             "게시물 옵션",
@@ -671,8 +678,9 @@ extension PostListView {
 
 private struct PaymentSheetView: View {
     let input: IamportPaymentInput
+    var onCompleted: ((IamportResponse?) -> Void)? = nil
     var body: some View {
-        IamportPaymentView(input: input)
+        IamportPaymentView(input: input, onCompleted: onCompleted)
     }
 }
 
