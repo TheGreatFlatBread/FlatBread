@@ -52,8 +52,6 @@
 			membershipExceptions = (
 				Core/DI/.gitkeep,
 				Core/Utils/.gitkeep,
-				DesignSystem/Components/.gitkeep,
-				DesignSystem/Modifiers/.gitkeep,
 				DesignSystem/Styles/.gitkeep,
 				Resources/Info.plist,
 				Shared/Errors/.gitkeep,
