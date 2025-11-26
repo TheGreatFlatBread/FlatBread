@@ -19,46 +19,54 @@ struct MoimChatListView: View {
     }
 
     var body: some View {
-        NavigationStack {
-            List(viewModel.chatRooms, id: \.id) { room in
-                NavigationLink(value: room) {
-                    ChatListRowView(room: room)
+        List(viewModel.chatRooms, id: \.id) { room in
+            ChatListRowView(room: room, currentUserID: currentUserID)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    selectedRoom = room
+                    showChatRoom = true
                 }
                 .listRowSeparator(.hidden)
-                .tint(Color.blue)
-            }
-            .tint(Color.blue)
-            .listStyle(.plain)
-            .navigationTitle("채팅")
-            .navigationDestination(for: ChatRoomModel.self) { room in
-                ChatRoomView(room: room, currentUserID: "current_user_id")
+        }
+        .listStyle(.plain)
+        .navigationTitle("채팅")
+        .toolbar(.hidden, for: .tabBar)
+        .navigationDestination(isPresented: $showChatRoom) {
+            if let room = selectedRoom {
+                ChatRoomView(room: room, currentUserID: currentUserID)
             }
         }
-        .tint(.black)
+        .task {
+            await viewModel.loadChatRooms()
+        }
     }
 }
 
 private struct ChatListRowView: View {
     let room: ChatRoomModel
+    let currentUserID: String
 
-    private var participantName: String {
-        room.participants.first?.nick ?? "Unknown"
+    private var opponent: ChatUserModel? {
+        room.participants.first { $0.id != currentUserID }
     }
 
-    private var profileURL: URL? {
-        guard let path = room.participants.first?.profileImage else { return nil }
-        return URL(string: "https://your.api.host\(path)")
+    private var participantName: String {
+        opponent?.nick ?? "Unknown"
+    }
+
+    private var profileImageURL: String? {
+        opponent?.profileImage
     }
 
     var body: some View {
         HStack(spacing: 12) {
-            if let profileImageURL = room.participants.first?.profileImage, !profileImageURL.isEmpty {
-                ProfileImage(profileImageURL: profileImageURL)
+            if let imageURL = profileImageURL, !imageURL.isEmpty {
+                ProfileImage(profileImageURL: imageURL)
                     .frame(width: 50, height: 50)
             } else {
                 DefaultProfile(prefix: String(participantName.prefix(1)))
             }
-            
+
             UserDescription(
                 participantName: participantName,
                 createdAt: room.lastChat?.createdAt.relativeTime() ?? "",
@@ -73,9 +81,14 @@ private struct ProfileImage: View {
     let profileImageURL: String
     var body: some View {
         RemoteImage(
-            url: "https://i.pravatar.cc/150?img=\(abs(profileImageURL.hashValue % 70))",
+            url: profileImageURL,
             displayMode: .thumbnail(CGSize(width: 100, height: 100))
-        ) { image in
+        ) {
+            // placeholder
+            Circle()
+                .fill(Color.gray.opacity(0.3))
+                .frame(width: 50, height: 50)
+        } content: { image in
             image
                 .resizable()
                 .scaledToFill()
