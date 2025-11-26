@@ -135,7 +135,7 @@ final class HomeViewModel: ObservableObject {
             let subtitle = post.content ?? ""
             let category = post.category ?? ""
             let price = post.price ?? 0
-            let buyersCount = post.buyers.count
+            let buyersCount = Set(post.buyers).count
             let likeV2Count = post.likes2.count
             let likeLegacyCount = post.likes.count
             let freeMemberCount = (likeV2Count > 0 ? likeV2Count : likeLegacyCount) + 1
