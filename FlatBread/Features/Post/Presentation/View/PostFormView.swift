@@ -22,7 +22,7 @@ struct PostWriteView: View {
                 moimId: moimId,
                 postToEdit: nil,
                 imageService: ImageServiceKey.defaultValue
-            )g
+            )
         )
         self.onPostCreated = onPostCreated
     }
