@@ -25,4 +25,5 @@ enum APIConfig {
         fatalError("required product_id")
     }
     static let baseURL: String = "http://" + domain + "/v1"
+    static let socketURL: String = "ws://" + domain
 }

@@ -14,8 +14,6 @@ struct BannerCardView: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .bottomLeading) {
-
-                // URL 기반 비동기 이미지 로딩
                 RemoteImage(
                     url: item.imageURL,
                     displayMode: .thumbnail(CGSize(width: geo.size.width, height: geo.size.height)),
@@ -25,7 +23,6 @@ struct BannerCardView: View {
                                 ProgressView()
                             }
                     },
-                    imageService: DefaultImageService.shared,
                     content: { image in
                         image
                             .resizable()

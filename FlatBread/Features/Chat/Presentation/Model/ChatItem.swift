@@ -7,33 +7,18 @@
 
 import Foundation
 
-struct ChatMessageSection: Identifiable, Hashable {
-    let id: String
-    let date: String
-    let dateFormatted: String
-    var messages: [ChatMessageModel]
-    let displayConfigs: [MessageDisplayConfig]
+/// 채팅 목록의 단일 아이템 (날짜 헤더 또는 메시지)
+enum ChatItem: Identifiable, Hashable {
+    case dateHeader(date: String, dateFormatted: String)
+    case message(config: MessageDisplayConfig)
 
-    /// Section 생성 헬퍼
-    /// - Parameters:
-    ///   - date: 날짜 키 (yyyy-MM-dd)
-    ///   - dateFormatted: 포맷된 날짜 헤더
-    ///   - messages: 메시지 배열
-    ///   - currentUserID: 현재 사용자 ID
-    /// - Returns: displayConfigs가 계산된 Section
-    static func create(
-        date: String,
-        dateFormatted: String,
-        messages: [ChatMessageModel],
-        currentUserID: String
-    ) -> ChatMessageSection {
-        ChatMessageSection(
-            id: date,
-            date: date,
-            dateFormatted: dateFormatted,
-            messages: messages,
-            displayConfigs: messages.toDisplayConfigs(currentUserID: currentUserID)
-        )
+    var id: String {
+        switch self {
+        case .dateHeader(let date, _):
+            return "header-\(date)"
+        case .message(let config):
+            return config.id
+        }
     }
 }
 

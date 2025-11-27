@@ -15,7 +15,23 @@ struct ChatRoomView: View {
 
     init(room: ChatRoomModel, currentUserID: String) {
         _viewModel = StateObject(
-            wrappedValue: ChatRoomViewModel(room: room, currentUserID: currentUserID)
+            wrappedValue: ChatRoomViewModel(
+                room: room,
+                currentUserID: currentUserID,
+                imageService: ImageServiceKey.defaultValue
+            )
+        )
+    }
+
+    init(opponentID: String, opponentNick: String, opponentProfileImage: String?, currentUserID: String) {
+        _viewModel = StateObject(
+            wrappedValue: ChatRoomViewModel(
+                opponentID: opponentID,
+                opponentNick: opponentNick,
+                opponentProfileImage: opponentProfileImage,
+                currentUserID: currentUserID,
+                imageService: ImageServiceKey.defaultValue
+            )
         )
     }
 
@@ -25,23 +41,29 @@ struct ChatRoomView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            RefreshableContainer(
-                reverse: true,
-                content: {
-                    ChatSectionConatiner(
-                        chatSection: self.viewModel.groupedMessages,
-                        currentUserID: self.viewModel.currentUserID,
-                        retry: self.viewModel.retryMessage(_:)
-                    )
-                },
-                onRefresh: {
-                    Task {
-                        await viewModel.loadMoreMessages()
-                    }
-                },
-                scrollPosition: $viewModel.scrollPosition
-            )
-            .scrollDismissesKeyboard(.interactively)
+            if !viewModel.isWebSocketConnected {
+                connectionStatusBanner
+            }
+
+            if viewModel.isEmpty {
+                emptyChatPlaceholder
+            } else {
+                RefreshableContainer(
+                    reverse: true,
+                    content: {
+                        ChatItemsContainer(
+                            chatItems: self.viewModel.chatItems,
+                            currentUserID: self.viewModel.currentUserID,
+                            retry: self.viewModel.retryMessage(_:)
+                        )
+                    },
+                    onRefresh: {
+                        viewModel.loadOlderMessages()
+                    },
+                    scrollPosition: $viewModel.scrollPosition
+                )
+                .scrollDismissesKeyboard(.interactively)
+            }
 
             MessageInputField(
                 text: $viewModel.messageText,
@@ -53,46 +75,95 @@ struct ChatRoomView: View {
                 onImageButtonTap: { showImageSourcePicker = true },
                 onVoiceButtonTap: { /* print("Voice tapped") */ },
                 onEmojiButtonTap: { /* print("Emoji tapped") */},
-                onPlusButtonTap: { /* print("Plus tapped") */ }
+                onPlusButtonTap:  { /* print("Plus tapped") */ }
             )
         }
-        .navigationTitle(viewModel.room.participants.first?.nick ?? "채팅방")
+        .navigationTitle(viewModel.displayTitle)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar(.hidden, for: .tabBar)
         .imagePicker(
             selectedImageURLs: $viewModel.selectedImageURLs,
             showPicker: $showImageSourcePicker
         )
+        .overlay {
+            if viewModel.isCreatingRoom {
+                Color.black.opacity(0.3)
+                    .ignoresSafeArea()
+                    .overlay {
+                        ProgressView("채팅방 생성 중...")
+                            .padding()
+                            .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 12))
+                    }
+            }
+        }
+        .task {
+            viewModel.fetchMessagesFromRealm()
+            viewModel.connectWebSocket()
+        }
+        .onDisappear {
+            viewModel.disconnectWebSocket()
+        }
+    }
+
+    private var emptyChatPlaceholder: some View {
+        VStack(spacing: 16) {
+            Spacer()
+            Image(systemName: "bubble.left.and.bubble.right")
+                .font(.system(size: 48))
+                .foregroundStyle(.secondary.opacity(0.5))
+            Text("새로운 채팅을 시작해보세요")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    private var connectionStatusBanner: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+                .controlSize(.small)
+
+            Text("연결 중...")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity)
+        .background(.yellow.opacity(0.2))
+        .transition(.move(edge: .top).combined(with: .opacity))
     }
 }
 
-fileprivate struct ChatSectionConatiner: View {
-    let chatSection: [ChatMessageSection]
+fileprivate struct ChatItemsContainer: View {
+    let chatItems: [ChatItem]
     let currentUserID: String
     let retry: (ChatMessageModel) -> Void
-    
+
     var body: some View {
         LazyVStack(spacing: 8) {
-            ForEach(chatSection, id: \.id) { section in
-                ChatListComponent(
-                    date: section.date,
-                    displayConfigs: section.displayConfigs,
-                    currentUserID: currentUserID,
-                    retry: retry
-                )
+            ForEach(chatItems) { item in
+                switch item {
+                case .dateHeader(_, let dateFormatted):
+                    ChatDateHeader(dateFormatted: dateFormatted)
+                case .message(let config):
+                    ChatBubbleCell(
+                        config: config,
+                        isMyMessage: config.message.sender.id == currentUserID,
+                        onRetry: { message in retry(message) }
+                    )
+                }
             }
         }
         .padding(.vertical, 8)
     }
 }
 
-fileprivate struct ChatListComponent: View {
-    let date: String
-    let displayConfigs: [MessageDisplayConfig]
-    let currentUserID: String
-    let retry: (ChatMessageModel) -> Void
-    
+fileprivate struct ChatDateHeader: View {
+    let dateFormatted: String
+
     var body: some View {
-        Text(self.date)
+        Text(dateFormatted)
             .font(.system(size: 12, weight: .medium))
             .foregroundColor(.gray)
             .padding(.horizontal, 12)
@@ -100,15 +171,5 @@ fileprivate struct ChatListComponent: View {
             .background(Color(uiColor: .systemGray6))
             .cornerRadius(12)
             .padding(.vertical, 8)
-        
-        ForEach(self.displayConfigs, id: \.id) { config in
-            ChatBubbleCell(
-                config: config,
-                isMyMessage: config.message.sender.id == currentUserID,
-                onRetry: { message in
-                    retry(message)
-                }
-            )
-        }
     }
 }

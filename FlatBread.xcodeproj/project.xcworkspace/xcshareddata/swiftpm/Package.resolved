@@ -1,5 +1,5 @@
 {
-  "originHash" : "f602d5c6812a29128ee6ef15d04a991ba3ebe2e4cc5749a70cbe4b1c766e7d24",
+  "originHash" : "aa7d4218aa5508bd31caee8b0a691d1f5221d43b025fafeef1717d77571e3b9e",
   "pins" : [
     {
       "identity" : "alamofire",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "513364f870f6bfc468f9d2ff0a95caccc10044c5",
         "version" : "5.10.2"
+      }
+    },
+    {
+      "identity" : "hwancache",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/hyeonghwan/HwanCache.git",
+      "state" : {
+        "revision" : "271c5510b7f7975be66798d715c2f6e98e0a2d53",
+        "version" : "0.2.2"
       }
     },
     {
@@ -29,12 +38,39 @@
       }
     },
     {
+      "identity" : "realm-core",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/realm/realm-core.git",
+      "state" : {
+        "revision" : "cccb3ca9e26ec452a29f2f0d4050d1e38b8a3d43",
+        "version" : "14.14.0"
+      }
+    },
+    {
+      "identity" : "realm-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/realm/realm-swift",
+      "state" : {
+        "branch" : "master",
+        "revision" : "c22f9303d446fc3c044e4c151ed19597464b6bd7"
+      }
+    },
+    {
       "identity" : "rxswift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/ReactiveX/RxSwift.git",
       "state" : {
         "revision" : "5004a18539bd68905c5939aa893075f578f4f03d",
         "version" : "6.9.1"
+      }
+    },
+    {
+      "identity" : "socket.io-client-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/socketio/socket.io-client-swift",
+      "state" : {
+        "branch" : "master",
+        "revision" : "42da871d9369f290d6ec4930636c40672143905b"
       }
     },
     {
@@ -53,6 +89,15 @@
       "state" : {
         "revision" : "fb4eef37db9904c0a0dcdf7a828c892e13782cfa",
         "version" : "3.23.0"
+      }
+    },
+    {
+      "identity" : "starscream",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/daltoniam/Starscream",
+      "state" : {
+        "revision" : "c6bfd1af48efcc9a9ad203665db12375ba6b145a",
+        "version" : "4.0.8"
       }
     },
     {

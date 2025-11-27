@@ -49,4 +49,7 @@ struct ChatMessageListResponseDTO: nonisolated Decodable {
     let data: [ChatMessageResponseDTO]
 }
 
-
+struct ChatSendRequestDTO: Encodable {
+    let content: String
+    let files: [String]
+}

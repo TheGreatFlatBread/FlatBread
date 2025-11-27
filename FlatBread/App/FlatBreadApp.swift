@@ -14,6 +14,7 @@ struct FlatBreadApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(\.imageService, ImageServiceKey.defaultValue)
         }
     }
 }

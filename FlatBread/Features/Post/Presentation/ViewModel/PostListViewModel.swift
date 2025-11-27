@@ -8,6 +8,7 @@
 import Foundation
 import Combine
 
+@MainActor
 final class PostListViewModel: ObservableObject {
     
     @Published var moim: TempPostMoimModel?
@@ -94,10 +95,12 @@ final class PostListViewModel: ObservableObject {
     }
     
     func loadInitialData() async {
+        isLoading = true
         await loadCurreqntUserId()
         if let memberIds = await fetchMoimData() {
             await fetchLoadMember(memberIds: memberIds)
         }
+        isLoading = false
         posts = await fetchPosts()
     }
     
@@ -262,10 +265,26 @@ final class PostListViewModel: ObservableObject {
         }
     }
 
-    func toggleLike(for post: PostUIModel) {
+    func toggleLike(for post: PostUIModel) async {
         guard let index = posts.firstIndex(where: { $0.id == post.id }) else { return }
-        posts[index].isLiked.toggle()
-        posts[index].likeCount += posts[index].isLiked ? 1 : -1
+
+        let newLikeStatus = !posts[index].isLiked
+
+        // Optimistic update
+        posts[index].isLiked = newLikeStatus
+        posts[index].likeCount += newLikeStatus ? 1 : -1
+
+        do {
+            _ = try await networkService.request(
+                PostRouter.togglePostLikeV1(postID: post.id, like_status: newLikeStatus),
+                responseType: LikeResponseDTO.self
+            )
+        } catch {
+            // Rollback on failure
+            posts[index].isLiked = !newLikeStatus
+            posts[index].likeCount += newLikeStatus ? -1 : 1
+            errorMessage = "좋아요 처리에 실패했습니다."
+        }
     }
 
     func toggleBookmark(for post: PostUIModel) {
@@ -280,9 +299,11 @@ final class PostListViewModel: ObservableObject {
     
     func loadMore() async {
         guard !isLoading else { return }
+        isLoading = true
         if selectedTab != .members {
             posts = await fetchPosts()
         }
+        isLoading = false
     }
     
     func incrementCommentCount(for postId: String) {

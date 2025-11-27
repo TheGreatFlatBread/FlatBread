@@ -179,7 +179,27 @@ struct PostListView: View {
                     }
                 }
             } else {
-                ProgressView()
+                if viewModel.isLoading {
+                    VStack {
+                        Spacer()
+                        ProgressView()
+                            .scaleEffect(1.5)
+                        Spacer()
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else if viewModel.errorMessage != nil {
+                    ContentUnavailableView(
+                        "모임을 불러올 수 없습니다",
+                        systemImage: "exclamationmark.triangle",
+                        description: Text(viewModel.errorMessage ?? "")
+                    )
+                } else {
+                    ContentUnavailableView(
+                        "모임 정보가 없습니다",
+                        systemImage: "person.3.fill",
+                        description: Text("잠시 후 다시 시도해주세요")
+                    )
+                }
             }
         }
         .toolbarRole(.editor)
@@ -278,7 +298,7 @@ struct PostListView: View {
             Button("삭제", role: .destructive) {
                 if let post = activeDialog?.post {
                     Task {
-                        await viewModel.deletePost(post.id)
+                        _ = await viewModel.deletePost(post.id)
                         activeDialog = nil
                     }
                 }
@@ -481,10 +501,10 @@ extension PostListView {
     
     struct PostList: View {
         let posts: [PostUIModel]
-        let onLikeTap: (PostUIModel) -> Void
+        let onLikeTap:  @MainActor (PostUIModel) async -> Void
         let onCommentTap: (PostUIModel) -> Void
         let settingTapped: (PostUIModel) -> Void
-        
+
         var body: some View {
             if posts.isEmpty {
                 EmptyPostView()
@@ -492,7 +512,9 @@ extension PostListView {
                 ForEach(posts, id: \.id) { post in
                     PostCardView(
                         post: post,
-                        onLikeTap: { onLikeTap(post) },
+                        onLikeTap: {
+                            Task { await onLikeTap(post) }
+                        },
                         onCommentTap: { onCommentTap(post) },
                         settingTapped: { settingTapped(post) }
                     )

@@ -18,17 +18,19 @@ final class UserProfileViewModel: ObservableObject {
     @Published var isLoadingMorePosts: Bool = false
     @Published var errorMessage: String?
     @Published var showingAlert: Bool = false
+    @Published var isCreatingChat: Bool = false
 
     let userID: String
     let moimId: String?
     let isCurrentUser: Bool
+    private(set) var currentUserId: String = ""
 
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     private var nextCursor: String = ""
     private let pageLimit = "5"
 
     var hasMorePosts: Bool {
-        !nextCursor.isEmpty
+        !nextCursor.isEmpty && nextCursor != "0"
     }
 
     init(userID: String, moimId: String? = nil, isCurrentUser: Bool = false) {
@@ -110,7 +112,9 @@ final class UserProfileViewModel: ObservableObject {
             let newPosts = response.data.compactMap {
                 PostMapper.toPostUIModel(from: $0, currentUserId: userID)
             }
-            userPosts.append(contentsOf: newPosts)
+            if !newPosts.isEmpty {
+                userPosts.append(contentsOf: newPosts)
+            }
             nextCursor = response.next_cursor
         } catch {
             #if DEBUG
@@ -121,8 +125,40 @@ final class UserProfileViewModel: ObservableObject {
         isLoadingMorePosts = false
     }
 
-    func startChat() {
-        // TODO: 1:1 채팅방 생성 또는 기존 채팅방으로 이동
-        // 채팅 기능 구현 시 연결
+    func fetchCurrentUserId() async {
+        do {
+            let profile = try await networkService.request(
+                UserRouter.getMeProfile,
+                responseType: UserProfileResponseDTO.self,
+                interceptorType: .networkWithToken
+            )
+            currentUserId = profile.userID ?? ""
+        } catch {
+            #if DEBUG
+            print("현재 사용자 ID 로드 실패: \(error.localizedDescription)")
+            #endif
+        }
+    }
+
+    func startChat() async -> ChatRoomModel? {
+        guard !isCreatingChat else { return nil }
+
+        isCreatingChat = true
+        defer {
+            isCreatingChat = false
+        }
+        do {
+            let response = try await networkService.request(
+                ChatRouter.makeChatRoom(opponent_id: userID),
+                responseType: ChatResponseDTO.self,
+                interceptorType: .networkWithToken
+            )
+            let chatRoom = response.toVM()
+            return chatRoom
+        } catch {
+            errorMessage = "채팅방 생성에 실패했습니다."
+            showingAlert = true
+            return nil
+        }
     }
 }

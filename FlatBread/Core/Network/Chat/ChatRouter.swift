@@ -10,10 +10,11 @@ import Alamofire
 
 enum ChatRouter: APIRouter {
     static let encoder = JSONEncoder()
-    
+
     case fetchChatRoomList
     case makeChatRoom(opponent_id: String)
     case fetchChatMessgeList(roomID: String, cursorDate: String)
+    case sendMessage(roomID: String, content: String, files: [String])
 
     var baseURL: URL {
         guard let url = URL(string: APIConfig.baseURL + "/chats/") else {
@@ -24,7 +25,7 @@ enum ChatRouter: APIRouter {
 
     var method: HTTPMethod {
         switch self {
-        case .makeChatRoom:
+        case .makeChatRoom, .sendMessage:
             return .post
         case .fetchChatMessgeList, .fetchChatRoomList:
             return .get
@@ -40,6 +41,8 @@ enum ChatRouter: APIRouter {
         switch self {
         case .fetchChatMessgeList(let roomID, _):
             return "\(roomID)"
+        case .sendMessage(let roomID, _, _):
+            return "\(roomID)"
         case .fetchChatRoomList, .makeChatRoom:
             return ""
         }
@@ -47,9 +50,8 @@ enum ChatRouter: APIRouter {
     
     var query: [URLQueryItem]? {
         switch self {
-        case .fetchChatMessgeList(let roomID, let cursorDate):
-            [URLQueryItem(name: "room_id", value: roomID),
-            URLQueryItem(name: "cursor_date", value: cursorDate)]
+        case .fetchChatMessgeList(_, let cursorDate):
+            [URLQueryItem(name: "cursor_date", value: cursorDate)]
         default:
             nil
         }
@@ -59,6 +61,8 @@ enum ChatRouter: APIRouter {
         switch self {
         case .makeChatRoom(let opponentID):
             return try? Self.encoder.encode(["opponent_id": opponentID])
+        case .sendMessage(_, let content, let files):
+            return try? Self.encoder.encode(ChatSendRequestDTO(content: content, files: files))
         default:
             return nil
         }

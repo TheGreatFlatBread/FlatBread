@@ -130,14 +130,18 @@ private struct ChatOtherBubble: View {
             VStack {
                 if let profileImageURL = message.sender.profileImage, !profileImageURL.isEmpty {
                     RemoteImage(
-                        url: "https://i.pravatar.cc/150?img=\(abs(profileImageURL.hashValue % 70))",
-                        displayMode: .thumbnail(CGSize(width: 72, height: 72))
-                    ) { image in
+                        url: profileImageURL,
+                        displayMode: .thumbnail(CGSize(width: 108, height: 108)))
+                    { image in
                         image
                             .resizable()
                             .scaledToFill()
                             .frame(width: 36, height: 36)
                             .clipShape(Circle())
+                            .overlay(
+                                Circle()
+                                    .stroke(Color.gray.opacity(0.2), lineWidth: 0.33)
+                            )
                     }
                 } else {
                     Circle()
@@ -192,9 +196,10 @@ private struct MessageView: View {
             .font(.system(size: 13, weight: .regular))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+            .lineSpacing(4)
             .background(Color(uiColor: .systemGray5))
             .foregroundColor(.black)
-            .cornerRadius(18)
+            .cornerRadius(16)
     }
 }
 
@@ -206,8 +211,9 @@ private struct MessageMeView: View {
             .font(.system(size: 13, weight: .regular))
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+            .lineSpacing(4)
             .background(.juhwang)
             .foregroundColor(.white)
-            .cornerRadius(18)
+            .cornerRadius(16)
     }
 }

@@ -37,7 +37,7 @@ struct ProfileView: View {
                 case .makeNewMoim:
                     DummyView(navigationTitle: "새 모임 만들기", text: "새 모임")
                 case .chatList:
-                    DummyView(navigationTitle: "채팅 목록", text: "채팅")
+                    MoimChatListView(currentUserID: viewModel.myProfile?.userID ?? "")
                 case .withdraw:
                     // 탈퇴 기능은 추후 alert로 대체
                     DummyView(navigationTitle: "탈퇴하기", text: "탈퇴")
