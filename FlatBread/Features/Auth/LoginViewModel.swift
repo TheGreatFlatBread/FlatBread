@@ -10,19 +10,27 @@ import Combine
 import Foundation
 
 final class LoginViewModel: NSObject, ObservableObject {
-    
+
     private let tokenStorage: any TokenStorage
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     private let tokenCoordiantor = NetworkServiceFactory.shared.getTokenCoordinator()
-    
+
     init(tokenStorage: any TokenStorage) {
         self.tokenStorage = tokenStorage
     }
-    
+
     @Published var showingAlert: Bool = false
     @Published var alertMessage: String = ""
     @Published var isLoginSucceed: Bool = false
     @Published var isCheckingLoginStatus: Bool = true
+
+    @Published var email: String = ""
+    @Published var password: String = ""
+
+    @Published var emailValidationMessage: String = ""
+    @Published var isEmailValid: Bool = false
+
+    @Published var isLoggingIn: Bool = false
 
     @MainActor
     func checkLoginStatus() async {
@@ -39,7 +47,7 @@ final class LoginViewModel: NSObject, ObservableObject {
         case .authorized:
             do {
                 _ = try await tokenCoordiantor.refreshToken()
-                isLoginSucceed = true
+                 // isLoginSucceed = true
             } catch {
                 isLoginSucceed = false
                 alertMessage = "세션이 만료되어 다시 로그인해야 합니다."
@@ -132,7 +140,7 @@ final class LoginViewModel: NSObject, ObservableObject {
             #if DEBUG
             print("accessToken: \(signInInfo.accessToken!)")
             #endif
-            
+
             isLoginSucceed = true
         } catch {
             print("\(error)")
@@ -140,5 +148,56 @@ final class LoginViewModel: NSObject, ObservableObject {
             showingAlert = true
         }
     }
-    
+
+}
+
+// MARK: - Email/Password Login
+extension LoginViewModel {
+
+    func validateEmailFormat() {
+        let result = EmailValidator.validateFormat(email)
+        emailValidationMessage = result.message
+        isEmailValid = result.isValid
+    }
+
+    var canLogin: Bool {
+        return !email.isEmpty && !password.isEmpty && !isLoggingIn
+    }
+
+    @MainActor
+    func login() async {
+        guard canLogin else { return }
+
+        isLoggingIn = true
+        defer { isLoggingIn = false }
+
+        do {
+            let response = try await networkService.request(
+                UserRouter.login(email: email, password: password),
+                responseType: UserSignUpResponseDTO.self,
+                interceptorType: .onlyNetworkRetrier
+            )
+
+            await tokenStorage.saveToken(
+                access: response.accessToken!,
+                refresh: response.refreshToken!
+            )
+
+            #if DEBUG
+            print("로그인 성공: \(response)")
+            #endif
+
+            isLoginSucceed = true
+        } catch {
+            print("로그인 실패: \(error)")
+            alertMessage = error.localizedDescription
+            showingAlert = true
+        }
+    }
+
+    // MARK: - Reset
+    func resetLoginForm() {
+        email = ""
+        password = ""
+    }
 }
