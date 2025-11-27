@@ -15,19 +15,20 @@ struct ShortVideoFeedView: View {
         GeometryReader { proxy in
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(spacing: 0) {
-                    ForEach(viewModel.shortVideos) { video in
-                        FeedVideoCell(shortVideo: video,
-                                      bottomInset: proxy.safeAreaInsets.bottom,
-                                      currentVideoID: $viewModel.currentVideoID)
+                    ForEach($viewModel.shortVideos) { video in
+                        ShortVideoFeedCell(bottomInset: proxy.safeAreaInsets.bottom,
+                                      shortVideo: video,
+                                      currentVideo: $viewModel.currentVideo,
+                                      myProfile: $viewModel.myProfile)
                             .containerRelativeFrame([.horizontal, .vertical])
-                            .id(video.id)
+                            .id(video.wrappedValue)
                     }
                 }
                 .ignoresSafeArea()
                 .scrollTargetLayout()
             }
             .scrollTargetBehavior(.paging)
-            .scrollPosition(id: $viewModel.currentVideoID)
+            .scrollPosition(id: $viewModel.currentVideo)
             .ignoresSafeArea()
             .background(Color.black)
             .onAppear {
@@ -35,8 +36,8 @@ struct ShortVideoFeedView: View {
             }
             .task {
                 await viewModel.updateShortVideos()
-                if viewModel.currentVideoID == nil {
-                    viewModel.currentVideoID = viewModel.shortVideos.first?.id
+                if viewModel.currentVideo == nil {
+                    viewModel.currentVideo = viewModel.shortVideos.first
                 }
             }
             .onDisappear {
