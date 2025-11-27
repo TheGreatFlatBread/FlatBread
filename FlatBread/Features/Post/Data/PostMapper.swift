@@ -154,7 +154,8 @@ struct PostMapper {
             return nil
         }()
 
-        let memberCount = Int(dto.value4 ?? "0") ?? 0
+        let likeV2Count = dto.likes2.count
+        let memberCount = likeV2Count
         let maxMembers = Int(dto.value3 ?? "100") ?? 100
 
         let hashtags = parseHashtags(from: content)
@@ -308,3 +309,4 @@ struct CommentMapper {
         )
     }
 }
+

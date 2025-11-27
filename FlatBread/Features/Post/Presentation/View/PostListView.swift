@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import iamport_ios
 
 extension PostListView {
     enum ActiveSheet: Identifiable {
@@ -74,15 +75,24 @@ struct PostListView: View {
                             moim: moim,
                             isLeader: viewModel.isLeader,
                             isMember: viewModel.isMember,
+                            memberDisplayCount: viewModel.displayedMemberCount,
                             onJoinTap: {
-                                // 결제 필요 여부 확인
+                                // 1) 유료 + 이미 멤버(= 탈퇴 의도): 결제 시트로 이동하지 않음, 개발용 Alert 표시
+                                if viewModel.isMember, let input = viewModel.makePaymentInputForMoimJoin(), input.price > 0 {
+                                    viewModel.devAlertMessage = "들어올 땐 맘대로지만 나갈 땐 아니란다"
+                                    return
+                                }
+
+                                // 2) 가입 플로우
                                 if let input = viewModel.makePaymentInputForMoimJoin(), input.price > 0 {
+                                    // 유료 + 아직 미가입: 결제 필요 → 시트 오픈
                                     DispatchQueue.main.async {
                                         self.paymentInput = input
                                         // paymentInput 세팅 이후 시트를 올려 순서 보장
                                         self.showPaymentSheet = true
                                     }
                                 } else {
+                                    // 무료: 기존 likeV2 기반 가입/탈퇴 토글
                                     Task {
                                         await viewModel.toggleMoimMembership()
                                     }
@@ -219,7 +229,17 @@ struct PostListView: View {
                 }
             }
         )) {
-            PaymentSheetView(input: paymentInput!)
+            PaymentSheetView(input: paymentInput!) { response in
+                if response?.success == true {
+                    Task {
+                        // 최신 데이터 반영 후 성공 알림
+                        await viewModel.loadInitialData()
+                        await MainActor.run {
+                            viewModel.devAlertMessage = "결제 및 가입이 완료되었습니다."
+                        }
+                    }
+                }
+            }
         }
         .confirmationDialog(
             "게시물 옵션",
@@ -267,6 +287,17 @@ struct PostListView: View {
         .task {
             await viewModel.loadInitialData()
         }
+        .alert(
+            viewModel.devAlertMessage ?? "",
+            isPresented: Binding(
+                get: { viewModel.devAlertMessage != nil },
+                set: { if !$0 { viewModel.devAlertMessage = nil } }
+            )
+        ) {
+            Button("확인", role: .cancel) {
+                viewModel.devAlertMessage = nil
+            }
+        }
     }
     
     @ToolbarContentBuilder
@@ -295,6 +326,7 @@ extension PostListView {
         let moim: TempPostMoimModel
         let isLeader: Bool
         let isMember: Bool
+        let memberDisplayCount: Int
         let onJoinTap: () -> Void
         
         var body: some View {
@@ -347,7 +379,7 @@ extension PostListView {
                                 Image(systemName: "person.2.fill")
                                     .font(.system(size: 12))
                                     .foregroundStyle(.secondary)
-                                Text("\(moim.memberCount + 1)명")
+                                Text("\(memberDisplayCount)명")
                                     .font(.system(size: 14))
                                     .foregroundStyle(.secondary)
                             }
@@ -652,8 +684,9 @@ extension PostListView {
 
 private struct PaymentSheetView: View {
     let input: IamportPaymentInput
+    var onCompleted: ((IamportResponse?) -> Void)? = nil
     var body: some View {
-        IamportPaymentView(input: input)
+        IamportPaymentView(input: input, onCompleted: onCompleted)
     }
 }
 

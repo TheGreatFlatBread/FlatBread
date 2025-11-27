@@ -17,11 +17,13 @@ final class PostListViewModel: ObservableObject {
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var currentUserNick: String = ""
+    @Published var devAlertMessage: String?
     
     private let networkService: AsyncNetworkService = NetworkServiceFactory.shared.makeNetworkService()
     private(set) var currentUserId: String = ""
     private(set) var moimId: String
     private var postIdSet: Set<String> = []
+    private var lastFetchedBuyers: Set<String> = []
     
     private var cursors: [PostType: String] = [
         .all: "", .schedule: "",
@@ -56,10 +58,24 @@ final class PostListViewModel: ObservableObject {
         posts.compactMap { $0.schedule }
     }
     
+    var displayedMemberCount: Int {
+        guard let moim else { return 0 }
+        if moim.membershipFee > 0 {
+            // Paid: buyers count (+1 for leader)
+            return lastFetchedBuyers.count + 1
+        } else {
+            // Free: likeV2-based memberCount mapped already into moim.memberCount; display +1 for leader
+            return moim.memberCount + 1
+        }
+    }
+    
     var members: [MemberUIModel] = []
     
     var isMember: Bool {
         guard let moim else { return false }
+        if !lastFetchedBuyers.isEmpty {
+            return lastFetchedBuyers.contains(currentUserId)
+        }
         return moim.memberIds.contains(currentUserId)
     }
     
@@ -173,6 +189,24 @@ final class PostListViewModel: ObservableObject {
             
             if let moimModel = PostMapper.toTempMoimModel(from: response) {
                 let fee = response.price ?? moimModel.membershipFee
+
+                // Capture buyers from the latest get post response (buyers likely non-optional)
+                let buyersFromResponse: [String] = response.buyers
+                self.lastFetchedBuyers = Set(buyersFromResponse)
+
+                // Resolve memberIds depending on free vs paid
+                // - Free: use like-based memberIds from moimModel
+                // - Paid: use creator + buyers
+                let resolvedMemberIds: [String]
+                if fee <= 0 {
+                    resolvedMemberIds = moimModel.memberIds
+                } else {
+                    var set = Set<String>()
+                    set.insert(moimModel.creator.id)
+                    for b in buyersFromResponse { set.insert(b) }
+                    resolvedMemberIds = Array(set)
+                }
+
                 let adjusted = TempPostMoimModel(
                     id: moimModel.id,
                     name: moimModel.name,
@@ -185,7 +219,7 @@ final class PostListViewModel: ObservableObject {
                     hashtags: moimModel.hashtags,
                     createdAt: moimModel.createdAt,
                     creator: moimModel.creator,
-                    memberIds: moimModel.memberIds,
+                    memberIds: resolvedMemberIds,
                     membershipFee: fee
                 )
                 moim = adjusted
@@ -268,15 +302,27 @@ final class PostListViewModel: ObservableObject {
         guard let moim else { return }
         isLoading = true
         defer { isLoading = false }
-        let newStatus = !isMember
-        do {
-            _ = try await networkService.request(
-                PostRouter.togglePostLikeV2(postID: moim.id, like_status: newStatus),
-                responseType: LikeResponseDTO.self
-            )
-            _ = await fetchMoimData()
-        } catch {
-            errorMessage = "모임 \(newStatus ? "가입" : "탈퇴")에 실패했습니다."
+
+        // Paid + already a member: show development alert instead of starting payment/cancel flow
+        if moim.membershipFee > 0, isMember {
+            devAlertMessage = "들어올 땐 맘대로지만 나갈 땐 아니란다"
+            return
+        }
+
+        if moim.membershipFee <= 0 {
+            let newStatus = !isMember
+            do {
+                _ = try await networkService.request(
+                    PostRouter.togglePostLikeV2(postID: moim.id, like_status: newStatus),
+                    responseType: LikeResponseDTO.self
+                )
+                if let memberIds = await fetchMoimData() {
+                    await fetchLoadMember(memberIds: memberIds)
+                }
+            } catch {
+                errorMessage = "모임 \(newStatus ? "가입" : "탈퇴")에 실패했습니다."
+            }
+            return
         }
     }
     

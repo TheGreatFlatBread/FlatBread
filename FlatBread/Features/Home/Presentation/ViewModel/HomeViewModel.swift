@@ -134,7 +134,12 @@ final class HomeViewModel: ObservableObject {
             let title = post.title ?? ""
             let subtitle = post.content ?? ""
             let category = post.category ?? ""
-            let memberCount = (post.buyers.count) + 1
+            let price = post.price ?? 0
+            let buyersCount = Set(post.buyers).count
+            let likeV2Count = post.likes2.count
+            let likeLegacyCount = post.likes.count
+            let freeMemberCount = (likeV2Count > 0 ? likeV2Count : likeLegacyCount) + 1
+            let memberCount = (price <= 0) ? freeMemberCount : (buyersCount + 1)
             let imageURL = post.files.first ?? ""
             if id.isEmpty && title.isEmpty && subtitle.isEmpty && imageURL.isEmpty { return nil }
             return MoimGroupItem(
@@ -185,3 +190,4 @@ final class HomeViewModel: ObservableObject {
         }
     }
 }
+
