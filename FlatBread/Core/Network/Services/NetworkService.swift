@@ -36,7 +36,7 @@ final class DefaultNetworkService: AsyncNetworkService {
         } catch let afError as AFError {
             throw NetworkError.from(afError)
         } catch {
-            throw NetworkError.unknown(error)
+            throw NetworkError.from(error)
         }
     }
 
@@ -65,7 +65,7 @@ final class DefaultNetworkService: AsyncNetworkService {
         } catch let afError as AFError {
             throw NetworkError.from(afError)
         } catch {
-            throw NetworkError.unknown(error)
+            throw NetworkError.from(error)
         }
     }
 
@@ -84,7 +84,7 @@ final class DefaultNetworkService: AsyncNetworkService {
         } catch let afError as AFError {
             throw NetworkError.from(afError)
         } catch {
-            throw NetworkError.unknown(error)
+            throw NetworkError.from(error)
         }
     }
     
