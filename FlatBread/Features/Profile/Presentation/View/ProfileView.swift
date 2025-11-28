@@ -20,7 +20,15 @@ struct ProfileView: View {
         NavigationStack(path: $viewModel.path) {
             ScrollView {
                 VStack(spacing: 24) {
-                    profileInfoSection(profile: viewModel.myProfile)
+                    if let profile = viewModel.myProfile {
+                        profileInfoSection(profile: profile)
+                    } else if viewModel.isLoadingProfile {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                            .frame(height: 60)
+                    } else {
+                        profileInfoSection(profile: nil)
+                    }
                     menuSection
                 }
                 .padding()
@@ -31,7 +39,11 @@ struct ProfileView: View {
             .navigationDestination(for: NavigationRoute.self) { route in
                 switch route {
                 case .profile:
-                    EditProfileView(userProfile: viewModel.myProfile)
+                    if let profile = viewModel.myProfile {
+                        EditProfileView(userProfile: profile)
+                    } else {
+                        Text("프로필 정보를 불러오는 중입니다…")
+                    }
                 case .myMoim:
                     DummyView(navigationTitle: "내가 만든 모임", text: "내 모임")
                 case .makeNewMoim:
@@ -58,74 +70,103 @@ struct ProfileView: View {
 
     }
     
-    // MARK: - 프로필 정보 섹션
     private func profileInfoSection(profile: UserProfileResponseDTO?) -> some View {
-        VStack(spacing: 16) {
-            if viewModel.isLoadingProfile {
-                ProgressView()
-                    .scaleEffect(1.5)
-                    .frame(height: 60)
-            } else {
-                HStack(spacing: 16) {
-                    if let urlString = profile?.profileImage, !urlString.isEmpty {
-                        RemoteImage(url: urlString, displayMode: .thumbnail(CGSize(width: 60, height: 60))) {
-                            Image(systemName: "person.circle.fill")
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 60, height: 60)
-                                .clipShape(Circle())
-                                .foregroundColor(.gray)
-                        } content: { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 60, height: 60)
-                                .clipShape(Circle())
-                        }
-                    } else {
+        if let profile = profile {
+            return AnyView(profileInfoSection(profile: profile))
+        } else {
+            return AnyView(
+                VStack(spacing: 16) {
+                    HStack(spacing: 16) {
                         Image(systemName: "person.circle.fill")
                             .resizable()
                             .aspectRatio(contentMode: .fill)
                             .frame(width: 60, height: 60)
                             .clipShape(Circle())
                             .foregroundColor(.gray)
+                        Text("닉네임 없음")
+                            .font(.system(size: 20, weight: .bold))
+                        Spacer()
                     }
-
-                    Text(profile?.nick ?? "닉네임 없음")
-                        .font(.system(size: 20, weight: .bold))
-
-                    Spacer()
+                    Divider()
+                    VStack(alignment: .leading, spacing: 12) {
+                        profileInfoRow(systemImage: "envelope.fill", title: "이메일", value: nil)
+                        profileInfoRow(systemImage: "calendar", title: "생년월일", value: nil)
+                        profileInfoRow(systemImage: "person.fill", title: "성별", value: nil)
+                        profileInfoRow(systemImage: "phone.fill", title: "전화번호", value: nil)
+                    }
+                    NavigationLink(value: NavigationRoute.profile) {
+                        HStack { Spacer(); Text("수정").foregroundStyle(.white).frame(height: 40); Spacer() }
+                            .background(.orange)
+                            .cornerRadius(14)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .disabled(true)
                 }
+                .padding(20)
+                .background(Color(.secondarySystemGroupedBackground))
+                .cornerRadius(32)
+                .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+            )
+        }
+    }
+
+    private func profileInfoSection(profile: UserProfileResponseDTO) -> some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                if let urlString = profile.profileImage, !urlString.isEmpty {
+                    RemoteImage(url: urlString, displayMode: .thumbnail(CGSize(width: 60, height: 60))) {
+                        Image(systemName: "person.circle.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                            .foregroundColor(.gray)
+                    } content: { image in
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                    }
+                } else {
+                    Image(systemName: "person.circle.fill")
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 60, height: 60)
+                        .clipShape(Circle())
+                        .foregroundColor(.gray)
+                }
+
+                Text(profile.nick ?? "닉네임 없음")
+                    .font(.system(size: 20, weight: .bold))
+
+                Spacer()
             }
 
             Divider()
-            
             VStack(alignment: .leading, spacing: 12) {
                 profileInfoRow(
                     systemImage: "envelope.fill",
                     title: "이메일",
-                    value: profile?.email
+                    value: profile.email
                 )
                 profileInfoRow(
                     systemImage: "calendar",
                     title: "생년월일",
-                    value: profile?.birthDay
+                    value: profile.birthDay
                 )
                 profileInfoRow(
                     systemImage: "person.fill",
                     title: "성별",
-                    value: {
-                        guard let gender = profile?.gender else { return nil }
-                        return (gender == "male") ? "남성" : "여성"
-                    }()
+                    value: genderDisplay(from: profile.gender)
                 )
                 profileInfoRow(
                     systemImage: "phone.fill",
                     title: "전화번호",
-                    value: profile?.phoneNum
+                    value: profile.phoneNum
                 )
             }
-            
+
             NavigationLink(value: NavigationRoute.profile) {
                 HStack {
                     Spacer()
@@ -144,6 +185,15 @@ struct ProfileView: View {
         .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(32)
         .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
+
+    private func genderDisplay(from gender: String?) -> String? {
+        guard let gender else { return nil }
+        switch gender {
+        case "male": return "남성"
+        case "female": return "여성"
+        default: return "기타"
+        }
     }
 
     // MARK: - 메뉴 버튼 섹션
