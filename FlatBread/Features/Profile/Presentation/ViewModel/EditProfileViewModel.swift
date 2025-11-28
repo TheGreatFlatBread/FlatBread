@@ -75,12 +75,25 @@ final class EditProfileViewModel: ObservableObject {
     private static let forbiddenNickCharacters = CharacterSet(charactersIn: ".,?*\\-@+^${}()|[]\\")
     private static let phoneRegexPattern = "^[0-9]{9,12}$"
 
+    var hasChanges: Bool {
+        let nickChanged = (nickname.trimmingCharacters(in: .whitespacesAndNewlines) != (existingProfile.nick ?? ""))
+        let phoneChanged = (phone != (existingProfile.phoneNum ?? ""))
+        let birthChanged: Bool = {
+            let existing = existingProfile.birthDay
+            let current = Self.birthFormatter.string(from: birth)
+            return (existing ?? "") != current
+        }()
+        let genderChanged = (gender.rawValue != (existingProfile.gender ?? "other"))
+        let imageChanged = (processedImageData != nil)
+        return nickChanged || phoneChanged || birthChanged || genderChanged || imageChanged
+    }
+
     var canSubmit: Bool {
         let nickOK = !nickname.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         let phoneOK = phone.isEmpty || phone.range(of: Self.phoneRegexPattern, options: .regularExpression) != nil
         let containsInvalidNick = !validateNick(nickname)
         let imageOK = isImageValid
-        return nickOK && phoneOK && !containsInvalidNick && !isUploading && imageOK
+        return nickOK && phoneOK && !containsInvalidNick && !isUploading && imageOK && hasChanges
     }
 
     // MARK: - Actions

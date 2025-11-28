@@ -44,7 +44,12 @@ struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: EditProfileViewModel
     @State private var selectedItem: PhotosPickerItem?
+    @FocusState private var focusedField: Field?
     var onSuccess: (() -> Void)?
+
+    enum Field {
+        case nickname, phone, birth
+    }
 
     init(userProfile: UserProfileResponseDTO, onSuccess: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: EditProfileViewModel(existingProfile: userProfile))
@@ -87,15 +92,18 @@ struct EditProfileView: View {
                     TextField("닉네임을 입력하세요", text: $viewModel.nickname)
                         .textInputAutocapitalization(.never)
                         .disableAutocorrection(true)
+                        .focused($focusedField, equals: .nickname)
                 }
 
                 Section("전화번호") {
                     TextField("전화번호를 입력하세요", text: $viewModel.phone)
                         .keyboardType(.numberPad)
+                        .focused($focusedField, equals: .phone)
                 }
 
                 Section("생년월일") {
                     DatePicker("생년월일 선택", selection: $viewModel.birth, displayedComponents: .date)
+                        .focused($focusedField, equals: .birth)
                 }
 
                 Section("성별") {
@@ -128,17 +136,22 @@ struct EditProfileView: View {
                             }
                         }
                     } label: {
-                        if viewModel.isUploading {
-                            HStack { Spacer(); ProgressView(); Spacer() }
-                        } else {
-                            Text("저장").frame(maxWidth: .infinity, alignment: .center)
-                        }
+                        Text(viewModel.isUploading ? "" : "저장")
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .overlay(
+                                Group { if viewModel.isUploading { HStack { Spacer(); ProgressView(); Spacer() } } }
+                            )
+                            .frame(height: 44)
+                            .background((viewModel.canSubmit && !viewModel.isUploading) ? Color("juhwang") : Color(.systemGray5))
+                            .foregroundStyle((viewModel.canSubmit && !viewModel.isUploading) ? .white : .secondary)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .disabled(!viewModel.canSubmit || viewModel.isUploading)
                 }
             }
             .navigationTitle("프로필 수정")
             .navigationBarTitleDisplayMode(.inline)
+            .onTapGesture { focusedField = nil }
             .onChange(of: selectedItem) { _, newItem in
                 guard let item = newItem else { viewModel.setProfileImage(data: nil); return }
                 Task {
