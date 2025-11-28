@@ -24,7 +24,14 @@ final class NetworkServiceFactory {
         let configuration = URLSessionConfiguration.default
         configuration.timeoutIntervalForRequest = 10
         configuration.timeoutIntervalForResource = 60
-        
+        configuration.requestCachePolicy = .reloadRevalidatingCacheData
+        let urlCache = URLCache(
+            memoryCapacity: 50 * 1024 * 1024,
+            diskCapacity: 200 * 1024 * 1024,
+            diskPath: "NetworkCache"
+        )
+        configuration.urlCache = urlCache
+
         let mainSession = if let eventMonitor {
             Session(
                 configuration: configuration,
