@@ -72,6 +72,7 @@ struct EditProfileView: View {
                                             ProgressView()
                                         }
                                     }
+                                    .allowsHitTesting(false)
                                 )
                             PhotosPicker(selection: $selectedItem, matching: .images, photoLibrary: .shared()) {
                                 Text("사진 선택")
@@ -87,6 +88,8 @@ struct EditProfileView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                     }
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { focusedField = nil }
 
                 Section("닉네임") {
                     TextField("닉네임을 입력하세요", text: $viewModel.nickname)
@@ -94,17 +97,23 @@ struct EditProfileView: View {
                         .disableAutocorrection(true)
                         .focused($focusedField, equals: .nickname)
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { focusedField = nil }
 
                 Section("전화번호") {
                     TextField("전화번호를 입력하세요", text: $viewModel.phone)
                         .keyboardType(.numberPad)
                         .focused($focusedField, equals: .phone)
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { focusedField = nil }
 
                 Section("생년월일") {
                     DatePicker("생년월일 선택", selection: $viewModel.birth, displayedComponents: .date)
                         .focused($focusedField, equals: .birth)
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { focusedField = nil }
 
                 Section("성별") {
                     Picker("성별 선택", selection: $viewModel.gender) {
@@ -114,6 +123,8 @@ struct EditProfileView: View {
                     }
                     .pickerStyle(.segmented)
                 }
+                .contentShape(Rectangle())
+                .onTapGesture { focusedField = nil }
 
                 if viewModel.isUploading {
                     Section {
@@ -140,8 +151,10 @@ struct EditProfileView: View {
                             .frame(maxWidth: .infinity, alignment: .center)
                             .overlay(
                                 Group { if viewModel.isUploading { HStack { Spacer(); ProgressView(); Spacer() } } }
+                                    .allowsHitTesting(false)
                             )
                             .frame(height: 44)
+                            .contentShape(Rectangle())
                             .background((viewModel.canSubmit && !viewModel.isUploading) ? Color("juhwang") : Color(.systemGray5))
                             .foregroundStyle((viewModel.canSubmit && !viewModel.isUploading) ? .white : .secondary)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -151,7 +164,6 @@ struct EditProfileView: View {
             }
             .navigationTitle("프로필 수정")
             .navigationBarTitleDisplayMode(.inline)
-            .onTapGesture { focusedField = nil }
             .onChange(of: selectedItem) { _, newItem in
                 guard let item = newItem else { viewModel.setProfileImage(data: nil); return }
                 Task {
