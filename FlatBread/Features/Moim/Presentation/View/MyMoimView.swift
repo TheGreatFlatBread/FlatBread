@@ -52,6 +52,11 @@ struct MyMoimView: View {
                     }
                 }
             }
+            .onAppear {
+                Task {
+                    await viewModel.loadData()
+                }
+            }
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {
                 case .postList(let moimId):
