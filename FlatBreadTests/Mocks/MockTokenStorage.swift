@@ -9,6 +9,14 @@ import Foundation
 @testable import FlatBread
 
 actor MockTokenStorage: TokenStorage {
+    func getUserID() async -> String? {
+        nil
+    }
+    
+    func saveUserID(_ userID: String) async {
+        
+    }
+    
     func getAppleUserID() async -> String? {
         nil
     }
