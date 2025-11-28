@@ -15,6 +15,8 @@ final class MyMoimViewModel: ObservableObject {
     @Published var myMoims: [MoimSearchResultUIModel] = []
     @Published var isLoading: Bool = false
     @Published var hasMoreData: Bool = true
+    
+    var userData: MyMoimProfile? = nil
 
     // MARK: - Private Properties
     private let networkService: AsyncNetworkService
@@ -29,8 +31,11 @@ final class MyMoimViewModel: ObservableObject {
     // MARK: - Methods
     private func loadMoims() {
         Task {
-            await fetchRecommendMoims()
-            await fetchMyMoims()
+            await withTaskGroup(of: Void.self) { group in
+                group.addTask { await self.fetchRecommendMoims() }
+                group.addTask { await self.fetchMyMoims() }
+                group.addTask { await self.requestMyProfile() }
+            }
         }
     }
 
@@ -38,8 +43,17 @@ final class MyMoimViewModel: ObservableObject {
         guard !isLoading && hasMoreData else { return }
         print(#function)
         Task {
-            await fetchMyMoims()
+            await loadMoreLikedMoims()
         }
+    }
+
+    @MainActor
+    private func loadMoreLikedMoims() async {
+        isLoading = true
+        defer { isLoading = false }
+
+        let likedMoims = await fetchLikedMoims()
+        myMoims.append(contentsOf: likedMoims)
     }
 
     @MainActor
@@ -48,7 +62,7 @@ final class MyMoimViewModel: ObservableObject {
             let response = try await networkService.request(
                 PostRouter.getPostList(
                     next: "",
-                    limit: "20",
+                    limit: "3",
                     category: MoimCategory.allCases.map { $0.rawValue }
                 ),
                 responseType: PostListResponseDTO.self
@@ -66,6 +80,71 @@ final class MyMoimViewModel: ObservableObject {
         isLoading = true
         defer { isLoading = false }
 
+        async let paymentPostIds = fetchPaymentPostIds()
+        async let profilePostIds = fetchProfilePostIds()
+
+        let (paymentIds, profileIds) = await (paymentPostIds, profilePostIds)
+
+        let combinedIds = Array(Set(paymentIds + profileIds))
+
+        let moimCategories = MoimCategory.allCases.map { $0.rawValue }
+        let filteredMoims = await fetchAndFilterMoimsByCategory(postIds: combinedIds, categories: moimCategories)
+
+        myMoims.append(contentsOf: filteredMoims)
+    }
+
+    private func fetchPaymentPostIds() async -> [String] {
+        do {
+            let paymentResponse = try await networkService.request(
+                PaymentRouter.myPaymentList(request: PaymentListResponseDTO(data: [])),
+                responseType: PaymentListResponseDTO.self
+            )
+            return paymentResponse.data.map { $0.postId }
+        } catch {
+            print("Failed to fetch payment list: \(error)")
+            return []
+        }
+    }
+
+    private func fetchProfilePostIds() async -> [String] {
+        do {
+            let profileResponse = try await networkService.request(
+                UserRouter.getMeProfile,
+                responseType: UserProfileResponseDTO.self,
+                interceptorType: .networkWithToken
+            )
+            return profileResponse.postIDList
+        } catch {
+            print("Failed to fetch profile post ids: \(error)")
+            return []
+        }
+    }
+
+    private func fetchAndFilterMoimsByCategory(postIds: [String], categories: [String]) async -> [MoimSearchResultUIModel] {
+        var moimsList: [MoimSearchResultUIModel] = []
+
+        for postId in postIds {
+            do {
+                let postResponse = try await networkService.request(
+                    PostRouter.getPost(postID: postId),
+                    responseType: PostResponseDTO.self
+                )
+
+                if let category = postResponse.category,
+                   categories.contains(category),
+                   let moimModel = postResponse.asSearchResultUIModel {
+                    moimsList.append(moimModel)
+                }
+            } catch {
+                print("Failed to fetch post \(postId): \(error)")
+                continue
+            }
+        }
+
+        return moimsList
+    }
+
+    private func fetchLikedMoims() async -> [MoimSearchResultUIModel] {
         do {
             let response = try await networkService.request(
                 PostRouter.getMeLikePostListV2(
@@ -76,13 +155,28 @@ final class MyMoimViewModel: ObservableObject {
                 responseType: PostListResponseDTO.self
             )
 
-            let newMoims = response.data.compactMap { $0.asSearchResultUIModel }
-            myMoims.append(contentsOf: newMoims)
             nextCursor = response.next_cursor
             hasMoreData = response.next_cursor != "0"
+            return response.data.compactMap { $0.asSearchResultUIModel }
         } catch {
-            print("Failed to fetch moims: \(error)")
+            print("Failed to fetch liked moims: \(error)")
             hasMoreData = false
+            return []
+        }
+    }
+    
+    private func requestMyProfile() async {
+        do {
+            isLoading = true
+            let responseDTO = try await networkService.request(
+                UserRouter.getMeProfile,
+                responseType: UserProfileResponseDTO.self,
+                interceptorType: .networkWithToken
+            )
+            isLoading = false
+            userData = responseDTO.asMyMoimProfile
+        } catch {
+            isLoading = false
         }
     }
 }

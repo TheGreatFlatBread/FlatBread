@@ -12,6 +12,7 @@ enum PaymentRouter: APIRouter {
     static let encoder = JSONEncoder()
 
     case validatePayment(request: PaymentValidationRequestDTO)
+    case myPaymentList(request: PaymentListResponseDTO)
 
     var baseURL: URL {
         if let url = URL(string: APIConfig.baseURL + "/payments/") {
@@ -25,6 +26,8 @@ enum PaymentRouter: APIRouter {
         switch self {
         case .validatePayment:
             return .post
+        case .myPaymentList:
+            return .get
         }
     }
 
@@ -38,6 +41,8 @@ enum PaymentRouter: APIRouter {
         switch self {
         case .validatePayment:
             return "validation"
+        case .myPaymentList:
+            return "me"
         }
     }
 
@@ -45,6 +50,8 @@ enum PaymentRouter: APIRouter {
         switch self {
         case .validatePayment(let requestDTO):
             return try? Self.encoder.encode(requestDTO)
+        case .myPaymentList:
+            return nil
         }
     }
 
