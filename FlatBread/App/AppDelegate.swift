@@ -41,7 +41,6 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         }
     }
 
-    // MARK: - APNs Token Registration
     // APNs 토큰 등록 성공
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
@@ -71,7 +70,6 @@ extension AppDelegate: MessagingDelegate {
         }
 
         print("[FCM] 새 토큰 수신: \(fcmToken.prefix(20))...")
-
         // 이전 토큰 확인
         let oldToken = UserDefaults.standard.string(forKey: "fcmToken")
 
@@ -210,8 +208,6 @@ extension AppDelegate: MessagingDelegate {
         }
     }
 
-    // MARK: - Remove FCM Token (Logout)
-
     /// 로그아웃 시 백엔드에서 FCM 토큰 제거
     func removeFCMTokenFromBackend(userId: String, fcmToken: String) {
         print(" [FCM] 로그아웃 - 토큰 제거 요청")
@@ -245,13 +241,11 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
         let userInfo = notification.request.content.userInfo
-        
         if let aps = userInfo["aps"] as? [String: Any] {
             if let alert = aps["alert"] as? String {
                 print("알림 내용: \(alert)")
             }
         }
-        
         // completionHandler([.banner, .sound, .badge])
     }
 
@@ -263,7 +257,6 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     ) {
         let userInfo = response.notification.request.content.userInfo
         print("알림 탭: \(userInfo)")
-
         // 알림 데이터 처리
         handleNotificationTap(userInfo: userInfo)
 

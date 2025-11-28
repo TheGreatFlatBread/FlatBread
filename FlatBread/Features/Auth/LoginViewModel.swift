@@ -65,7 +65,7 @@ final class LoginViewModel: NSObject, ObservableObject {
         }
 
         do {
-            let access = try await tokenCoordiantor.refreshToken()
+            _ = try await tokenCoordiantor.refreshToken()
             // UserSession 복원
             UserSession.shared.login(userId: userId, sendPendingToken: true)
 
@@ -102,6 +102,8 @@ final class LoginViewModel: NSObject, ObservableObject {
                 // UserSession 복원
                 if let userId = await tokenStorage.getUserID() {
                     UserSession.shared.login(userId: userId, sendPendingToken: true)
+                } else {
+                    throw SocialLoginError.sessionExpired
                 }
 
                 // 자동 로그인 후 FCM 토큰 재전송
