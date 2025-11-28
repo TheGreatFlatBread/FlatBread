@@ -51,6 +51,17 @@ final class ChatMessageRepository {
         }
     }
 
+    /// Profiling 테스트용: 전체 메시지 로드 (limit 없음)
+    func getAllMessagesInRoom(roomID: String, participants: [ChatUserModel]) -> [ChatMessageModel] {
+        let results = realm.objects(ChatMessageEntity.self)
+            .filter("roomID == %@", roomID)
+            .sorted(byKeyPath: "createdAt", ascending: true) // 오래된 순서대로
+
+        return results.map { entity in
+            entity.toDomain(participants: participants)
+        }
+    }
+
     func getOlderMessages(roomID: String, participants: [ChatUserModel], before: Date, limit: Int = 30) -> [ChatMessageModel] {
         let results = realm.objects(ChatMessageEntity.self)
             .filter("roomID == %@ AND createdAt < %@", roomID, before)
