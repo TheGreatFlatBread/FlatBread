@@ -40,7 +40,14 @@ struct ProfileView: View {
                 switch route {
                 case .profile:
                     if let profile = viewModel.myProfile {
-                        EditProfileView(userProfile: profile)
+                        EditProfileView(userProfile: profile) {
+                            Task {
+                                await viewModel.requestMyProfile()
+                                viewModel.alertTitle = "성공"
+                                viewModel.alertMessage = "프로필이 업데이트되었습니다."
+                                viewModel.showingAlert = true
+                            }
+                        }
                     } else {
                         Text("프로필 정보를 불러오는 중입니다…")
                     }

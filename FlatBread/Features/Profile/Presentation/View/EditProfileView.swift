@@ -44,9 +44,11 @@ struct EditProfileView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: EditProfileViewModel
     @State private var selectedItem: PhotosPickerItem?
+    var onSuccess: (() -> Void)?
 
-    init(userProfile: UserProfileResponseDTO) {
+    init(userProfile: UserProfileResponseDTO, onSuccess: (() -> Void)? = nil) {
         _viewModel = StateObject(wrappedValue: EditProfileViewModel(existingProfile: userProfile))
+        self.onSuccess = onSuccess
     }
 
     var body: some View {
@@ -121,6 +123,7 @@ struct EditProfileView: View {
                         Task {
                             await viewModel.submit()
                             if !viewModel.isUploading && viewModel.errorMessage == nil {
+                                onSuccess?()
                                 dismiss()
                             }
                         }
