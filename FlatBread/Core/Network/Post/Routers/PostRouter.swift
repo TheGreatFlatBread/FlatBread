@@ -120,6 +120,13 @@ enum PostRouter: APIRouter {
             + category.map {
                 URLQueryItem(name: "category", value: $0)
             }
+            
+        case .getUserPostList(_, let next, let limit, let category):
+            return [URLQueryItem(name: "next", value: next),
+                    URLQueryItem(name: "limit", value: limit)]
+            + category.map {
+                URLQueryItem(name: "category", value: $0)
+            }
         default:
             return nil
         }
