@@ -62,6 +62,9 @@ struct ProfileView: View {
                     DummyView(navigationTitle: "탈퇴하기", text: "탈퇴")
                 }
             }
+            .navigationDestination(for: ChatRoomModel.self) { room in
+                ChatRoomView(room: room, currentUserID: viewModel.myProfile?.userID ?? "")
+            }
         }
         .tint(.primary)
         .task {
