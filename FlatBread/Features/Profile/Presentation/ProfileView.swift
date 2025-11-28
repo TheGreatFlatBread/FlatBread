@@ -67,16 +67,33 @@ struct ProfileView: View {
                     .frame(height: 60)
             } else {
                 HStack(spacing: 16) {
-                    Image(systemName: "person.circle.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 60, height: 60)
-                        .clipShape(Circle())
-                        .foregroundColor(.gray)
-                    
+                    if let urlString = profile?.profileImage, !urlString.isEmpty {
+                        RemoteImage(url: urlString, displayMode: .thumbnail(CGSize(width: 60, height: 60))) {
+                            Image(systemName: "person.circle.fill")
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 60, height: 60)
+                                .clipShape(Circle())
+                                .foregroundColor(.gray)
+                        } content: { image in
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 60, height: 60)
+                                .clipShape(Circle())
+                        }
+                    } else {
+                        Image(systemName: "person.circle.fill")
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 60, height: 60)
+                            .clipShape(Circle())
+                            .foregroundColor(.gray)
+                    }
+
                     Text(profile?.nick ?? "닉네임 없음")
                         .font(.system(size: 20, weight: .bold))
-                    
+
                     Spacer()
                 }
             }

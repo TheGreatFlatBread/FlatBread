@@ -48,6 +48,7 @@ class ProfileViewModel: ObservableObject {
     @Published var alertTitle: String = ""
     @Published var alertMessage: String = ""
     @Published var showingAlert: Bool = false
+    @Published var profileImageURL: URL? = nil
     
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     
@@ -61,11 +62,13 @@ class ProfileViewModel: ObservableObject {
             )
             isLoadingProfile = false
             myProfile = responseDTO
+            profileImageURL = responseDTO.profileImage.flatMap { URL(string: $0) }
         } catch {
             isLoadingProfile = false
             alertTitle = "프로필 불러오기 실패"
             alertMessage = error.localizedDescription
             showingAlert = true
+            profileImageURL = nil
         }
     }
     
@@ -79,6 +82,7 @@ final class MockProfileViewModel: ProfileViewModel {
         myProfile = await Task {
             return UserProfileResponseDTO.profileViewDummy
         }.value
+        profileImageURL = myProfile?.profileImage.flatMap { URL(string: $0) }
     }
     
 }
