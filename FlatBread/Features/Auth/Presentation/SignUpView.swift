@@ -69,8 +69,8 @@ struct SignUpView: View {
                                 }
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 8)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundStyle(.blue)
+                                .background(Color("juhwang").opacity(0.1))
+                                .foregroundStyle(Color("juhwang"))
                                 .cornerRadius(8)
                             }
                             .disabled(viewModel.isCheckingEmailDuplicate)
@@ -132,7 +132,7 @@ struct SignUpView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .frame(height: 50)
-                        .background(viewModel.canSignUp ? Color.blue : Color.gray.opacity(0.3))
+                        .background(viewModel.canSignUp ? Color("juhwang") : Color.gray.opacity(0.3))
                         .foregroundStyle(.white)
                         .cornerRadius(10)
                     }
@@ -142,6 +142,7 @@ struct SignUpView: View {
 
                 Spacer(minLength: 40)
             }
+            .tint(Color("juhwang"))
         }
         .scrollDismissesKeyboard(.interactively)
         .navigationBarTitleDisplayMode(.inline)
@@ -202,7 +203,7 @@ fileprivate struct CustomTextField: View {
 
     private var borderColor: Color {
         if focused == field {
-            return .blue
+            return Color("juhwang")
         } else if !validationMessage.isEmpty {
             return isValid ? .green : .red
         } else {
@@ -268,7 +269,7 @@ fileprivate struct CustomSecureField: View {
 
     private var borderColor: Color {
         if focused == field {
-            return .blue
+            return Color("juhwang")
         } else if !validationMessage.isEmpty {
             return isValid ? .green : .red
         } else {
