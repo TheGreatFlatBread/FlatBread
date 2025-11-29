@@ -14,27 +14,32 @@ final class MoimChatListViewModel: ObservableObject {
 
     private let networkService: AsyncNetworkService
     private let roomRepository = ChatRoomRepository.shared
+    private var isSyncing = false
+    private let currentUserID: String
 
-    init(networkService: AsyncNetworkService = NetworkServiceFactory.shared.makeNetworkService()) {
+    init(currentUserID: String, networkService: AsyncNetworkService = NetworkServiceFactory.shared.makeNetworkService()) {
+        self.currentUserID = currentUserID
         self.networkService = networkService
     }
 
-    /// 최초 로드: Realm 캐시 먼저 표시 후 서버 동기화
     func loadChatRooms() async {
-        // 1. Realm에서 캐시된 채팅방 로드 (빠른 표시)
-        let cachedRooms = roomRepository.getAllRooms()
+        let cachedRooms = roomRepository.getAllRooms(currentUserID: currentUserID)
         if !cachedRooms.isEmpty {
             await MainActor.run {
                 self.chatRooms = cachedRooms
             }
         }
-
-        // 2. 서버에서 최신 데이터 가져와서 동기화
         await fetchChatList()
     }
-
-    /// 서버에서 채팅방 목록 가져와서 Realm에 저장
+    
     func fetchChatList() async {
+        guard !isSyncing else {
+            return
+        }
+
+        isSyncing = true
+        defer { isSyncing = false }
+
         do {
             let response = try await networkService.request(
                 ChatRouter.fetchChatRoomList,
@@ -44,12 +49,62 @@ final class MoimChatListViewModel: ObservableObject {
 
             let rooms = response.data.map { $0.toVM() }
 
-            // Realm에 저장
             roomRepository.saveRooms(rooms)
 
-            // UI 업데이트
+            let hasStructuralChange = await MainActor.run {
+                rooms.count != chatRooms.count ||
+                zip(rooms, chatRooms).contains {
+                    $0.0.id != $0.1.id
+                }
+            }
+
+            if hasStructuralChange {
+                await MainActor.run {
+                    self.chatRooms = rooms
+                }
+            }
+
+            let updates = await withTaskGroup(of: (String, ChatMessageModel?, Int).self, returning: [(String, ChatMessageModel?, Int)].self)
+            { @concurrent group in
+                for room in rooms {
+                    group.addTask {
+                        let localLastMessage = await ChatMessageRepository.shared.getLastMessage(
+                            roomID: room.id,
+                            participants: room.participants
+                        )
+                        if let serverLastChat = room.lastChat,
+                           let localLast = localLastMessage,
+                           serverLastChat.id != localLast.id {
+                            await ChatSyncManager.shared.syncMessages(
+                                roomID: room.id,
+                                participants: room.participants,
+                                createdAt: room.createdAt,
+                                networkService: self.networkService
+                            )
+                        }
+                        let unreadCount = await self.roomRepository.getUnreadCount(roomID: room.id, currentUserID: self.currentUserID)
+                        return (room.id, room.lastChat, unreadCount)
+                    }
+                }
+                var results: [(String, ChatMessageModel?, Int)] = []
+                for await result in group {
+                    results.append(result)
+                }
+                return results
+            }
+            
             await MainActor.run {
-                self.chatRooms = rooms
+                for (roomID, lastChat, unread) in updates {
+                    guard let index = self.chatRooms.firstIndex(where: { $0.id == roomID }) else { continue }
+
+                    if self.chatRooms[index].lastChat?.id != lastChat?.id {
+                        self.chatRooms[index].lastChat = lastChat
+                    }
+
+                    if self.chatRooms[index].unreadCount != unread {
+                        self.chatRooms[index].unreadCount = unread
+                    }
+                }
             }
         } catch {
             switch error {
