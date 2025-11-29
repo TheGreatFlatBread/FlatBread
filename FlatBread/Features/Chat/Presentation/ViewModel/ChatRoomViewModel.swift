@@ -138,7 +138,6 @@ final class ChatRoomViewModel: ObservableObject {
         selectedImageURLs.remove(at: index)
 
         if urlToRemove.hasPrefix("file://") {
-            // 파일 시스템에서 원본 삭제
             ImageFileManager.shared.deleteImage(at: urlToRemove)
         }
 
@@ -153,28 +152,18 @@ final class ChatRoomViewModel: ObservableObject {
         isLoadingMore = true
         defer { isLoadingMore = false }
 
-        do {
-            let lastMessage = messageRepository.getLastMessage(roomID: room.id, participants: room.participants)
-            let cursor = lastMessage?.createdAt ?? room.createdAt
+        // ChatSyncManager를 통해 동기화 (중복 방지)
+        await ChatSyncManager.shared.syncMessages(
+            roomID: room.id,
+            participants: room.participants,
+            createdAt: room.createdAt,
+            networkService: networkService
+        )
 
-            let response = try await networkService.request(
-                ChatRouter.fetchChatMessgeList(roomID: room.id, cursorDate: cursor),
-                responseType: ChatMessageListResponseDTO.self,
-                interceptorType: .networkWithToken
-            )
-
-            let newMessages = response.data.map { $0.toVM() }
-
-            if !newMessages.isEmpty {
-                messageRepository.saveMessages(newMessages)
-            }
-
-            fetchMessagesFromRealm()
-            isRealmSynced = true
-            processQueuedMessages()
-        } catch {
-            print("채팅 메시지 동기화 실패: \(error)")
-        }
+        // Realm에서 메시지 다시 로드
+        fetchMessagesFromRealm()
+        isRealmSynced = true
+        processQueuedMessages()
     }
 
     /// 큐에 쌓인 WebSocket 메시지 처리 (중복 체크)
@@ -192,7 +181,6 @@ final class ChatRoomViewModel: ObservableObject {
                 }
             }
         }
-
         print("Processed \(messageQueue.count) queued WebSocket messages")
         messageQueue.removeAll()
     }
@@ -200,7 +188,9 @@ final class ChatRoomViewModel: ObservableObject {
     // MARK: - Realm에서 메시지 로드
     /// 최초 화면 로드 시 Realm에서 최신 메시지 로드
     func fetchMessagesFromRealm() {
-        guard let room else { return }
+        guard let room else {
+            return
+        }
 
         messages.removeAll()
         chatItems.removeAll()
@@ -217,6 +207,12 @@ final class ChatRoomViewModel: ObservableObject {
         }
 
         hasMoreOlderMessages = realmMessages.count >= 30
+
+        if let lastMessage = messages.last {
+            roomRepository.markAsRead(roomID: room.id, lastMessageId: lastMessage.id)
+        } else {
+            // print("messages.last가 nil - 읽음 처리 스킵")
+        }
     }
 
     // MARK: - 이전 메시지 로드 (페이지네이션)
