@@ -41,6 +41,7 @@ final class ChatRoomViewModel: ObservableObject {
     private let messageRepository = ChatMessageRepository.shared
     private let roomRepository = ChatRoomRepository.shared
     private let webSocketManager = ChatWebSocketManager.shared
+    private let chatService = ChatService.shared
 
     var displayTitle: String {
         room?.participants.first { $0.id != currentUserID }?.nick
@@ -137,7 +138,6 @@ final class ChatRoomViewModel: ObservableObject {
         selectedImageURLs.remove(at: index)
 
         if urlToRemove.hasPrefix("file://") {
-            // 파일 시스템에서 원본 삭제
             ImageFileManager.shared.deleteImage(at: urlToRemove)
         }
 
@@ -152,28 +152,18 @@ final class ChatRoomViewModel: ObservableObject {
         isLoadingMore = true
         defer { isLoadingMore = false }
 
-        do {
-            let lastMessage = messageRepository.getLastMessage(roomID: room.id, participants: room.participants)
-            let cursor = lastMessage?.createdAt ?? room.createdAt
+        // ChatSyncManager를 통해 동기화 (중복 방지)
+        await ChatSyncManager.shared.syncMessages(
+            roomID: room.id,
+            participants: room.participants,
+            createdAt: room.createdAt,
+            networkService: networkService
+        )
 
-            let response = try await networkService.request(
-                ChatRouter.fetchChatMessgeList(roomID: room.id, cursorDate: cursor),
-                responseType: ChatMessageListResponseDTO.self,
-                interceptorType: .networkWithToken
-            )
-
-            let newMessages = response.data.map { $0.toVM() }
-
-            if !newMessages.isEmpty {
-                messageRepository.saveMessages(newMessages)
-            }
-
-            fetchMessagesFromRealm()
-            isRealmSynced = true
-            processQueuedMessages()
-        } catch {
-            print("채팅 메시지 동기화 실패: \(error)")
-        }
+        // Realm에서 메시지 다시 로드
+        fetchMessagesFromRealm()
+        isRealmSynced = true
+        processQueuedMessages()
     }
 
     /// 큐에 쌓인 WebSocket 메시지 처리 (중복 체크)
@@ -191,7 +181,6 @@ final class ChatRoomViewModel: ObservableObject {
                 }
             }
         }
-
         print("Processed \(messageQueue.count) queued WebSocket messages")
         messageQueue.removeAll()
     }
@@ -199,7 +188,9 @@ final class ChatRoomViewModel: ObservableObject {
     // MARK: - Realm에서 메시지 로드
     /// 최초 화면 로드 시 Realm에서 최신 메시지 로드
     func fetchMessagesFromRealm() {
-        guard let room else { return }
+        guard let room else {
+            return
+        }
 
         messages.removeAll()
         chatItems.removeAll()
@@ -216,6 +207,12 @@ final class ChatRoomViewModel: ObservableObject {
         }
 
         hasMoreOlderMessages = realmMessages.count >= 30
+
+        if let lastMessage = messages.last {
+            roomRepository.markAsRead(roomID: room.id, lastMessageId: lastMessage.id)
+        } else {
+            // print("messages.last가 nil - 읽음 처리 스킵")
+        }
     }
 
     // MARK: - 이전 메시지 로드 (페이지네이션)
@@ -393,6 +390,9 @@ extension ChatRoomViewModel {
                     if let sentMessage = messages.first(where: { $0.id == newID }) {
                         messageRepository.saveMessage(sentMessage)
                     }
+
+                    // 푸시 알림 전송 (상대방에게)
+                    sendPushNotification(message: messageContent, messageType: "text")
                 }
             } catch {
                 print("텍스트 전송 실패: \(error)")
@@ -466,6 +466,11 @@ extension ChatRoomViewModel {
                     if let sentMessage = messages.first(where: { $0.id == newID }) {
                         messageRepository.saveMessage(sentMessage)
                     }
+
+                    // 푸시 알림 전송 (상대방에게)
+                    let pushMessage = messageContent.isEmpty ? "사진을 보냈습니다" : messageContent
+                    let messageType = messageContent.isEmpty ? "image" : "imageWithText"
+                    sendPushNotification(message: pushMessage, messageType: messageType)
                 }
 
                 // 5. 로컬 임시 파일 삭제
@@ -765,25 +770,16 @@ extension ChatRoomViewModel {
 
     func connectWebSocket() {
         guard let room else { return }
-
-        // 기존 Task 취소
         connectionTask?.cancel()
         messageTask?.cancel()
 
-        // 초기 상태 설정
         isWebSocketConnected = false
 
-        // 새 연결 준비 (기존 스트림 리셋)
         webSocketManager.prepareNewConnection()
 
-        // 새로운 Task 생성 및 저장 (리셋된 스트림에서 새로 생성됨)
         connectionTask = Task { @MainActor in
             for await isConnected in webSocketManager.connectionStates {
-                print(" Connection state changed: \(isConnected)")
                 self.isWebSocketConnected = isConnected
-                print("isWebSocketConnected updated: \(self.isWebSocketConnected)")
-
-                // WebSocket 연결 완료 시 서버에서 메시지 fetch & 큐 처리
                 if isConnected {
                     await self.fetchAndSync()
                 }
@@ -825,5 +821,40 @@ extension ChatRoomViewModel {
         messageTask = nil
         webSocketManager.disconnect()
         isWebSocketConnected = false
+    }
+}
+
+
+// MARK: - Push Notification
+extension ChatRoomViewModel {
+    /// 상대방에게 푸시 알림 전송
+    /// - Parameters:
+    ///   - message: 메시지 내용
+    ///   - messageType: 메시지 타입 ("text", "image", "imageWithText" 등)
+    private func sendPushNotification(message: String, messageType: String) {
+        guard let room else {
+            return
+        }
+
+        guard let opponent = room.participants.first(where: { $0.id != currentUserID }) else {
+            return
+        }
+
+        let currentUser = room.participants.first(where: { $0.id == currentUserID })
+        let senderNickname = currentUser?.nick
+
+        Task {
+            do {
+                try await chatService.sendPushNotification(
+                    receiverId: opponent.id,
+                    message: message,
+                    messageType: messageType,
+                    senderNickname: senderNickname
+                )
+                print("[Push] 전송 완료 - receiverId: \(opponent.id), senderNickname: \(senderNickname ?? "nil")")
+            } catch {
+                print("[Push] 전송 실패: \(error.localizedDescription)")
+            }
+        }
     }
 }
