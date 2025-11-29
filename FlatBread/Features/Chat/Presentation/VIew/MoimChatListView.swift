@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MoimChatListView: View {
-    @StateObject private var viewModel = MoimChatListViewModel()
+    @StateObject private var viewModel: MoimChatListViewModel
     let currentUserID: String
 
     @State private var selectedRoom: ChatRoomModel?
@@ -16,35 +16,53 @@ struct MoimChatListView: View {
 
     init(currentUserID: String) {
         self.currentUserID = currentUserID
+        _viewModel = StateObject(wrappedValue: MoimChatListViewModel(currentUserID: currentUserID))
     }
 
     var body: some View {
         List(viewModel.chatRooms, id: \.id) { room in
-            ChatListRowView(room: room, currentUserID: currentUserID)
-                .contentShape(Rectangle())
-                .onTapGesture {
-                    selectedRoom = room
-                    showChatRoom = true
-                }
-                .listRowSeparator(.hidden)
+            VStack(spacing: 0) {
+                ChatListRowView(room: room, currentUserID: currentUserID)
+                    .equatable()
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        selectedRoom = room
+                        showChatRoom = true
+                    }
+                Divider()
+            }
+            .listRowInsets(EdgeInsets())
+            .listRowSeparator(.hidden)
         }
         .listStyle(.plain)
         .navigationTitle("채팅")
         .toolbar(.hidden, for: .tabBar)
         .navigationDestination(isPresented: $showChatRoom) {
-            if let room = selectedRoom {
-                ChatRoomView(room: room, currentUserID: currentUserID)
+            if let selectedRoom {
+                ChatRoomView(room: selectedRoom, currentUserID: currentUserID)
             }
         }
         .task {
             await viewModel.loadChatRooms()
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 5_000_000_000)
+                guard !Task.isCancelled else { break }
+                await viewModel.loadChatRooms()
+            }
         }
     }
 }
 
-private struct ChatListRowView: View {
+private struct ChatListRowView: View, Equatable {
     let room: ChatRoomModel
     let currentUserID: String
+
+    static func == (lhs: ChatListRowView, rhs: ChatListRowView) -> Bool {
+        lhs.room.id == rhs.room.id &&
+        lhs.room.lastChat?.id == rhs.room.lastChat?.id &&
+        lhs.room.unreadCount == rhs.room.unreadCount &&
+        lhs.currentUserID == rhs.currentUserID
+    }
 
     private var opponent: ChatUserModel? {
         room.participants.first { $0.id != currentUserID }
@@ -59,7 +77,7 @@ private struct ChatListRowView: View {
     }
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .center, spacing: 12) {
             if let imageURL = profileImageURL, !imageURL.isEmpty {
                 ProfileImage(profileImageURL: imageURL)
                     .frame(width: 50, height: 50)
@@ -70,10 +88,12 @@ private struct ChatListRowView: View {
             UserDescription(
                 participantName: participantName,
                 createdAt: room.lastChat?.createdAt.relativeTime() ?? "",
-                lastMessage: room.lastChat?.messegeType.getLastMessage() ?? ""
+                lastMessage: room.lastChat?.messegeType.getLastMessage() ?? "",
+                unreadCount: room.unreadCount
             )
         }
-        .padding(.vertical, 4)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }
 
@@ -121,24 +141,40 @@ private struct UserDescription: View {
     let participantName: String
     let createdAt: String
     let lastMessage: String
+    let unreadCount: Int
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
+        HStack(alignment: .top, spacing: 8) {
+            // 왼쪽: 닉네임 + 메시지
+            VStack(alignment: .leading, spacing: 4) {
                 Text(participantName)
                     .font(.system(size: 15, weight: .semibold))
                     .lineLimit(1)
 
-                Spacer()
-                
+                Text(lastMessage)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(.secondary)
+                    .lineLimit(2)
+            }
+
+            Spacer()
+
+            // 오른쪽: 시간 + Badge
+            VStack(alignment: .trailing, spacing: 4) {
                 Text(createdAt)
                     .font(.system(size: 11, weight: .thin))
                     .foregroundColor(.gray)
-            }
 
-            Text(lastMessage)
-                .font(.system(size: 12, weight: .regular))
-                .foregroundColor(.secondary)
-                .lineLimit(2)
+                if unreadCount > 0 {
+                    Text("\(unreadCount)")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.orange)
+                        .clipShape(Capsule())
+                }
+            }
         }
     }
 }
