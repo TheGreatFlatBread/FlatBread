@@ -16,7 +16,7 @@ final class ChatRoomViewModel: ObservableObject {
     private let opponentID: String?
     private let opponentNick: String?
     private let opponentProfileImage: String?
-    private let imageService: HWImageService
+    
 
     @Published private(set) var messages: [ChatMessageModel] = []
     @Published var messageText: String = ""
@@ -40,8 +40,9 @@ final class ChatRoomViewModel: ObservableObject {
     private let networkService: AsyncNetworkService
     private let messageRepository = ChatMessageRepository.shared
     private let roomRepository = ChatRoomRepository.shared
-    private let webSocketManager = ChatWebSocketManager.shared
-    private let chatService = ChatService.shared
+    private let webSocketManager = ChatWebSocketManager()
+    private let chatService = ChatService()
+    private let imageService: HWImageService
 
     var displayTitle: String {
         room?.participants.first { $0.id != currentUserID }?.nick
@@ -847,11 +848,12 @@ extension ChatRoomViewModel {
             do {
                 try await chatService.sendPushNotification(
                     receiverId: opponent.id,
+                    roomId: room.id,
                     message: message,
                     messageType: messageType,
                     senderNickname: senderNickname
                 )
-                print("[Push] 전송 완료 - receiverId: \(opponent.id), senderNickname: \(senderNickname ?? "nil")")
+                print("[Push] 전송 완료 - receiverId: \(opponent.id), roomId: \(room.id), senderNickname: \(senderNickname ?? "nil")")
             } catch {
                 print("[Push] 전송 실패: \(error.localizedDescription)")
             }

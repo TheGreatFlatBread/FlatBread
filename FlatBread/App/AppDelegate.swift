@@ -88,146 +88,16 @@ extension AppDelegate: MessagingDelegate {
 
                 // 백엔드에서 old 토큰 제거 요청
                 if let userId = UserSession.shared.currentUserId {
-                    removeOldFCMToken(userId: userId, oldToken: oldToken)
+                    FCMManager.shared.removeOldToken(userId: userId, oldToken: oldToken)
                 }
             } else {
                 print("[FCM] 최초 토큰 수신")
             }
 
             // 서버에 새 FCM 토큰 전송 (변경되었을 때만)
-            sendTokenToBackend(fcmToken: fcmToken)
+            FCMManager.shared.sendTokenToBackend(fcmToken: fcmToken)
         } else {
             print("[FCM] 토큰 변경 없음 - 서버 전송 스킵")
-        }
-    }
-
-    /// 이전 FCM 토큰 제거 (토큰 갱신 시)
-    private func removeOldFCMToken(userId: String, oldToken: String) {
-        print("[FCM] 이전 토큰 제거 요청")
-        print("userId: \(userId)")
-        print("oldToken: \(oldToken.prefix(20))...")
-
-        let functions = Functions.functions(region: "asia-northeast3")
-        let callable = functions.httpsCallable("removeOldFCMToken")
-
-        callable.call([
-            "userId": userId,
-            "oldToken": oldToken
-        ]) { result, error in
-            if let error = error {
-                print("[FCM] 이전 토큰 제거 실패: \(error.localizedDescription)")
-            } else {
-                print("q[FCM] 이전 토큰 제거 성공")
-            }
-        }
-    }
-
-
-    // 백엔드로 토큰 전송 (Retry 로직 포함)
-    func sendTokenToBackend(fcmToken: String, retryCount: Int = 0) {
-        guard let userId = UserSession.shared.currentUserId else {
-            print("[FCM] 로그인되지 않음 - Pending 토큰으로 저장")
-            UserSession.shared.savePendingFCMToken(fcmToken)
-            return
-        }
-
-        let deviceID = UIDevice.current.identifierForVendor?.uuidString ?? "unknown"
-
-        print("   [FCM] 토큰 전송 시작 (시도 \(retryCount + 1)/3)")
-        print("   userId: \(userId)")
-        print("   fcmToken: \(fcmToken)...")
-        print("   deviceID: \(deviceID)")
-
-        // Firebase Functions 리전 설정 (서울 = asia-northeast3)
-        let functions = Functions.functions(region: "asia-northeast3")
-        let callable = functions.httpsCallable("updateFCMToken")
-
-        let data: [String: Any] = [
-            "userId": userId,
-            "fcmToken": fcmToken,
-            "deviceID": deviceID
-        ]
-
-        print("[FCM] Firebase Functions 호출 중... (updateFCMToken)")
-
-        // Timeout 타이머 (15초)
-        var hasCompleted = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 15) {
-            if !hasCompleted {
-                print("   [FCM] 타임아웃 (30초) - 응답 없음")
-                hasCompleted = true
-
-                if retryCount < 2 {
-                    let delay = Double(retryCount + 1) * 2.0
-                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                        self.sendTokenToBackend(fcmToken: fcmToken, retryCount: retryCount + 1)
-                    }
-                } else {
-                    UserSession.shared.savePendingFCMToken(fcmToken)
-                }
-            }
-        }
-
-        callable.call(data) { result, error in
-            guard !hasCompleted else {
-                print("[FCM] 응답이 타임아웃 후에 도착함 - 무시")
-                return
-            }
-            hasCompleted = true
-
-            print("[FCM] 응답 수신!")
-
-            if let error = error as NSError? {
-                print("[FCM] 토큰 업데이트 실패 (시도 \(retryCount + 1)/3)")
-                print("Domain: \(error.domain)")
-                print("Code: \(error.code)")
-                print("Description: \(error.localizedDescription)")
-
-                if let details = error.userInfo["details"] {
-                    print("   Details: \(details)")
-                }
-
-                if retryCount < 2 {
-                    let delay = Double(retryCount + 1) * 2.0
-                    print("[FCM] \(Int(delay))초 후 재시도...")
-                    DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                        self.sendTokenToBackend(fcmToken: fcmToken, retryCount: retryCount + 1)
-                    }
-                } else {
-                    print("[FCM] 최대 재시도 횟수 초과 - Pending 토큰으로 저장")
-                    UserSession.shared.savePendingFCMToken(fcmToken)
-                }
-            } else {
-                print("   [FCM] 토큰 업데이트 성공!")
-                print("   userId: \(userId)")
-                if let resultData = result?.data {
-                    print("   Response: \(resultData)")
-                }
-                UserSession.shared.clearPendingFCMToken()
-            }
-        }
-    }
-
-    /// 로그아웃 시 백엔드에서 FCM 토큰 제거
-    func removeFCMTokenFromBackend(userId: String, fcmToken: String) {
-        print(" [FCM] 로그아웃 - 토큰 제거 요청")
-        print("   userId: \(userId)")
-        print("   fcmToken: \(fcmToken.prefix(20))...")
-
-        let functions = Functions.functions(region: "asia-northeast3")
-        let callable = functions.httpsCallable("removeFCMToken")
-
-        let data: [String: Any] = [
-            "userId": userId,
-            "fcmToken": fcmToken
-        ]
-
-        callable.call(data) { result, error in
-            if let error = error {
-                print(" [FCM] 토큰 제거 실패: \(error.localizedDescription)")
-            } else {
-                print(" [FCM] 토큰 제거 성공")
-            }
         }
     }
 }
@@ -246,7 +116,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
                 print("알림 내용: \(alert)")
             }
         }
-        // completionHandler([.banner, .sound, .badge])
+        completionHandler([.banner, .sound, .badge])
     }
 
     // 알림 탭했을 때 호출
@@ -265,14 +135,68 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 
     // MARK: - Notification Handler
     private func handleNotificationTap(userInfo: [AnyHashable: Any]) {
-        // TODO: 알림 타입에 따라 화면 이동 처리
-        // 예시:
-        // if let chatRoomId = userInfo["chatRoomId"] as? String {
-        //     NotificationCenter.default.post(
-        //         name: NSNotification.Name("NavigateToChatRoom"),
-        //         object: nil,
-        //         userInfo: ["chatRoomId": chatRoomId]
-        //     )
-        // }
+        print("========================================")
+        print("[FCM] 알림 데이터 전체:")
+        print(userInfo)
+        print("========================================")
+
+        var deepLinkPath: String?
+
+        if let type = userInfo["type"] as? String {
+            print("[FCM] type: \(type)")
+            switch type {
+            case "chat":
+                print("[FCM] roomId 확인 중...")
+                print("[FCM] userInfo[\"roomId\"]: \(userInfo["roomId"] ?? "nil")")
+
+                if let roomId = userInfo["roomId"] as? String {
+                    print("[FCM] roomId 발견: \(roomId)")
+                    deepLinkPath = "FlatBread://chat/\(roomId)"
+                } else {
+                    print("[FCM] roomId가 없음 - 채팅 딥링크 실패")
+                }
+
+            default:
+                print("[FCM] 지원하지 않는 type: \(type)")
+                break
+            }
+        }
+
+        if deepLinkPath == nil, let deepLink = userInfo["deepLink"] as? String {
+            deepLinkPath = deepLink
+        }
+
+        if let path = deepLinkPath, let url = URL(string: path) {
+            print("[FCM] ========================================")
+            print("[FCM] 딥링크 처리: \(path)")
+
+            // 앱 상태 확인
+            let appState = UIApplication.shared.applicationState
+            let stateString = appState == .active ? "Active (Foreground)" : appState == .background ? "Background" : "Inactive"
+            print("[FCM] 현재 앱 상태: \(stateString)")
+
+            // 모든 경우에 NotificationCenter 사용
+            if appState != .active {
+                // Background/Inactive: 딜레이 후 처리
+                print("[FCM] Background/Inactive - 1초 후 처리")
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+                    print("[FCM] DeepLink 전송 (딜레이 후)")
+                    NotificationCenter.default.post(
+                        name: .handleDeepLink,
+                        object: url
+                    )
+                }
+            } else {
+                // Foreground: 즉시 처리
+                print("[FCM] DeepLink 전송 (즉시)")
+                NotificationCenter.default.post(
+                    name: .handleDeepLink,
+                    object: url
+                )
+            }
+            print("[FCM] ========================================")
+        } else {
+            print("[FCM] ❌ 딥링크 파싱 실패 - userInfo: \(userInfo)")
+        }
     }
 }

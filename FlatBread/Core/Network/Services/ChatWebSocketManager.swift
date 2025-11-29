@@ -11,10 +11,9 @@ import SocketIO
 /// Socket.IO를 통한 실시간 채팅 메시지 수신
 final class ChatWebSocketManager: NSObject, @unchecked Sendable {
 
-    static let shared = ChatWebSocketManager()
     private let tokenCoordinator: TokenRefreshCoordinator = NetworkServiceFactory.shared.getTokenCoordinator()
 
-    private override init() {
+override init() {
         super.init()
     }
 

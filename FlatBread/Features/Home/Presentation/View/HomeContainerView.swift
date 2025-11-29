@@ -7,40 +7,34 @@
 
 import SwiftUI
 
-enum HomeRoute: Hashable {
-    case createMoim
-    case moveToMoimDetail(moimId: String)
-    case moveToCategory
-}
-
 struct HomeContainerView: View {
-    
+
     @StateObject private var viewModel = HomeViewModel()
-    @State private var path = NavigationPath()
-    
+    @EnvironmentObject var router: TabRouter<HomeDestination>
+
     var body: some View {
-        NavigationStack(path: $path) {
+        NavigationStack(path: $router.path) {
             HomeView {
                 // 플로팅 버튼 탭 시 네비게이션 경로에 push
-                path.append(HomeRoute.createMoim)
+                router.navigate(to: .createMoim)
             } onMoveToCategory: {
-                path.append(HomeRoute.moveToCategory)
+                router.navigate(to: .categoryDetail)
             } onMoveToMoimDetail: { moimId in
-                path.append(HomeRoute.moveToMoimDetail(moimId: moimId))
+                router.navigate(to: .moimDetail(moimId))
             }
             .environmentObject(viewModel)
-            .navigationDestination(for: HomeRoute.self) { route in
-                switch route {
+            .navigationDestination(for: HomeDestination.self) { destination in
+                switch destination {
                 case .createMoim:
                     CreateMoimView()
-                case .moveToMoimDetail(let moimId):
+                case .moimDetail(let moimId), .postList(let moimId):
                     PostListView(moimId: moimId)
-                case .moveToCategory:
+                case .categoryDetail:
                     HomeCategoryDetailView(
                         title: viewModel.selectedCategoryTitle ?? "",
                         items: viewModel.selectedCategoryGroups,
                         onTapRow: { groupItem in
-                            path.append(HomeRoute.moveToMoimDetail(moimId: groupItem.id))
+                            router.navigate(to: .moimDetail(groupItem.id))
                         }
                     )
                 }
