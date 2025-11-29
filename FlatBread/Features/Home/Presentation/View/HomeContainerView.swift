@@ -11,6 +11,7 @@ enum HomeRoute: Hashable {
     case createMoim
     case moveToMoimDetail(moimId: String)
     case moveToCategory
+    case moveToFindNearby
 }
 
 struct HomeContainerView: View {
@@ -27,6 +28,8 @@ struct HomeContainerView: View {
                 path.append(HomeRoute.moveToCategory)
             } onMoveToMoimDetail: { moimId in
                 path.append(HomeRoute.moveToMoimDetail(moimId: moimId))
+            } onFindNearby: {
+                path.append(HomeRoute.moveToFindNearby)
             }
             .environmentObject(viewModel)
             .navigationDestination(for: HomeRoute.self) { route in
@@ -43,6 +46,8 @@ struct HomeContainerView: View {
                             path.append(HomeRoute.moveToMoimDetail(moimId: groupItem.id))
                         }
                     )
+                case .moveToFindNearby:
+                    RadarView(navigationPath: $path)
                 }
             }
         }
