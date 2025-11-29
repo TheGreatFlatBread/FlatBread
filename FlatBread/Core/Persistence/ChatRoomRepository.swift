@@ -28,22 +28,18 @@ final class ChatRoomRepository {
         try! realm.write {
             realm.add(entity, update: .modified)
         }
-
-        if let lastChat = room.lastChat {
-            ChatMessageRepository.shared.saveMessage(lastChat)
-        }
     }
 
     func saveRooms(_ rooms: [ChatRoomModel]) {
-        let entities = rooms.map { ChatRoomEntity.from($0) }
-
         try! realm.write {
-            realm.add(entities, update: .modified)
-        }
-
-        let lastMessages = rooms.compactMap { $0.lastChat }
-        if !lastMessages.isEmpty {
-            ChatMessageRepository.shared.saveMessages(lastMessages)
+            for room in rooms {
+                let local = realm.object(ofType: ChatRoomEntity.self, forPrimaryKey: room.id)
+                let newEntity = ChatRoomEntity.from(room)
+                if let local {
+                    newEntity.lastReadMessageId = local.lastReadMessageId
+                }
+                realm.add(newEntity, update: .modified)
+            }
         }
     }
 
