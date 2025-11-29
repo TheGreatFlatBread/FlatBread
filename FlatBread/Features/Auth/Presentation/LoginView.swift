@@ -29,9 +29,10 @@ struct LoginView: View {
                 VStack(spacing: 32) {
                     // Logo & Title
                     VStack(spacing: 12) {
-                        Image(systemName: "person.crop.circle.fill")
-                            .font(.system(size: 80))
-                            .foregroundStyle(.blue.gradient)
+                        Image("FB_logo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 80, height: 80)
 
                         Text("FlatBread")
                             .font(.system(size: 32, weight: .bold))
@@ -68,9 +69,10 @@ struct LoginView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Text("계정이 없으신가요?")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.black)
+                                .opacity(0.5)
                             Text("회원가입")
-                                .foregroundStyle(.blue)
+                                .foregroundStyle(Color("juhwang"))
                                 .fontWeight(.semibold)
                         }
                         .font(.system(size: 14))
@@ -172,12 +174,13 @@ struct LoginView: View {
                 }
                 .frame(maxWidth: .infinity)
                 .frame(height: 50)
-                .background(viewModel.canLogin ? Color.blue : Color.gray.opacity(0.3))
+                .background(viewModel.canLogin ? Color("juhwang") : Color.gray.opacity(0.3))
                 .foregroundStyle(.white)
                 .cornerRadius(10)
             }
             .disabled(!viewModel.canLogin)
         }
+        .tint(Color("juhwang"))
     }
 
 }
@@ -225,7 +228,7 @@ fileprivate struct CustomTextField: View {
 
     private var borderColor: Color {
         if focused == field {
-            return .blue
+            return Color("juhwang")
         } else if !validationMessage.isEmpty {
             return isValid ? .green : .red
         } else {
@@ -292,7 +295,7 @@ fileprivate struct CustomSecureField: View {
 
     private var borderColor: Color {
         if focused == field {
-            return .blue
+            return Color("juhwang")
         } else if !validationMessage.isEmpty {
             return isValid ? .green : .red
         } else {

@@ -20,11 +20,11 @@ struct ChipButton: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule(style: .continuous)
-                        .fill(isSelected ? Color.black : Color(.systemGray6))
+                        .fill(isSelected ? Color("juhwang") : Color(.systemGray6))
                 )
                 .overlay(
                     Capsule(style: .continuous)
-                        .stroke(isSelected ? Color.black : Color(.systemGray4), lineWidth: 1)
+                        .stroke(isSelected ? Color("juhwang") : Color(.systemGray4), lineWidth: 1)
                 )
                 .foregroundStyle(isSelected ? .white : .primary)
         }

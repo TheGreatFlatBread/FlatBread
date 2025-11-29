@@ -58,7 +58,7 @@ struct HomeView: View {
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
                     .frame(width: 56, height: 56)
-                    .background(Color.accentColor)
+                    .background(Color("juhwang"))
                     .clipShape(Circle())
                     .shadow(radius: 8)
             }
