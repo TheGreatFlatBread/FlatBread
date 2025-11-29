@@ -2,6 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.thegreatflatbread.FlatBread</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>FlatBread</string>
+			</array>
+		</dict>
+	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>kftc-bankpay</string>
@@ -42,23 +53,14 @@
 		<string>newsmartpib</string>
 		<string>kakaobank</string>
 	</array>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>FlatBread</string>
-			</array>
-			<key>CFBundleURLName</key>
-			<string>com.thegreatflatbread.FlatBread</string>
-		</dict>
-	</array>
 	<key>NMFNcpKeyId</key>
 	<string>$(NAVER_MAP_API_KEY)</string>
-	<key>api_key</key>
-	<string>$(API_KEY)</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
 		<key>NSExceptionDomains</key>
 		<dict>
 			<key>lslp.sesac.co.kr</key>
@@ -69,11 +71,13 @@
 				<true/>
 			</dict>
 		</dict>
-		<key>NSAllowsArbitraryLoadsInWebContent</key>
-		<true/>
-		<key>NSAllowsArbitraryLoads</key>
-		<true/>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>api_key</key>
+	<string>$(API_KEY)</string>
 	<key>domain</key>
 	<string>$(DOMAIN)</string>
 	<key>product_id</key>
