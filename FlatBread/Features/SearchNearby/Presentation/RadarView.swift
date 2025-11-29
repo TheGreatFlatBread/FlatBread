@@ -10,10 +10,11 @@ import SwiftUI
 import MultipeerConnectivity
 
 enum FindNearbyRoute: Hashable {
-    case moveToChat(partnerID: String)
+    case moveToChat(chatRoom: ChatRoomModel)
 }
 
 struct RadarView: View {
+    @StateObject private var viewModel = FindNearbyViewModel()
     @StateObject private var service = NearbyService()
     @Binding var navigationPath: NavigationPath
     
@@ -41,13 +42,28 @@ struct RadarView: View {
             }
         }
         .navigationTitle("주변 탐색")
-        .task {
-            // 네비게이션 콜백 연결
-            service.onMoveToChat = { partnerID in
-                navigationPath.append(FindNearbyRoute.moveToChat(partnerID: partnerID))
+        .onAppear(perform: {
+            viewModel.chatRoom = nil
+            service.startMPC()
+        })
+        .onChange(of: viewModel.myProfile, { oldValue, newValue in
+            guard let newValue else {
+                return
             }
-            await service.fetchMyIDAndStart()
-        }
+            service.setInitialState(userID: newValue.userID)
+        })
+        .onChange(of: service.state, { oldValue, newValue in
+            guard case .chatting(let peerUserID) = newValue else {
+                return
+            }
+            viewModel.fetchChatModel(opponent_id: peerUserID)
+        })
+        .onChange(of: viewModel.chatRoom, { oldValue, newValue in
+            guard let chatRoom = newValue else {
+                return
+            }
+            navigationPath.append(FindNearbyRoute.moveToChat(chatRoom: chatRoom))
+        })
         .onDisappear {
             service.cleanup()
         }
@@ -85,10 +101,15 @@ struct RadarView: View {
         } message: {
             Text(service.alertMessage ?? "")
         }
+        .alert("에러 발생", isPresented: $viewModel.showAlert) {
+            Button("확인", role: .cancel) { }
+        } message: {
+            Text(viewModel.alertMessage ?? "")
+        }
         // 4. 네비게이션 목적지
         .navigationDestination(for: FindNearbyRoute.self) { route in
-            if case .moveToChat(let id) = route {
-                ChatView(partnerID: id)
+            if case .moveToChat(let chatRoom) = route {
+                ChatRoomView(room: chatRoom, currentUserID: viewModel.myProfile?.userID ?? "")
             }
         }
     }
@@ -139,20 +160,6 @@ struct RadarView: View {
                     .foregroundColor(.white)
                     .padding(.top, 8)
             }
-        }
-    }
-}
-
-
-// 더미 채팅 뷰
-struct ChatView: View {
-    let partnerID: String
-    
-    var body: some View {
-        VStack {
-            Text("\(partnerID)님과의 채팅")
-                .font(.title)
-            Spacer()
         }
     }
 }

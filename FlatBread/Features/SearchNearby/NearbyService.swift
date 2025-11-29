@@ -18,6 +18,7 @@ class NearbyService: NSObject, ObservableObject {
     }
     
     private let serviceType = "nearby-chat"
+    private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     
     // UI 상태
     @Published var state: NearbyServiceState = .initializing
@@ -44,25 +45,16 @@ class NearbyService: NSObject, ObservableObject {
     // 의도적인 연결 종료인지 확인하는 플래그 (에러 알림 방지)
     private var isDisconnectingIntentionally: Bool = false
     
-    // 네비게이션 트리거
-    var onMoveToChat: ((String) -> Void)?
-    
     // MARK: - Setup
-    @MainActor
-    func fetchMyIDAndStart() async {
-        self.state = .initializing
-        cleanup()
-        
-        try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
-        let userID = "69159b50ff94927948ff0fb1" // 우선 임시 더미 값 활용
+    func setInitialState(userID: String) {
+        print("userID: \(userID)")
         self.myFbUserID = userID
         self.myMCPeerID = MCPeerID(displayName: "익명의 유저")
-        
-        startMPC()
         self.state = .idle
+        startMPC()
     }
     
-    private func startMPC() {
+    func startMPC() {
         guard let myMCPeerID else { return }
         
         let discoveryInfo: [String: String] = ["fbUserID": myFbUserID]
@@ -133,19 +125,10 @@ class NearbyService: NSObject, ObservableObject {
         self.isDisconnectingIntentionally = false // 리셋
     }
     
-    // 우선 더미로 구현
-    private func fetchUserProfile(fbUserID: String) {
-        Task { @MainActor in
-            self.state = .fetchingProfile(fbUserID)
-            // 더미 딜레이
-            try? await Task.sleep(nanoseconds: 1 * 1_000_000_000)
-            
-            self.onMoveToChat?(fbUserID)
-            self.state = .chatting(fbUserID)
-            
-            // 채팅방 이동했으므로 MPC 세션은 더 이상 필요 없음
-            self.cleanupSessionOnly()
-        }
+    private func moveToChat(opponentID: String) {
+        self.state = .chatting(to: opponentID)
+        // 채팅방 이동했으므로 MPC 세션은 더 이상 필요 없음
+        self.cleanupSessionOnly()
     }
     
     // 세션만 정리 (탐색은 계속)
@@ -252,7 +235,7 @@ extension NearbyService: MCSessionDelegate {
                 
                 // 연결되면 즉시 상태에 따라 신호 전송
                 // 내가 초대를 받은 입장 (responding -> connecting 상태였음)
-                if case .connecting(let user) = self.state {
+                if case .connecting(let peerUser) = self.state {
                     // 거절하려고 연결한 경우
                     if self.isDisconnectingIntentionally {
                         self.sendSignal(.decline, to: [peerID])
@@ -267,7 +250,7 @@ extension NearbyService: MCSessionDelegate {
                         self.sendSignal(.accept, to: [peerID])
                         // 나는 수락했으니 상대방이 프로필을 가져가도록 대기하지 않고,
                         // 나도 상대방 프로필을 가져옴 (양방향)
-                        self.fetchUserProfile(fbUserID: user.fbUserID)
+                        moveToChat(opponentID: peerUser.fbUserID)
                     }
                 }
                 
@@ -312,7 +295,7 @@ extension NearbyService: MCSessionDelegate {
             case .accept:
                 // 상대방이 수락함 (내가 Inviting 상태였을 것)
                 if case .inviting(let user) = self.state {
-                     self.fetchUserProfile(fbUserID: user.fbUserID)
+                    moveToChat(opponentID: user.fbUserID)
                 }
                 
             case .decline:

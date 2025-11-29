@@ -17,7 +17,7 @@ extension NearbyService {
         case connecting(PeerUser)       // 연결 시도 중 (수락/거절 버튼 누른 직후)
         case connected(PeerUser)        // 물리적 연결 완료 (데이터 교환 단계)
         case fetchingProfile(String)    // 프로필 정보 가져오는 중
-        case chatting(String)           // 채팅 시작 (MPC 종료됨)
+        case chatting(to: String)       // 채팅 시작 (MPC 종료됨)
         
         var isBusy: Bool {
             // idle이 아니면 무언가 하고 있는 상태
