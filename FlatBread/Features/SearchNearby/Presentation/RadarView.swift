@@ -91,8 +91,13 @@ struct RadarView: View {
                 service.respondToInvitation(accept: false)
             }
         } message: {
-            if case .responding(let user) = service.state {
-                Text("\(user.fbUserID)님이 대화를 요청했습니다.")
+            if case .responding(let peerUser) = service.state {
+                if let myNickname = viewModel.myProfile?.nickname {
+                    Text("\(peerUser.mcPeerID.displayName)님이 대화를 요청했습니다.\n수락하시면 \(myNickname) 님의 프로필이 공유됩니다.")
+                } else {
+                    Text("\(peerUser.mcPeerID.displayName)님이 대화를 요청했습니다.\n수락하시면 프로필이 공유됩니다.")
+                    
+                }
             }
         }
         // 3. [공통] 에러/정보 Alert
@@ -164,7 +169,7 @@ struct RadarView: View {
     }
 }
 
-//#Preview {
-//    @Previewable @State var navigationPath = NavigationPath()
-//    RadarView(navigationPath: $navigationPath)
-//}
+#Preview {
+    @Previewable @State var navigationPath = NavigationPath()
+    RadarView(navigationPath: $navigationPath)
+}

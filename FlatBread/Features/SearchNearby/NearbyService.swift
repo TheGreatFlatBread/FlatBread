@@ -49,7 +49,8 @@ class NearbyService: NSObject, ObservableObject {
     func setInitialState(userID: String) {
         print("userID: \(userID)")
         self.myFbUserID = userID
-        self.myMCPeerID = MCPeerID(displayName: "익명의 유저")
+        let randomNickname = NicknameGenerator.generate()
+        self.myMCPeerID = MCPeerID(displayName: randomNickname)
         self.state = .idle
         startMPC()
     }
