@@ -13,6 +13,12 @@
 			</array>
 		</dict>
 	</array>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_nearby-chat._tcp</string>
+	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>주변 친구들을 찾고 연결하기 위해 로컬 네트워크 사용이 필요해요.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>kftc-bankpay</string>

@@ -37,7 +37,8 @@ struct PostWriteView: View {
                     onPostCreated?(response)
                     dismiss()
                 }
-            }
+            },
+            onClose: { dismiss() }
         )
     }
 }
@@ -72,14 +73,14 @@ struct PostPatchView: View {
                     onPostUpdated?(response)
                     dismiss()
                 }
-            }
+            },
+            onClose: { dismiss() }
         )
     }
 }
 
 private struct PostFormView: View {
     
-    @Environment(\.dismiss) var dismiss
     @ObservedObject var viewModel: PostWriteViewModel
     @State private var showImagePicker = false
     @State private var showSchedulePicker = false
@@ -87,6 +88,7 @@ private struct PostFormView: View {
     let title: String
     let buttonText: String
     let onSubmit: @MainActor () async -> Void
+    let onClose: () -> Void
 
     private var imageSubTitle: String {
         viewModel.selectedImageURLs.isEmpty ? "최대 5장" : "\(viewModel.selectedImageURLs.count)장 선택됨"
@@ -186,7 +188,7 @@ private struct PostFormView: View {
     var toolBarItems: some ToolbarContent {
         ToolbarItem(placement: .navigationBarLeading) {
             Button {
-                dismiss()
+                onClose()
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 16, weight: .medium))
