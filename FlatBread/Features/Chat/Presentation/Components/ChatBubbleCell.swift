@@ -46,11 +46,10 @@ private struct ChatMeBubble: View {
                     statusView(for: sendStatus)
                 }
 
-                if showTime {
-                    Text(message.createdAt.toTimeString())
-                        .font(.system(size: 11, weight: .light))
-                        .foregroundColor(.gray)
-                }
+                Text(message.createdAt.toTimeString())
+                    .font(.system(size: 11, weight: .light))
+                    .foregroundColor(.gray)
+                    .opacity(showTime ? 1 : 0)
             }
 
             VStack(alignment: .trailing, spacing: 4) {
@@ -179,11 +178,10 @@ private struct ChatOtherBubble: View {
                         MessageView(message: message)
                     }
                 }
-                if showTime {
-                    Text(message.createdAt.toTimeString())
-                        .font(.system(size: 11, weight: .light))
-                        .foregroundColor(.gray)
-                }
+                Text(message.createdAt.toTimeString())
+                    .font(.system(size: 11, weight: .light))
+                    .foregroundColor(.gray)
+                    .opacity(showTime ? 1 : 0)
             }
         }
     }

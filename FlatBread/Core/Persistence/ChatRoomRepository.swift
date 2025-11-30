@@ -28,22 +28,18 @@ final class ChatRoomRepository {
         try! realm.write {
             realm.add(entity, update: .modified)
         }
-
-        if let lastChat = room.lastChat {
-            ChatMessageRepository.shared.saveMessage(lastChat)
-        }
     }
 
     func saveRooms(_ rooms: [ChatRoomModel]) {
-        let entities = rooms.map { ChatRoomEntity.from($0) }
-
         try! realm.write {
-            realm.add(entities, update: .modified)
-        }
-
-        let lastMessages = rooms.compactMap { $0.lastChat }
-        if !lastMessages.isEmpty {
-            ChatMessageRepository.shared.saveMessages(lastMessages)
+            for room in rooms {
+                let local = realm.object(ofType: ChatRoomEntity.self, forPrimaryKey: room.id)
+                let newEntity = ChatRoomEntity.from(room)
+                if let local {
+                    newEntity.lastReadMessageId = local.lastReadMessageId
+                }
+                realm.add(newEntity, update: .modified)
+            }
         }
     }
 
@@ -57,7 +53,67 @@ final class ChatRoomRepository {
         }
     }
 
-    func getAllRooms() -> [ChatRoomModel] {
+    /// 채팅방의 마지막으로 읽은 메시지 ID 업데이트
+    func markAsRead(roomID: String, lastMessageId: String) {
+        guard let entity = realm.object(ofType: ChatRoomEntity.self, forPrimaryKey: roomID) else {
+            return
+        }
+
+        try! realm.write {
+            entity.lastReadMessageId = lastMessageId
+        }
+    }
+
+    /// 읽지 않은 메시지 개수 계산
+    /// - lastReadMessageId 이후의 메시지 중 마지막부터 역순으로 연속된 상대방 메시지만 카운트
+    /// - 마지막 메시지가 내 메시지면 0
+    func getUnreadCount(roomID: String, currentUserID: String) -> Int {
+        guard let entity = realm.object(ofType: ChatRoomEntity.self, forPrimaryKey: roomID) else {
+            return 0
+        }
+
+        // 1. 마지막 메시지 확인
+        guard let lastMessage = realm.objects(ChatMessageEntity.self)
+            .filter("roomID == %@", roomID)
+            .sorted(byKeyPath: "createdAt", ascending: false)
+            .first else {
+            return 0
+        }
+
+        // 2. 마지막 메시지가 내 메시지면 0
+        if lastMessage.senderID == currentUserID {
+            return 0
+        }
+
+        // 3. lastReadMessageId 이후의 메시지만 가져오기
+        let messagesToCheck: Results<ChatMessageEntity>
+
+        if let lastReadId = entity.lastReadMessageId,
+           let lastReadMessage = realm.object(ofType: ChatMessageEntity.self, forPrimaryKey: lastReadId) {
+            // lastReadMessage의 createdAt 이후 메시지만
+            messagesToCheck = realm.objects(ChatMessageEntity.self)
+                .filter("roomID == %@ AND createdAt > %@", roomID, lastReadMessage.createdAt)
+                .sorted(byKeyPath: "createdAt", ascending: true)
+        } else {
+            // lastReadMessageId가 없으면 모든 메시지
+            messagesToCheck = realm.objects(ChatMessageEntity.self)
+                .filter("roomID == %@", roomID)
+                .sorted(byKeyPath: "createdAt", ascending: true)
+        }
+
+        // 4. 마지막부터 역순으로 연속된 상대방 메시지만 카운트
+        var unreadCount = 0
+        for message in messagesToCheck.reversed() {
+            if message.senderID == currentUserID {
+                break
+            }
+            unreadCount += 1
+        }
+
+        return unreadCount
+    }
+
+    func getAllRooms(currentUserID: String) -> [ChatRoomModel] {
         let roomEntities = realm.objects(ChatRoomEntity.self)
             .sorted(byKeyPath: "updatedAt", ascending: false)
 
@@ -71,7 +127,11 @@ final class ChatRoomRepository {
             })
 
             let lastMessage = ChatMessageRepository.shared.getLastMessage(roomID: entity.id, participants: participants)
-            return entity.toDomain(lastMessage: lastMessage)
+            let unreadCount = getUnreadCount(roomID: entity.id, currentUserID: currentUserID)
+
+            var room = entity.toDomain(lastMessage: lastMessage)
+            room.unreadCount = unreadCount
+            return room
         }
     }
 

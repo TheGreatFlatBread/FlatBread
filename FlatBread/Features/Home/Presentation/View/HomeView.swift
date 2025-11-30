@@ -14,6 +14,7 @@ struct HomeView: View {
     let onTapCreateMoim: () -> Void // 모임 생성 버튼 탭시
     let onMoveToCategory: () -> Void // 카테고리 섹션 탭시
     let onMoveToMoimDetail: (String) -> Void // 모임 탭시 모임 디테일로 이동
+    let onFindNearby: () -> Void // 주변 검색 버튼 탭 시
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
@@ -22,7 +23,7 @@ struct HomeView: View {
                 HomeTopBarView(
                     title: "FlatBread", // 앱 로고 텍스트
                     onSearchTap: {
-                        // TODO: 검색 화면으로 이동
+                        onFindNearby()
                         print("Search tapped")
                     }
                 )
@@ -58,7 +59,7 @@ struct HomeView: View {
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.white)
                     .frame(width: 56, height: 56)
-                    .background(Color.accentColor)
+                    .background(Color("juhwang"))
                     .clipShape(Circle())
                     .shadow(radius: 8)
             }

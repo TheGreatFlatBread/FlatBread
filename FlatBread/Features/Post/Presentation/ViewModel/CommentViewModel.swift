@@ -192,9 +192,5 @@ final class CommentViewModel: ObservableObject {
     private func handleError(_ error: NetworkError, context: ErrorContext) {
         errorMessage = error.userMessage(context: context)
         showError = true
-
-        #if DEBUG
-        print("❌ Error in \(context): \(error)")
-        #endif
     }
 }

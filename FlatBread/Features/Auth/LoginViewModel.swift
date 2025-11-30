@@ -10,45 +10,124 @@ import Combine
 import Foundation
 
 final class LoginViewModel: NSObject, ObservableObject {
-    
+
     private let tokenStorage: any TokenStorage
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     private let tokenCoordiantor = NetworkServiceFactory.shared.getTokenCoordinator()
-    
+
     init(tokenStorage: any TokenStorage) {
         self.tokenStorage = tokenStorage
     }
-    
+
     @Published var showingAlert: Bool = false
     @Published var alertMessage: String = ""
     @Published var isLoginSucceed: Bool = false
     @Published var isCheckingLoginStatus: Bool = true
 
+    @Published var email: String = ""
+    @Published var password: String = ""
+
+    @Published var emailValidationMessage: String = ""
+    @Published var isEmailValid: Bool = false
+
+    @Published var isLoggingIn: Bool = false
+
     @MainActor
     func checkLoginStatus() async {
-
         defer { isCheckingLoginStatus = false }
 
-        guard let userID = await tokenStorage.getAppleUserID() else {
+        let emailSuccess = await attemptEmailAutoLogin()
+        if emailSuccess {
             return
         }
 
-        let state = await checkCredentialState(userID: userID)
+        let appleSuccess = await attemptAppleAutoLogin()
+        if appleSuccess {
+            return
+        }
+        print("[Login] 자동 로그인 불가 - 로그인 필요")
+    }
+
+    @MainActor
+    private func attemptEmailAutoLogin() async -> Bool {
+        if await tokenStorage.getAppleUserID() != nil {
+            return false
+        }
+        
+        guard let refreshToken = await tokenStorage.getRefreshToken(),
+              !refreshToken.isEmpty else {
+            return false
+        }
+        
+        guard let userId = await tokenStorage.getUserID(),
+              !userId.isEmpty else {
+            return false
+        }
+
+        do {
+            _ = try await tokenCoordiantor.refreshToken()
+            // UserSession 복원
+            UserSession.shared.login(userId: userId, sendPendingToken: true)
+
+            // 자동 로그인 후 FCM 토큰 재전송 (중요!)
+            sendFCMTokenIfAvailable()
+
+            isLoginSucceed = true
+            return true
+        } catch {
+            await tokenStorage.clearTokens()
+            UserSession.shared.logout()
+            return false
+        }
+    }
+
+    @MainActor
+    private func attemptAppleAutoLogin() async -> Bool {
+        guard let appleUserID = await tokenStorage.getAppleUserID() else {
+            return false
+        }
+
+        guard let refreshToken = await tokenStorage.getRefreshToken(),
+              !refreshToken.isEmpty else {
+            return false
+        }
+
+        let state = await checkCredentialState(userID: appleUserID)
 
         switch state {
         case .authorized:
             do {
                 _ = try await tokenCoordiantor.refreshToken()
+
+                // UserSession 복원
+                if let userId = await tokenStorage.getUserID() {
+                    UserSession.shared.login(userId: userId, sendPendingToken: true)
+                } else {
+                    throw SocialLoginError.sessionExpired
+                }
+
+                // 자동 로그인 후 FCM 토큰 재전송
+                sendFCMTokenIfAvailable()
+
                 isLoginSucceed = true
+                return true
             } catch {
+                await tokenStorage.clearTokens()
+                UserSession.shared.logout()
                 isLoginSucceed = false
+                print("error: \(error)")
                 alertMessage = "세션이 만료되어 다시 로그인해야 합니다."
                 showingAlert = true
+                return false
             }
+
         case .revoked, .notFound, .transferred:
             await tokenStorage.clearTokens()
+            UserSession.shared.logout()
+            return false
+
         @unknown default:
-            break
+            return false
         }
     }
 
@@ -58,6 +137,17 @@ final class LoginViewModel: NSObject, ObservableObject {
                 continuation.resume(returning: state)
             }
         }
+    }
+
+    /// 현재 FCM 토큰이 있으면 백엔드로 전송
+    /// - 자동 로그인 후, 수동 로그인 후 호출
+    /// - userId가 바뀌었을 수 있으므로 항상 전송
+    private func sendFCMTokenIfAvailable() {
+        guard let fcmToken = UserDefaults.standard.string(forKey: "fcmToken"),
+              !fcmToken.isEmpty else {
+            return
+        }
+        FCMManager.shared.sendTokenToBackend(fcmToken: fcmToken)
     }
     
     func handleAppleSignInResult(result: Result<ASAuthorization, any Error>) {
@@ -127,18 +217,92 @@ final class LoginViewModel: NSObject, ObservableObject {
             )
             await tokenStorage.saveToken(
                 access: signInInfo.accessToken!,
-                refresh: signInInfo.refreshToken!,
+                refresh: signInInfo.refreshToken!
             )
+
+            // userId 저장
+            if let userId = signInInfo.userID {
+                await tokenStorage.saveUserID(userId)
+
+                // UserSession에 로그인 상태 저장 + Pending FCM 토큰 전송
+                UserSession.shared.login(userId: userId, sendPendingToken: true)
+            }
+
+            // FCM 토큰 재전송 (수동 로그인 후)
+            sendFCMTokenIfAvailable()
+
             #if DEBUG
-            print("accessToken: \(signInInfo.accessToken!)")
+            print("[Login] Apple 로그인 성공")
+            print("   accessToken: \(signInInfo.accessToken!)")
+            print("   userId: \(signInInfo.userID ?? "nil")")
             #endif
-            
+
             isLoginSucceed = true
         } catch {
-            print("\(error)")
             alertMessage = error.localizedDescription
             showingAlert = true
         }
     }
-    
+
+}
+
+// MARK: - Email/Password Login
+extension LoginViewModel {
+
+    func validateEmailFormat() {
+        let result = EmailValidator.validateFormat(email)
+        emailValidationMessage = result.message
+        isEmailValid = result.isValid
+    }
+
+    var canLogin: Bool {
+        return !email.isEmpty && !password.isEmpty && !isLoggingIn
+    }
+
+    @MainActor
+    func login() async {
+        guard canLogin else { return }
+
+        isLoggingIn = true
+        defer { isLoggingIn = false }
+
+        do {
+            let response = try await networkService.request(
+                UserRouter.login(email: email, password: password),
+                responseType: UserSignUpResponseDTO.self,
+                interceptorType: .onlyNetworkRetrier
+            )
+
+            await tokenStorage.saveToken(
+                access: response.accessToken!,
+                refresh: response.refreshToken!
+            )
+
+            if let userId = response.userID {
+                await tokenStorage.saveUserID(userId)
+                UserSession.shared.login(userId: userId, sendPendingToken: true)
+            }
+
+            // FCM 토큰 재전송 (수동 로그인 후)
+            sendFCMTokenIfAvailable()
+
+            #if DEBUG
+            print("[Login] Email 로그인 성공")
+            print("   email: \(response.email ?? "nil")")
+            print("   userId: \(response.userID ?? "nil")")
+            #endif
+
+            isLoginSucceed = true
+        } catch {
+            print("로그인 실패: \(error)")
+            alertMessage = error.localizedDescription
+            showingAlert = true
+        }
+    }
+
+    // MARK: - Reset
+    func resetLoginForm() {
+        email = ""
+        password = ""
+    }
 }

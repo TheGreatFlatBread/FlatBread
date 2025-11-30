@@ -22,6 +22,9 @@ class MockURLProtocol: URLProtocol {
     private static var requestCount: Int = 0
     private static var mockDelay: TimeInterval = 0
 
+    // 동적 request handler (테스트별로 커스텀 로직 가능)
+    static var requestHandler: ((URLRequest) -> (HTTPURLResponse, Data))?
+
     static func setMock(_ response: MockResponse) {
         mockResponse = response
     }
@@ -35,10 +38,11 @@ class MockURLProtocol: URLProtocol {
         set { mockDelay = newValue }
     }
 
-    static func reset() {
+    class func reset() {
         mockResponse = nil
         requestCount = 0
         mockDelay = 0
+        requestHandler = nil
     }
 
     override class func canInit(with request: URLRequest) -> Bool {
@@ -61,8 +65,19 @@ class MockURLProtocol: URLProtocol {
             Thread.sleep(forTimeInterval: Self.mockDelay)
         }
 
+        // requestHandler가 있으면 우선 사용 (동적 응답)
+        if let handler = Self.requestHandler {
+            let (response, data) = handler(self.request)
+
+            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+            client?.urlProtocol(self, didLoad: data)
+            client?.urlProtocolDidFinishLoading(self)
+            return
+        }
+
+        // 기존 mockResponse 사용
         guard let mockResponse = Self.mockResponse else {
-            fatalError("❌ No mock response")
+            fatalError("❌ No mock response or requestHandler")
         }
 
         handleMockResponse(mockResponse, url: url)
@@ -149,7 +164,6 @@ class MockURLProtocol: URLProtocol {
             forResource: fileName,
             withExtension: "json"
         ) else {
-            print("❌ Mock JSON not found: \(fileName).json")
             return Data()
         }
         return try? Data(contentsOf: fileURL)

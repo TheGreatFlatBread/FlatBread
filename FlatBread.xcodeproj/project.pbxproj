@@ -12,6 +12,9 @@
 		173151D82ED30B4D009C14B8 /* RealmSwift in Embed Frameworks */ = {isa = PBXBuildFile; productRef = 173151D22ED3080C009C14B8 /* RealmSwift */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		1745BC0A2EC8B88600611C61 /* Kingfisher in Frameworks */ = {isa = PBXBuildFile; productRef = 1745BC092EC8B88600611C61 /* Kingfisher */; };
 		17780DA62ED5D28D00D36AFA /* HwanCache in Frameworks */ = {isa = PBXBuildFile; productRef = 17780DA52ED5D28D00D36AFA /* HwanCache */; };
+		17B7A50A2ED888E200816EA0 /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = 17B7A5092ED888E200816EA0 /* FirebaseCore */; };
+		17B7A50C2ED888E200816EA0 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 17B7A50B2ED888E200816EA0 /* FirebaseMessaging */; };
+		17B7ABB92ED8A89C00816EA0 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = 17B7ABB82ED8A89C00816EA0 /* FirebaseFunctions */; };
 		17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 17BCDA8C2EBA291E00451DBF /* Alamofire */; };
 		4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */ = {isa = PBXBuildFile; productRef = 4E037CE72EBC4CFC00965D62 /* NMapsMap */; };
 		FE815B792ED56C9D006BA907 /* iamport-ios in Frameworks */ = {isa = PBXBuildFile; productRef = FE815B782ED56C9D006BA907 /* iamport-ios */; };
@@ -103,12 +106,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				17B7A50C2ED888E200816EA0 /* FirebaseMessaging in Frameworks */,
 				1745BC0A2EC8B88600611C61 /* Kingfisher in Frameworks */,
 				17BCDA8D2EBA291E00451DBF /* Alamofire in Frameworks */,
 				173151D32ED3080C009C14B8 /* RealmSwift in Frameworks */,
 				172547D12ED44897003E46FE /* SocketIO in Frameworks */,
 				4E037CE82EBC4CFC00965D62 /* NMapsMap in Frameworks */,
 				FE815B792ED56C9D006BA907 /* iamport-ios in Frameworks */,
+				17B7ABB92ED8A89C00816EA0 /* FirebaseFunctions in Frameworks */,
+				17B7A50A2ED888E200816EA0 /* FirebaseCore in Frameworks */,
 				17780DA62ED5D28D00D36AFA /* HwanCache in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -185,6 +191,9 @@
 				173151D22ED3080C009C14B8 /* RealmSwift */,
 				172547D02ED44897003E46FE /* SocketIO */,
 				17780DA52ED5D28D00D36AFA /* HwanCache */,
+				17B7A5092ED888E200816EA0 /* FirebaseCore */,
+				17B7A50B2ED888E200816EA0 /* FirebaseMessaging */,
+				17B7ABB82ED8A89C00816EA0 /* FirebaseFunctions */,
 			);
 			productName = FlatBread;
 			productReference = FE6110272EB9D4AD006E4243 /* FlatBread.app */;
@@ -226,6 +235,7 @@
 				173151CF2ED3080C009C14B8 /* XCRemoteSwiftPackageReference "realm-swift" */,
 				172547CF2ED44897003E46FE /* XCRemoteSwiftPackageReference "socket" */,
 				17780DA42ED5D28D00D36AFA /* XCRemoteSwiftPackageReference "HwanCache" */,
+				17B7A5082ED888E200816EA0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = FE6110282EB9D4AD006E4243 /* Products */;
@@ -475,6 +485,8 @@
 				INFOPLIST_FILE = FlatBread/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FlatBread;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "채팅에서 사진을 촬영하고 전송하기 위해 카메라 접근 권한이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "채팅에서 사진을 전송하기 위해 사진 라이브러리 접근 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -490,7 +502,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.thegreatflatbread.FlatBread;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
-				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = Flatbread_Profile_251118;
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = FlatBread_Profile_251128;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SUPPORTS_MACCATALYST = NO;
@@ -521,6 +533,8 @@
 				INFOPLIST_FILE = FlatBread/Resources/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = FlatBread;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSCameraUsageDescription = "채팅에서 사진을 촬영하고 전송하기 위해 카메라 접근 권한이 필요합니다.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "채팅에서 사진을 전송하기 위해 사진 라이브러리 접근 권한이 필요합니다.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -616,6 +630,14 @@
 				minimumVersion = 0.1.0;
 			};
 		};
+		17B7A5082ED888E200816EA0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.6.0;
+			};
+		};
 		17BCDA8B2EBA291E00451DBF /* XCRemoteSwiftPackageReference "Alamofire" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
@@ -662,6 +684,21 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 17780DA42ED5D28D00D36AFA /* XCRemoteSwiftPackageReference "HwanCache" */;
 			productName = HwanCache;
+		};
+		17B7A5092ED888E200816EA0 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 17B7A5082ED888E200816EA0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+		17B7A50B2ED888E200816EA0 /* FirebaseMessaging */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 17B7A5082ED888E200816EA0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseMessaging;
+		};
+		17B7ABB82ED8A89C00816EA0 /* FirebaseFunctions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 17B7A5082ED888E200816EA0 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFunctions;
 		};
 		17BCDA8C2EBA291E00451DBF /* Alamofire */ = {
 			isa = XCSwiftPackageProductDependency;

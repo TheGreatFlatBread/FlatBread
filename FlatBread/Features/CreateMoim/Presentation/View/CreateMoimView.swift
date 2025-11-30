@@ -238,6 +238,7 @@ struct CreateMoimView: View {
                             set: { vm.toggleFree($0) }
                         ))
                         .toggleStyle(.switch)
+                        .tint(Color("juhwang"))
                         
                         if !vm.isFree {
                             HStack(spacing: 8) {
@@ -284,7 +285,7 @@ struct CreateMoimView: View {
                     .font(.system(size: 17, weight: .semibold))
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(vm.canSubmit ? Color.black : Color(.systemGray5))
+                    .background(vm.canSubmit ? Color("juhwang") : Color(.systemGray5))
                     .foregroundStyle(vm.canSubmit ? .white : .secondary)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .padding(.horizontal, 16)
