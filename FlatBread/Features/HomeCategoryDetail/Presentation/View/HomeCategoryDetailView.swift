@@ -1,29 +1,37 @@
 import SwiftUI
 
 struct HomeCategoryDetailView: View {
-    var title: String = "카테고리"
-    var items: [MoimGroupItem] = []
+    @StateObject var viewModel: HomeCategoryDetailViewModel
     var onTapRow: ((MoimGroupItem) -> Void)? = nil
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
-                ForEach(items) { item in
+            LazyVStack(alignment: .leading, spacing: 12) {
+                ForEach(viewModel.items) { item in
                     MoimGroupRowView(item: item, onTap: onTapRow)
                         .padding(.horizontal, 16)
+                        .onAppear {
+                            Task { await viewModel.loadMoreIfNeeded(currentItem: item) }
+                        }
+                }
+                if viewModel.isLoading {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding()
                 }
             }
             .padding(.vertical, 12)
         }
-        .navigationTitle(title)
+        .navigationTitle(viewModel.title)
+        .task {
+            await viewModel.loadInitial()
+        }
     }
 }
 
 #Preview {
+    let vm = HomeCategoryDetailViewModel(title: "운동/스포츠", categories: ["운동/스포츠"], limit: 20)
     NavigationStack {
-        HomeCategoryDetailView(
-            title: "운동/스포츠",
-            items: HomeViewModel().moimGroups
-        )
+        HomeCategoryDetailView(viewModel: vm)
     }
 }
