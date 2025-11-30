@@ -61,7 +61,9 @@ struct ShortVideoFeedCell: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             
-            LinearGradient(colors: [.clear, .black.opacity(0.5)], startPoint: .center, endPoint: .bottom)
+            LinearGradient(colors: [.clear, .black.opacity(0.9)],
+                           startPoint: .init(x: 0.5, y: 0.7),
+                           endPoint: .init(x: 0.5, y: 0.9))
                 .allowsHitTesting(false)
             
             HStack(alignment: .bottom, spacing: 14) {
@@ -153,6 +155,7 @@ struct ShortVideoFeedCell: View {
                 .presentationDetents([.fraction(0.7), .large])
                 .presentationCornerRadius(30)
                 .presentationDragIndicator(.visible)
+                .background(.white)
         }
         .alert("에러 발생", isPresented: $showingAlert) {
             Button("확인", role: .cancel) { return }
