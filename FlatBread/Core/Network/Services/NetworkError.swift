@@ -94,7 +94,28 @@ enum NetworkError: LocalizedError, Equatable {
 }
 
 extension NetworkError {
+    /// Error를 NetworkError로 변환 (이미 NetworkError면 그대로 반환)
+    static func from(_ error: Error) -> NetworkError {
+        // 이미 NetworkError면 그대로 반환
+        if let networkError = error as? NetworkError {
+            return networkError
+        }
+
+        // AFError면 변환
+        if let afError = error as? AFError {
+            return from(afError)
+        }
+
+        // 알 수 없는 에러
+        return .unknown(error)
+    }
+
     static func from(_ afError: AFError) -> NetworkError {
+        // RequestRetryError인 경우 originalError 사용 (왜 요청이 실패했는지)
+        if case .requestRetryFailed(let retryError, _) = afError {
+            return from(retryError)
+        }
+
         switch afError {
         case .sessionTaskFailed(let error as NSError):
             switch error.code {
