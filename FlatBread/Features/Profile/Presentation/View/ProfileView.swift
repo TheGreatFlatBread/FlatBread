@@ -61,7 +61,9 @@ struct ProfileView: View {
                 case .chatRoom(let room):
                     ChatRoomView(room: room, currentUserID: viewModel.myProfile?.userID ?? UserSession.shared.currentUserId ?? "")
                 case .withdraw:
-                    DummyView(navigationTitle: "탈퇴하기", text: "탈퇴")
+                    // 탈퇴 기능은 추후 alert로 대체
+//                    DummyView(navigationTitle: "탈퇴하기", text: "탈퇴")
+                    VideoUploadView()
                 }
             }
         }

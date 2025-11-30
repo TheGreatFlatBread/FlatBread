@@ -67,6 +67,19 @@ struct VideoUploadView: View {
             }
             .padding(.horizontal)
             
+            
+            VStack(alignment: .leading, spacing: 16) {
+                Text("카테고리 ID").font(.system(size: 16, weight: .bold))
+                TextField("카테고리 ID를 입력하세요", text: $viewModel.categoryID)
+                
+                Text("제목").font(.system(size: 16, weight: .bold))
+                TextField("제목을 입력하세요", text: $viewModel.shortVideotitleInput)
+                
+                Text("내용").font(.system(size: 16, weight: .bold))
+                TextField("내용을 입력하세요", text: $viewModel.shortVideoContentInput)
+            }
+            .padding(.horizontal)
+            
             Spacer()
             
             Button(action: viewModel.uploadVideo) {

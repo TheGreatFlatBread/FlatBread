@@ -22,6 +22,10 @@ final class VideoUploadViewModel: ObservableObject {
     
     @Published var compressedVideoData: Data?
     
+    @Published var categoryID: String = ""
+    @Published var shortVideotitleInput: String = ""
+    @Published var shortVideoContentInput: String = ""
+    
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     
     
@@ -145,8 +149,25 @@ private extension VideoUploadViewModel {
 // MARK: - Uploading
 extension VideoUploadViewModel {
     
+//    func uploadVideo(categoryID: String, title: String, content: String) {
     func uploadVideo() {
-        guard let videoData = compressedVideoData else { return }
+        Task {
+            let uploadedFilePath = try await uploadVideoFile()
+//            try await uploadShortVideo(
+//                categoryID: categoryID,
+//                title: content,
+//                content: categoryID,
+//                filePath: uploadedFilePath
+//            )
+        }
+        
+    }
+    
+    func uploadVideoFile() async throws -> String {
+        guard let videoData = compressedVideoData else {
+            fatalError()
+//            return
+        }
         
         print("--- 업로드 시작 ---")
         print("파일 크기: \(videoData.count) bytes")
@@ -155,20 +176,43 @@ extension VideoUploadViewModel {
         let videoUploadRequestDTO = VideoUploadRequestDTO(files: [videoFile])
         let multipardAPIRouter = MultipartRouter.uploadVideos(request: videoUploadRequestDTO)
         
-        Task {
-            do {
-                let fileUploadResponse = try await networkService.upload(
-                    multipardAPIRouter,
-                    responseType: FileUploadResponseDTO.self
-                ) { progress in
-                    print("progress: \(progress)")
-                }
-                print("업로드 성공: \(fileUploadResponse.files)")
-                
-            } catch {
-                print("동영상 업로드 실패: \(error.localizedDescription)")
+        do {
+            let fileUploadResponse = try await networkService.upload(
+                multipardAPIRouter,
+                responseType: FileUploadResponseDTO.self
+            ) { progress in
+                print("progress: \(progress)")
             }
+            print("동영상 파일 업로드 성공: \(fileUploadResponse.files)")
+            if let filePath = fileUploadResponse.files.first {
+                return filePath
+            } else {
+                fatalError()
+            }
+        } catch {
+            print("동영상 파일 업로드 실패")
+            throw error
         }
+    }
+    
+    
+    func uploadShortVideo(categoryID: String, title: String, content: String, filePath: String) async throws {
+        let postUploadRequest = PostUploadRequestDTO(
+            category: categoryID,
+            title: title,
+            price: 0,
+            content: content,
+            files: [filePath],
+            longitude: 0,
+            latitude: 0
+        )
+        let router = PostRouter.uploadPost(request: postUploadRequest)
+        let resposne = try await networkService.request(router, responseType: PostResponseDTO.self)
+        
+        print("-----🎬숏폼 동영상 업로드 성공-----")
+        print("제목: \(title)")
+        print("내용: \(content)")
+        print("파일: \(filePath)")
     }
     
 }
