@@ -117,7 +117,7 @@ FlatBread는 사용자가 관심사를 공유하는 사람들과 모임을 만�
 - 초기 사용자 설정
 - 단계별 온보딩 플로우
 
-### 📂 카테고리 상세 (HomeCategoryDetail)
+### 카테고리 상세 (HomeCategoryDetail)
 - 단일 카테고리의 모임 목록
 - 페이지네이션 지원
 
@@ -131,23 +131,23 @@ FlatBread는 **MVVM (Model-View-ViewModel)과 Clean Architecture 원칙**을 따
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                         View (SwiftUI)                       │
-│  - 선언적 UI                                                 │
-│  - @StateObject, @ObservedObject, @Published 바인딩          │
+│                         View (SwiftUI)                      │
+│  - 선언적 UI                                                  │
+│  - @StateObject, @ObservedObject, @Published 바인딩           │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                   ViewModel (ObservableObject)               │
-│  - Presentation Logic                                        │
+│                   ViewModel (ObservableObject)              │
+│  - Presentation Logic                                       │
 │  - @Published 속성                                           │
-│  - 서비스 의존성 주입                                        │
+│  - 서비스 의존성 주입                                           │
 └───────────────────────────┬─────────────────────────────────┘
                             │
                             ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      Services Layer                          │
-│  - Business Logic                                            │
+│                      Services Layer                         │
+│  - Business Logic                                           │
 │  - NetworkService, ChatService, LocationManager 등           │
 └───────────────────────────┬─────────────────────────────────┘
                             │
@@ -714,7 +714,7 @@ xcodebuild test -project FlatBread.xcodeproj -scheme FlatBread -destination 'pla
 
 ## 라이선스
 
-이 프로젝트의 라이선스는 별도로 명시되지 않았습니다.
+이 프로젝트의 라이선스는 MIT License를 따르고 있습니다. [LICENSE](./LICENSE)
 
 ---
 
