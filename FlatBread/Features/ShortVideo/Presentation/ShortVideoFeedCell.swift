@@ -153,8 +153,8 @@ struct ShortVideoFeedCell: View {
         }
         .sheet(isPresented: $showCommentSheet) {
             ShortVideoCommentView(videoID: shortVideo.id)
+                .adaptiveCommentSheetStyle
                 .presentationDetents([.fraction(0.7), .large])
-                .presentationCornerRadius(30)
                 .presentationDragIndicator(.visible)
                 .background(.white)
         }
