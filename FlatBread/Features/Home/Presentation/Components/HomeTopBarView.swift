@@ -25,7 +25,7 @@ struct HomeTopBarView: View {
             Button {
                 onSearchTap?()
             } label: {
-                Image(systemName: "magnifyingglass")
+                Image(systemName: "iphone.gen3.radiowaves.left.and.right")
                     .font(.system(size: 20, weight: .regular))
                     .foregroundStyle(Color.black)
                     .frame(width: 32, height: 32)
