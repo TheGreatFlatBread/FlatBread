@@ -57,15 +57,15 @@ struct ShortVideoCommentRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text(creator?.nick ?? "알 수 없음")
-                        .font(.system(size: 11, weight: .semibold))
+                        .font(.system(size: 14, weight: .semibold))
                     
                     Text(date?.toDate()?.asShortVideoCommentFormat ?? "")
-                        .font(.system(size: 11))
+                        .font(.system(size: 12))
                         .foregroundColor(.gray)
                 }
                 
                 Text(content ?? "")
-                    .font(.system(size: 12))
+                    .font(.system(size: 14))
                     .lineLimit(nil)
                 
                 // 부모 댓글인 경우에만 '답글 달기' 버튼 표시

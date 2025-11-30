@@ -82,14 +82,15 @@ struct ShortVideoFeedCell: View {
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                         
                         Text((moimInfo == nil) ? "--" : moimInfo?.title ?? "모임 이름 없음")
-                            .font(.system(size: 13)).bold()
+                            .font(.system(size: 15)).bold()
                             .lineLimit(2)
                     }
                     .frame(height: 50)
                     
                     Text(shortVideo.content.components(separatedBy: "#").first ?? "")
-                        .font(.system(size: 13))
+                        .font(.system(size: 14))
                         .lineLimit(3)
+                        .lineSpacing(3)
                     
                     HStack {
                         Image(systemName: "calendar")
