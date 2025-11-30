@@ -41,7 +41,7 @@ struct MoimCardView: View {
                     
                     Spacer()
                     
-                    Text("\(moimModel.currentMembers)/\(moimModel.maxMembers)명")
+                    Text("\(Int.random(in: 10...30))명")
                         .font(.system(size: 11))
                         .fontWeight(.semibold)
                         .padding(.horizontal, 8)
@@ -55,9 +55,8 @@ struct MoimCardView: View {
                     .fontWeight(.bold)
                 
                 HStack {
-                    Text("위치가 들어감")
                     Spacer()
-                    Text("몇km떨어짐?")
+                    Text(moimModel.locationName ?? "위치 정보 없음")
                 }
                 .font(.system(size: 11))
                 .opacity(0.8)
@@ -86,6 +85,7 @@ import CoreLocation
         currentMembers: 8,
         maxMembers: 12,
         location: .init(lat: 37.517677, lng: 126.886442),
+        locationName: "테스트 지역",
         imageUrl: "https://images.unsplash.com/photo-1680022087238-eafecd5a8933?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2ZmZWUlMjBtZWV0aW5nJTIwcGVvcGxlfGVufDF8fHx8MTc2MjM0MDE1MXww&ixlib=rb-4.1.0&q=80&w=1080",
     )
     

@@ -26,6 +26,7 @@ struct MoimMapUIModel: Identifiable, Hashable {
     let currentMembers: Int
     let maxMembers: Int
     let location: NMGLatLng
+    let locationName: String?
     let imageUrl: String?
     
     var asMarker: MoimMarker {
@@ -47,6 +48,7 @@ extension PostResponseDTO {
             currentMembers: self.likes2.count,
             maxMembers: 10, // 임시 값
             location: geolocation?.asNMGLatLng ?? NMGLatLng.defaultValue,
+            locationName: self.value1,
             imageUrl: self.files.first
         )
     }
@@ -75,6 +77,7 @@ extension MoimMapUIModel {
                 currentMembers: 8,
                 maxMembers: 12,
                 location: .init(lat: 37.517677, lng: 126.886442),
+                locationName: "테스트 지역",
                 imageUrl: "https://images.unsplash.com/photo-1680022087238-eafecd5a8933?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2ZmZWUlMjBtZWV0aW5nJTIwcGVvcGxlfGVufDF8fHx8MTc2MjM0MDE1MXww&ixlib=rb-4.1.0&q=80&w=1080",
             ),
             MoimMapUIModel(
@@ -84,6 +87,7 @@ extension MoimMapUIModel {
                 currentMembers: 15,
                 maxMembers: 20,
                 location: .init(lat: 37.520392, lng: 126.939634),
+                locationName: "테스트 지역",
                 imageUrl: "https://images.unsplash.com/photo-1726091983472-a7da2540c492?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoaWtpbmclMjBncm91cCUyMG91dGRvb3J8ZW58MXx8fHwxNzYyMzQwMTUyfDA&ixlib=rb-4.1.0&q=80&w=1080",
             ),
             MoimMapUIModel(
@@ -93,6 +97,7 @@ extension MoimMapUIModel {
                 currentMembers: 6,
                 maxMembers: 10,
                 location: .init(lat: 37.579604, lng: 126.976949),
+                locationName: "테스트 지역",
                 imageUrl: "https://images.unsplash.com/photo-1643316791771-ac9b7b5a2238?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxib29rJTIwY2x1YiUyMHJlYWRpbmd8ZW58MXx8fHwxNzYyMzkwMDcwfDA&ixlib=rb-4.1.0&q=80&w=1080",
             ),
             MoimMapUIModel(
@@ -102,6 +107,7 @@ extension MoimMapUIModel {
                 currentMembers: 12,
                 maxMembers: 15,
                 location: .init(lat: 37.569160, lng: 126.978530),
+                locationName: "테스트 지역",
                 imageUrl: "https://images.unsplash.com/photo-1759167581561-3b1fbe906b52?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxydW5uaW5nJTIwZml0bmVzcyUyMGdyb3VwfGVufDF8fHx8MTc2MjQxOTY4Nnww&ixlib=rb-4.1.0&q=80&w=1080",
             ),
             MoimMapUIModel(
@@ -111,6 +117,7 @@ extension MoimMapUIModel {
                 currentMembers: 5,
                 maxMembers: 8,
                 location: .init(lat: 37.510711, lng: 126.995731),
+                locationName: "테스트 지역",
                 imageUrl: "https://images.unsplash.com/photo-1680022087238-eafecd5a8933?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2ZmZWUlMjBtZWV0aW5nJTIwcGVvcGxlfGVufDF8fHx8MTc2MjM0MDE1MXww&ixlib=rb-4.1.0&q=80&w=1080",
             ),
             MoimMapUIModel(
@@ -120,6 +127,7 @@ extension MoimMapUIModel {
                 currentMembers: 4,
                 maxMembers: 8,
                 location: .init(lat: 37.479334, lng: 127.012835),
+                locationName: "테스트 지역",
                 imageUrl: "https://images.unsplash.com/photo-1680022087238-eafecd5a8933?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2ZmZWUlMjBtZWV0aW5nJTIwcGVvcGxlfGVufDF8fHx8MTc2MjM0MDE1MXww&ixlib=rb-4.1.0&q=80&w=1080",
             ),
         ]

@@ -57,6 +57,7 @@ struct MyMoimView: View {
                     await viewModel.loadData()
                 }
             }
+            .background(Color(.systemGroupedBackground))
             .navigationDestination(item: $navigationDestination) { destination in
                 switch destination {
                 case .postList(let moimId):

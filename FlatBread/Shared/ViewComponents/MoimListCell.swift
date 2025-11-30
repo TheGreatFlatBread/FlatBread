@@ -55,7 +55,7 @@ struct MoimListCell: View {
                     Label(moim.location, systemImage: "map")
                         .font(.system(size: 12))
                     
-                    Label("\(moim.member.count)명", systemImage: "person.2")
+                    Label("\(Int.random(in: 10...30))명", systemImage: "person.2")
                         .font(.system(size: 12))
                 }
                 .frame(height: 30)
