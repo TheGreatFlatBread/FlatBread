@@ -36,11 +36,13 @@ final class UserSession {
 
     func login(userId: String, sendPendingToken: Bool = true) {
         self.currentUserId = userId
-        if sendPendingToken, let pendingToken = getPendingFCMToken() {
-            // AppDelegate에 토큰 전송 요청
-            if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-                appDelegate.sendTokenToBackend(fcmToken: pendingToken)
-            }
+        print("[UserSession] 로그인: userId=\(userId)")
+
+        if sendPendingToken {
+            // FCMManager를 통해 Pending 토큰 전송
+            FCMManager.shared.sendPendingToken()
+        } else {
+            print("[UserSession] sendPendingToken=false - 토큰 전송 스킵")
         }
     }
 
@@ -64,10 +66,8 @@ final class UserSession {
 
         print("[UserSession] 백엔드에서 FCM 토큰 제거 중...")
 
-        // 토큰 제거 요청
-        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-            appDelegate.removeFCMTokenFromBackend(userId: userId, fcmToken: fcmToken)
-        }
+        // FCMManager를 통해 토큰 제거
+        FCMManager.shared.removeTokenFromBackend(userId: userId, fcmToken: fcmToken)
 
         // deleteAndRegenerateFCMToken()
     }
@@ -115,6 +115,30 @@ final class UserSession {
     func clearPendingFCMToken() {
         UserDefaults.standard.removeObject(forKey: "PendingFCMToken")
         print("[UserSession] Pending FCM 토큰 삭제")
+    }
+
+    // MARK: - Pending DeepLink
+
+    /// Pending DeepLink 저장
+    /// - Parameter url: 딥링크 URL
+    func savePendingDeepLink(_ url: URL) {
+        UserDefaults.standard.set(url.absoluteString, forKey: "PendingDeepLink")
+        print("[UserSession] Pending DeepLink 저장: \(url.absoluteString)")
+    }
+
+    /// Pending DeepLink 조회
+    /// - Returns: 저장된 Pending DeepLink (없으면 nil)
+    func getPendingDeepLink() -> URL? {
+        guard let urlString = UserDefaults.standard.string(forKey: "PendingDeepLink") else {
+            return nil
+        }
+        return URL(string: urlString)
+    }
+
+    /// Pending DeepLink 삭제
+    func clearPendingDeepLink() {
+        UserDefaults.standard.removeObject(forKey: "PendingDeepLink")
+        print("[UserSession] Pending DeepLink 삭제")
     }
 
     // MARK: - FCM Token Management

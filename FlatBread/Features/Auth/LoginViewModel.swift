@@ -115,6 +115,7 @@ final class LoginViewModel: NSObject, ObservableObject {
                 await tokenStorage.clearTokens()
                 UserSession.shared.logout()
                 isLoginSucceed = false
+                print("error: \(error)")
                 alertMessage = "세션이 만료되어 다시 로그인해야 합니다."
                 showingAlert = true
                 return false
@@ -150,9 +151,10 @@ final class LoginViewModel: NSObject, ObservableObject {
 
         print("[Login] FCM 토큰 재전송 (자동/수동 로그인 후)")
         // AppDelegate의 sendTokenToBackend 호출
-        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
-            appDelegate.sendTokenToBackend(fcmToken: fcmToken)
-        }
+//        if let appDelegate = UIApplication.shared.delegate as? AppDelegate {
+//            appDelegate.sendTokenToBackend(fcmToken: fcmToken)
+//        }
+        FCMManager.shared.sendTokenToBackend(fcmToken: fcmToken)
     }
     
     func handleAppleSignInResult(result: Result<ASAuthorization, any Error>) {
