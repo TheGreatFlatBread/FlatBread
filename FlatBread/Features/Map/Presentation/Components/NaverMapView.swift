@@ -10,19 +10,25 @@ import NMapsGeometry
 import SwiftUI
 
 struct NaverMapView: UIViewRepresentable {
-    
+
     @Binding var cameraPosition: NMGLatLng
     @Binding var markers: [MoimMarker]
     @Binding var focusingPlaceID: String?
-    
+    @Binding var userLocation: NMGLatLng?
+    @Binding var cameraUpdateTrigger: UUID?
+
     init(
         coordinate: Binding<NMGLatLng>,
         markers: Binding<[MoimMarker]>,
-        focusingPlaceID: Binding<String?>
+        focusingPlaceID: Binding<String?>,
+        userLocation: Binding<NMGLatLng?>,
+        cameraUpdateTrigger: Binding<UUID?>
     ) {
         self._cameraPosition = coordinate
         self._markers = markers
         self._focusingPlaceID = focusingPlaceID
+        self._userLocation = userLocation
+        self._cameraUpdateTrigger = cameraUpdateTrigger
     }
     
     func makeUIView(context: Context) -> NMFMapView {
@@ -36,7 +42,7 @@ struct NaverMapView: UIViewRepresentable {
         let cameraUpdate = NMFCameraUpdate(scrollTo: cameraPosition)
         cameraUpdate.animation = .fly
         cameraUpdate.animationDuration = 0.8
-        
+
         markers.forEach {
             $0.mapView = uiView
             $0.touchHandler = { overlay in
@@ -46,6 +52,15 @@ struct NaverMapView: UIViewRepresentable {
                 return true
             }
         }
+
+        // 위치 오버레이 설정
+        if let userLocation = userLocation {
+            uiView.locationOverlay.location = userLocation
+            uiView.locationOverlay.hidden = false
+        } else {
+            uiView.locationOverlay.hidden = true
+        }
+
         uiView.moveCamera(cameraUpdate)
     }
     
@@ -56,5 +71,7 @@ struct NaverMapView: UIViewRepresentable {
     @Previewable @State var markers: [MoimMarker] = MoimMapUIModel.makeSample()
         .map { $0.asMarker }
     @Previewable @State var currentPlaceID: String? = nil
-    NaverMapView(coordinate: $coordinate, markers: $markers, focusingPlaceID: $currentPlaceID)
+    @Previewable @State var userLocation: NMGLatLng? = .init(lat: 37.517677, lng: 126.886442)
+    @Previewable @State var cameraUpdateTrigger: UUID? = nil
+    NaverMapView(coordinate: $coordinate, markers: $markers, focusingPlaceID: $currentPlaceID, userLocation: $userLocation, cameraUpdateTrigger: $cameraUpdateTrigger)
 }
