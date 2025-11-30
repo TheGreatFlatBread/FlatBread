@@ -853,7 +853,6 @@ extension ChatRoomViewModel {
                     messageType: messageType,
                     senderNickname: senderNickname
                 )
-                print("[Push] 전송 완료 - receiverId: \(opponent.id), roomId: \(room.id), senderNickname: \(senderNickname ?? "nil")")
             } catch {
                 print("[Push] 전송 실패: \(error.localizedDescription)")
             }

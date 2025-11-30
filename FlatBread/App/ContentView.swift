@@ -80,16 +80,13 @@ struct ContentView: View {
                 }
                 .tint(.black)
                 .onAppear {
-                    print("[ContentView] TabView 렌더링 완료")
                     deepLinkHandler.coordinator = navigationCoordinator
                 }
                 .onOpenURL { url in
-                    print("[ContentView] onOpenURL 호출: \(url.absoluteString)")
                     deepLinkHandler.handle(url: url)
                 }
                 .onReceive(NotificationCenter.default.publisher(for: .handleDeepLink)) { notification in
                     if let url = notification.object as? URL {
-                        print("[ContentView] NotificationCenter로 DeepLink 수신: \(url.absoluteString)")
                         deepLinkHandler.handle(url: url)
                     }
                 }

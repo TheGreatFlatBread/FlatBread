@@ -164,7 +164,6 @@ class MockURLProtocol: URLProtocol {
             forResource: fileName,
             withExtension: "json"
         ) else {
-            print("❌ Mock JSON not found: \(fileName).json")
             return Data()
         }
         return try? Data(contentsOf: fileURL)

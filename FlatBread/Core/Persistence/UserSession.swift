@@ -36,13 +36,9 @@ final class UserSession {
 
     func login(userId: String, sendPendingToken: Bool = true) {
         self.currentUserId = userId
-        print("[UserSession] 로그인: userId=\(userId)")
-
         if sendPendingToken {
             // FCMManager를 통해 Pending 토큰 전송
             FCMManager.shared.sendPendingToken()
-        } else {
-            print("[UserSession] sendPendingToken=false - 토큰 전송 스킵")
         }
     }
 
@@ -50,8 +46,6 @@ final class UserSession {
     func logout() {
         let previousUserId = currentUserId
         self.currentUserId = nil
-        print("[UserSession] 로그아웃: \(previousUserId ?? "unknown")")
-
         // 로그아웃 시 백엔드에서 FCM 토큰 제거
         removeFCMTokenFromBackend(userId: previousUserId)
     }
@@ -60,12 +54,8 @@ final class UserSession {
     private func removeFCMTokenFromBackend(userId: String?) {
         guard let userId = userId,
               let fcmToken = currentFCMToken else {
-            print("[UserSession] FCM 토큰 제거 건너뛰기 (userId 또는 토큰 없음)")
             return
         }
-
-        print("[UserSession] 백엔드에서 FCM 토큰 제거 중...")
-
         // FCMManager를 통해 토큰 제거
         FCMManager.shared.removeTokenFromBackend(userId: userId, fcmToken: fcmToken)
 
@@ -78,16 +68,10 @@ final class UserSession {
     private func deleteAndRegenerateFCMToken() {
         Messaging.messaging().deleteToken { error in
             if let error {
-                print("[FCM] 토큰 삭제 실패: \(error.localizedDescription)")
             } else {
-                print("[FCM] 토큰 삭제 성공")
-
                 // 새 토큰 요청 (자동으로 생성되고 didReceiveRegistrationToken에서 받음)
                 Messaging.messaging().token { token, error in
-                    if let error = error {
-                        print("[FCM] 새 토큰 받기 실패: \(error.localizedDescription)")
-                    } else if let token = token {
-                        print("[FCM] 새 토큰 생성됨: \(token.prefix(20))...")
+                    if let token {
                         // 새 토큰은 Pending으로 저장됨 (다음 로그인 시 전송)
                         self.savePendingFCMToken(token)
                     }
@@ -102,7 +86,6 @@ final class UserSession {
     /// - Parameter token: FCM 토큰
     func savePendingFCMToken(_ token: String) {
         UserDefaults.standard.set(token, forKey: "PendingFCMToken")
-        print("[UserSession] Pending FCM 토큰 저장")
     }
 
     /// Pending FCM 토큰 조회
@@ -114,31 +97,6 @@ final class UserSession {
     /// Pending FCM 토큰 삭제
     func clearPendingFCMToken() {
         UserDefaults.standard.removeObject(forKey: "PendingFCMToken")
-        print("[UserSession] Pending FCM 토큰 삭제")
-    }
-
-    // MARK: - Pending DeepLink
-
-    /// Pending DeepLink 저장
-    /// - Parameter url: 딥링크 URL
-    func savePendingDeepLink(_ url: URL) {
-        UserDefaults.standard.set(url.absoluteString, forKey: "PendingDeepLink")
-        print("[UserSession] Pending DeepLink 저장: \(url.absoluteString)")
-    }
-
-    /// Pending DeepLink 조회
-    /// - Returns: 저장된 Pending DeepLink (없으면 nil)
-    func getPendingDeepLink() -> URL? {
-        guard let urlString = UserDefaults.standard.string(forKey: "PendingDeepLink") else {
-            return nil
-        }
-        return URL(string: urlString)
-    }
-
-    /// Pending DeepLink 삭제
-    func clearPendingDeepLink() {
-        UserDefaults.standard.removeObject(forKey: "PendingDeepLink")
-        print("[UserSession] Pending DeepLink 삭제")
     }
 
     // MARK: - FCM Token Management
@@ -150,6 +108,5 @@ final class UserSession {
     /// FCM 토큰 삭제 (로그아웃 시 선택적으로 사용)
     private func clearFCMToken() {
         UserDefaults.standard.removeObject(forKey: "fcmToken")
-        print("[UserSession] FCM 토큰 삭제")
     }
 }
