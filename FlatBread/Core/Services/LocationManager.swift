@@ -11,6 +11,7 @@ import Combine
 
 final class LocationManager: NSObject, ObservableObject {
     @Published var currentAddress: String = "위치 정보 없음"
+    @Published var currentLocation: CLLocation?
     @Published var authorizationStatus: CLAuthorizationStatus = .notDetermined
 
     private let locationManager = CLLocationManager()
@@ -87,6 +88,7 @@ extension LocationManager: CLLocationManagerDelegate {
 
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
+        currentLocation = location
         reverseGeocode(location: location)
     }
 
