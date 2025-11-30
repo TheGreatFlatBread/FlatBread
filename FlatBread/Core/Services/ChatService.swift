@@ -41,7 +41,6 @@ final class ChatService {
                 code: -1,
                 userInfo: [NSLocalizedDescriptionKey: "로그인되지 않음"]
             )
-            print("[Push] 로그인되지 않음")
             completion(.failure(error))
             return
         }
@@ -59,19 +58,9 @@ final class ChatService {
         if let senderNickname = senderNickname {
             data["nickname"] = senderNickname
         }
-
-        print("   [Push] 전송 시작:")
-        print("   senderId: \(senderId)")
-        print("   receiverId: \(receiverId)")
-        print("   roomId: \(roomId)")
-        print("   messageType: \(messageType)")
-        if let nickname = senderNickname {
-            print("   nickname: \(nickname)")
-        }
-
+        
         callable.call(data) { result, error in
             if let error {
-                print("[Push] 전송 실패: \(error.localizedDescription)")
                 completion(.failure(error))
                 return
             }
@@ -80,18 +69,14 @@ final class ChatService {
             if let data = result?.data as? [String: Any],
                let success = data["success"] as? Bool {
                 if success {
-                    print("[Push] 전송 성공")
                     completion(.success(()))
                 } else {
                     let reason = data["reason"] as? String ?? "unknown"
-                    print("[Push] 전송 실패: \(reason)")
-
                     // 실패여도 메시지는 전송되었으므로 success로 처리
                     completion(.success(()))
                 }
             } else {
                 // 응답 형식이 다르거나 없는 경우도 success
-                print("[Push] 전송 완료 (응답 형식 불일치)")
                 completion(.success(()))
             }
         }
@@ -115,7 +100,6 @@ final class ChatService {
     ) {
         // 1. 로컬에 메시지 저장
         saveMessageLocally()
-        print("   [Message] 로컬 저장 완료")
 
         // 2. 푸시 알림 전송
         sendPushNotification(
