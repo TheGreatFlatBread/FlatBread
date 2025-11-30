@@ -76,6 +76,9 @@ struct RemoteImage<Content: View>: View {
                     }
             }
         }
+        .onChange(of: source) { _, newValue in
+            loadImage()
+        }
     }
     
     private func loadImage() {
