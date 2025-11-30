@@ -40,8 +40,11 @@ struct HomeContainerView: View {
                     PostListView(moimId: moimId)
                 case .moveToCategory:
                     HomeCategoryDetailView(
-                        title: viewModel.selectedCategoryTitle ?? "",
-                        items: viewModel.selectedCategoryGroups,
+                        viewModel: HomeCategoryDetailViewModel(
+                            title: viewModel.selectedCategoryTitle ?? "",
+                            categories: [viewModel.selectedCategoryTitle ?? ""],
+                            limit: 10
+                        ),
                         onTapRow: { groupItem in
                             path.append(HomeRoute.moveToMoimDetail(moimId: groupItem.id))
                         }
