@@ -22,7 +22,6 @@ final class ChatSyncManager {
     ) async {
         // 이미 진행 중인 Task가 있으면 기다림
         if let existingTask = getTask(for: roomID) {
-            print("이미 동기화 중 - 기존 작업 대기: \(roomID)")
             await existingTask.value
             return
         }
@@ -49,8 +48,6 @@ final class ChatSyncManager {
         createdAt: String,
         networkService: AsyncNetworkService
     ) async {
-        print("메시지 동기화 시작: \(roomID)")
-
         do {
             let messageRepository = ChatMessageRepository.shared
             let lastMessage = messageRepository.getLastMessage(roomID: roomID, participants: participants)
@@ -66,9 +63,6 @@ final class ChatSyncManager {
 
             if !newMessages.isEmpty {
                 messageRepository.saveMessages(newMessages)
-                print("메시지 \(newMessages.count)개 동기화 완료: \(roomID)")
-            } else {
-                print("새 메시지 없음: \(roomID)")
             }
         } catch {
             print("메시지 동기화 실패: \(roomID), \(error)")

@@ -56,8 +56,6 @@ struct TokenInterceptorIntegrationTests {
             if request.url?.path.contains("refresh") == true ||
                request.url?.absoluteString.contains("auth") == true {
                 TokenInterceptorMockProtocol.refreshCallCount += 1
-                print("   [Mock] refresh API (#\(TokenInterceptorMockProtocol.refreshCallCount))")
-
                 let response = HTTPURLResponse(
                     url: request.url!,
                     statusCode: 200,
@@ -80,7 +78,6 @@ struct TokenInterceptorIntegrationTests {
 
             // 만료된 토큰이면 401
             if authHeader == "expired-token-will-get-401" {
-                print("   [Mock] -> 401 (만료 토큰)")
                 let response = HTTPURLResponse(
                     url: request.url!,
                     statusCode: 401,
@@ -92,7 +89,6 @@ struct TokenInterceptorIntegrationTests {
             }
 
             // 새 토큰이면 200
-            print("   [Mock] -> 200 (성공)")
             let response = HTTPURLResponse(
                 url: request.url!,
                 statusCode: 200,
@@ -125,14 +121,10 @@ struct TokenInterceptorIntegrationTests {
                             .value
 
                         let elapsed = Date().timeIntervalSince(startTime)
-                        print(" response: \(response)")
-                        print("  [\(i)] 성공 (\(String(format: "%.3f", elapsed))초)")
 
                         return (i, .success("success"))
                     } catch {
                         let elapsed = Date().timeIntervalSince(startTime)
-                        print("  [\(i)] 실패 (\(String(format: "%.3f", elapsed))초): \(error)")
-
                         return (i, .failure(error))
                     }
                 }
@@ -144,12 +136,6 @@ struct TokenInterceptorIntegrationTests {
         }
 
         // Then
-        print("\n테스트 결과:")
-        print("   총 API 호출 횟수: \(TokenInterceptorMockProtocol.apiCallCount)")
-        print("   refresh API 호출 횟수: \(TokenInterceptorMockProtocol.refreshCallCount)")
-        print("   성공한 요청: \(results.filter { if case .success = $0 { return true }; return false }.count)")
-        print("   실패한 요청: \(results.filter { if case .failure = $0 { return true }; return false }.count)")
-
         // 검증
         #expect(TokenInterceptorMockProtocol.refreshCallCount == 1, "refresh는 정확히 1번만 호출되어야 함")
         #expect(results.filter { if case .success = $0 { return true }; return false }.count == 10, "모든 요청이 성공해야 함")
@@ -176,9 +162,7 @@ struct TokenInterceptorIntegrationTests {
 
             // refresh API
             if url.contains("auth") {
-                print("[Mock] refresh 시작")
                 TokenInterceptorMockProtocol.refreshCallCount += 1
-                print("[Mock] refresh 완료")
 
                 let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
                 return (response, "{\"accessToken\": \"new\", \"refreshToken\": \"new\"}".data(using: .utf8)!)
@@ -189,13 +173,11 @@ struct TokenInterceptorIntegrationTests {
 
             // old 토큰이면 401
             if token == "old" {
-                print("[Mock] old 토큰 -> 401 반환")
                 let response = HTTPURLResponse(url: request.url!, statusCode: 401, httpVersion: nil, headerFields: nil)!
                 return (response, "{}".data(using: .utf8)!)
             }
 
             // new 토큰이면 200
-            print("[Mock] new 토큰 -> 200 반환")
             let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: nil, headerFields: nil)!
             return (response, "{}".data(using: .utf8)!)
         }

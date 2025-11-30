@@ -113,7 +113,6 @@ final class PostListViewModel: ObservableObject {
             currentUserId = profile.userID ?? ""
             currentUserNick = profile.nick ?? ""
         } catch {
-            print("Failed to load current user ID: \(error)")
         }
     }
     
@@ -167,7 +166,6 @@ final class PostListViewModel: ObservableObject {
 
             return mapToMemberUIModel(userProfile, isLeader: false)
         } catch {
-            print("Failed to fetch member \(userId): \(error)")
             return nil
         }
     }

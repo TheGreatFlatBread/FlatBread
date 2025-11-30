@@ -11,10 +11,9 @@ import SocketIO
 /// Socket.IO를 통한 실시간 채팅 메시지 수신
 final class ChatWebSocketManager: NSObject, @unchecked Sendable {
 
-    static let shared = ChatWebSocketManager()
     private let tokenCoordinator: TokenRefreshCoordinator = NetworkServiceFactory.shared.getTokenCoordinator()
 
-    private override init() {
+override init() {
         super.init()
     }
 
@@ -97,29 +96,23 @@ final class ChatWebSocketManager: NSObject, @unchecked Sendable {
 
     private func setupEventHandlers() {
         socket?.on(clientEvent: .connect) { [weak self] data, ack in
-            print("Socket.IO connected successfully")
             self?.connectionContinuation?.yield(true)
         }
 
         socket?.on(clientEvent: .disconnect) { [weak self] data, ack in
-            print("Socket.IO disconnected")
             self?.connectionContinuation?.yield(false)
         }
 
         socket?.on(clientEvent: .reconnect) { [weak self] data, ack in
-            print("Socket.IO reconnected")
             self?.connectionContinuation?.yield(true)
         }
 
         socket?.on(clientEvent: .reconnectAttempt) { data, ack in
             if let attempt = data.first as? Int {
-                print("Socket.IO reconnecting (attempt \(attempt)/5)...")
-                
             }
         }
 
         socket?.on(clientEvent: .error) { data, ack in
-            print("error receive: \(data)\n ack: \(ack)")
         }
 
         socket?.on("chat") { [weak self] data, ack in

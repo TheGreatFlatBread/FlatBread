@@ -9,15 +9,16 @@ import Combine
 import SwiftUI
 
 struct ProfileView: View {
-    
+
     @StateObject private var viewModel: ProfileViewModel
-    
+    @EnvironmentObject var router: TabRouter<ProfileDestination>
+
     init(viewModel: ProfileViewModel = ProfileViewModel()) {
         _viewModel = StateObject(wrappedValue: viewModel)
     }
-    
+
     var body: some View {
-        NavigationStack(path: $viewModel.path) {
+        NavigationStack(path: $router.path) {
             ScrollView {
                 VStack(spacing: 24) {
                     if let profile = viewModel.myProfile {
@@ -36,9 +37,9 @@ struct ProfileView: View {
             .navigationTitle("내 프로필")
             .navigationBarTitleDisplayMode(.large)
             .background(Color(.systemGroupedBackground))
-            .navigationDestination(for: NavigationRoute.self) { route in
-                switch route {
-                case .profile:
+            .navigationDestination(for: ProfileDestination.self) { destination in
+                switch destination {
+                case .editProfile:
                     if let profile = viewModel.myProfile {
                         EditProfileView(userProfile: profile) {
                             Task {
@@ -57,13 +58,11 @@ struct ProfileView: View {
                     DummyView(navigationTitle: "새 모임 만들기", text: "새 모임")
                 case .chatList:
                     MoimChatListView(currentUserID: viewModel.myProfile?.userID ?? "")
+                case .chatRoom(let room):
+                    ChatRoomView(room: room, currentUserID: viewModel.myProfile?.userID ?? UserSession.shared.currentUserId ?? "")
                 case .withdraw:
-                    // 탈퇴 기능은 추후 alert로 대체
                     DummyView(navigationTitle: "탈퇴하기", text: "탈퇴")
                 }
-            }
-            .navigationDestination(for: ChatRoomModel.self) { room in
-                ChatRoomView(room: room, currentUserID: viewModel.myProfile?.userID ?? "")
             }
         }
         .tint(.primary)
@@ -104,7 +103,9 @@ struct ProfileView: View {
                         profileInfoRow(systemImage: "person.fill", title: "성별", value: nil)
                         profileInfoRow(systemImage: "phone.fill", title: "전화번호", value: nil)
                     }
-                    NavigationLink(value: NavigationRoute.profile) {
+                    Button {
+                        router.navigate(to: .editProfile)
+                    } label: {
                         HStack { Spacer(); Text("수정").foregroundStyle(.white).frame(height: 40); Spacer() }
                             .background(.orange)
                             .cornerRadius(14)
@@ -177,7 +178,9 @@ struct ProfileView: View {
                 )
             }
 
-            NavigationLink(value: NavigationRoute.profile) {
+            Button {
+                router.navigate(to: .editProfile)
+            } label: {
                 HStack {
                     Spacer()
                     Text("수정")
@@ -210,23 +213,31 @@ struct ProfileView: View {
     private var menuSection: some View {
         VStack(spacing: 12) {
             VStack(spacing: 0) {
-                NavigationLink(value: NavigationRoute.myMoim) {
+                Button {
+                    router.navigate(to: .myMoim)
+                } label: {
                     ProfileMenuButtonRow(title: "내가 만든 모임 확인하기")
                 }
-                
-                NavigationLink(value: NavigationRoute.makeNewMoim) {
+
+                Button {
+                    router.navigate(to: .makeNewMoim)
+                } label: {
                     ProfileMenuButtonRow(title: "새 모임 만들기")
                 }
-                
-                NavigationLink(value: NavigationRoute.chatList) {
+
+                Button {
+                    router.navigate(to: .chatList)
+                } label: {
                     ProfileMenuButtonRow(title: "채팅 목록")
                 }
             }
             .padding(10)
             .background(.white)
             .cornerRadius(32)
-            
-            NavigationLink(value: NavigationRoute.withdraw) {
+
+            Button {
+                router.navigate(to: .withdraw)
+            } label: {
                 ProfileMenuButtonRow(title: "회원 탈퇴", isDestructive: true)
             }
         }

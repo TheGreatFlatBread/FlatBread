@@ -58,33 +58,6 @@ struct MessageInputField: View {
                                 .font(.system(size: 20))
                         }
                     }
-//                    else {
-//                        HStack(spacing: 12) {
-//                            Button(action: onVoiceButtonTap) {
-//                                Image(systemName: "mic.fill")
-//                                    .foregroundColor(.gray)
-//                                    .font(.system(size: 20))
-//                            }
-//
-//                            Button(action: onImageButtonTap) {
-//                                Image(systemName: "photo")
-//                                    .foregroundColor(.gray)
-//                                    .font(.system(size: 20))
-//                            }
-//
-//                            Button(action: onEmojiButtonTap) {
-//                                Image(systemName: "face.smiling")
-//                                    .foregroundColor(.gray)
-//                                    .font(.system(size: 20))
-//                            }
-//
-//                            Button(action: onPlusButtonTap) {
-//                                Image(systemName: "plus.circle")
-//                                    .foregroundColor(.gray)
-//                                    .font(.system(size: 20))
-//                            }
-//                        }
-//                    }
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
