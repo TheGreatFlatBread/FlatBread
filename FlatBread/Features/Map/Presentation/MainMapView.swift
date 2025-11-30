@@ -14,6 +14,7 @@ struct MainMapView: View {
     @StateObject private var viewModel: MainMapViewModel
     @FocusState private var searchBarFocused: Bool
     @State private var isSearchActive: Bool = false
+    @State private var showLocationPermissionAlert: Bool = false
 //    @Namespace private var animation
     
     init(initialPosition: NMGLatLng = .init(lat: 37.517677, lng: 126.886442)) {
@@ -27,12 +28,32 @@ struct MainMapView: View {
                 NaverMapView(
                     coordinate: $viewModel.coordinate,
                     markers: $viewModel.markers,
-                    focusingPlaceID: $viewModel.focusingPlaceID
+                    focusingPlaceID: $viewModel.focusingPlaceID,
+                    userLocation: $viewModel.userLocation,
+                    cameraUpdateTrigger: $viewModel.cameraUpdateTrigger
                 )
                 .ignoresSafeArea(.all)
                 
                 VStack(spacing: 0) {
                     Spacer()
+
+                    HStack {
+                        Spacer()
+
+                        Button {
+                            handleMyLocationButtonTap()
+                        } label: {
+                            Image(systemName: "location.fill")
+                                .font(.system(size: 20))
+                                .foregroundStyle(.white)
+                                .frame(width: 48, height: 48)
+                                .background(.orange)
+                                .clipShape(Circle())
+                                .shadow(radius: 4)
+                        }
+                        .padding(.trailing, 20)
+                        .padding(.bottom, 8)
+                    }
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
@@ -137,6 +158,16 @@ struct MainMapView: View {
         .task {
             await viewModel.requestNearbyMoimList()
         }
+        .alert("위치 권한 필요", isPresented: $showLocationPermissionAlert) {
+            Button("설정으로 이동") {
+                if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button("취소", role: .cancel) { }
+        } message: {
+            Text("위치 서비스를 사용하려면 설정에서 위치 권한을 허용해주세요.")
+        }
     }
     
     func handleCardClick(moimID: String) {
@@ -145,6 +176,21 @@ struct MainMapView: View {
             viewModel.coordinate = selectedPosition.location
         }
         viewModel.focusingPlaceID = moimID
+    }
+
+    func handleMyLocationButtonTap() {
+        let authStatus = viewModel.locationManager.authorizationStatus
+
+        switch authStatus {
+        case .authorizedWhenInUse, .authorizedAlways:
+            viewModel.moveToMyLocation()
+        case .notDetermined:
+            viewModel.locationManager.requestLocationPermission()
+        case .denied, .restricted:
+            showLocationPermissionAlert = true
+        @unknown default:
+            showLocationPermissionAlert = true
+        }
     }
 }
 

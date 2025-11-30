@@ -9,6 +9,7 @@ import Combine
 import Foundation
 import NMapsMap
 import NMapsGeometry
+import CoreLocation
 
 class MainMapViewModel: ObservableObject {
     @Published var coordinate: NMGLatLng
@@ -16,6 +17,7 @@ class MainMapViewModel: ObservableObject {
     @Published var categories: [MainMapCategoryUIModel] = MoimCategory.allCases.map {
         MainMapCategoryUIModel(category: $0, isSelected: true)
     }
+    @Published var userLocation: NMGLatLng?
     private var selectedCategoriesPublisher: AnyPublisher<[MoimCategory], Never> {
         $categories
             .map { $0.filter(\.isSelected).map(\.category) }
@@ -26,12 +28,15 @@ class MainMapViewModel: ObservableObject {
     @Published private var allMoimSearchResult: [MoimSearchResultUIModel] = []
     @Published var moimSearchResult: [MoimSearchResultUIModel] = []
     @Published var markers: [MoimMarker] = []
-    
+    @Published var cameraUpdateTrigger: UUID?
+
+    let locationManager = LocationManager()
+
     private var cancellables = Set<AnyCancellable>()
-    
+
     init(coordinate: NMGLatLng) {
         self.coordinate = coordinate
-        
+
         $categories
             .debounce(for: 0.5, scheduler: RunLoop.main)
             .sink { [weak self] _ in
@@ -39,7 +44,7 @@ class MainMapViewModel: ObservableObject {
                 Task { await self.requestNearbyMoimList() }
             }
             .store(in: &cancellables)
-            
+
         $allMoimSearchResult
             .combineLatest(selectedCategoriesPublisher)
             .map { (searchResult, selectedCategories) in
@@ -47,7 +52,7 @@ class MainMapViewModel: ObservableObject {
             }.eraseToAnyPublisher()
             .assign(to: \.moimSearchResult, on: self)
             .store(in: &cancellables)
-        
+
         $searchText
             .removeDuplicates(by: {
                 $0.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -58,6 +63,15 @@ class MainMapViewModel: ObservableObject {
                 guard let self else { return }
                 Task { await self.searchMoim(searchText) }
             }
+            .store(in: &cancellables)
+
+        // LocationManager의 currentLocation을 구독하여 userLocation 업데이트
+        locationManager.$currentLocation
+            .compactMap { $0 }
+            .map { location in
+                NMGLatLng(lat: location.coordinate.latitude, lng: location.coordinate.longitude)
+            }
+            .assign(to: \.userLocation, on: self)
             .store(in: &cancellables)
     }
     
@@ -90,7 +104,7 @@ class MainMapViewModel: ObservableObject {
         let selectedCategories = categories
             .filter(\.isSelected)
             .map(\.category.rawValue)
-        
+
         do {
             allMoimSearchResult = try await networkService.request(
                 PostRouter.searchPostTitle(
@@ -101,12 +115,20 @@ class MainMapViewModel: ObservableObject {
             )
             .data
             .compactMap(\.asSearchResultUIModel)
-            
+
         } catch {
             print(error.localizedDescription)
         }
     }
-    
+
+    func moveToMyLocation() {
+        print(#function)
+        guard let userLocation = userLocation else { return }
+        print(#function, userLocation)
+        coordinate = userLocation
+        cameraUpdateTrigger = UUID()
+    }
+
 }
 
 extension PostResponseDTO {
