@@ -667,7 +667,7 @@ class DeepLinkManager {
 ### 요구사항
 
 - Xcode 15.0+
-- iOS 15.0+
+- iOS 17.0+
 - Swift 5.9+
 - CocoaPods 또는 Swift Package Manager
 
