@@ -14,18 +14,21 @@ final class ChatRoomEntity: Object {
     @Persisted var createdAt: Date
     @Persisted var updatedAt: Date
     @Persisted var participants: List<ChatParticipantEntity>
+    @Persisted var lastReadMessageId: String?
 
     convenience init(
         id: String,
         createdAt: Date,
         updatedAt: Date,
-        participants: [ChatParticipantEntity]
+        participants: [ChatParticipantEntity],
+        lastReadMessageId: String?
     ) {
         self.init()
         self.id = id
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.participants.append(objectsIn: participants)
+        self.lastReadMessageId = lastReadMessageId
     }
 }
 
@@ -74,7 +77,8 @@ extension ChatRoomEntity {
             id: model.id,
             createdAt: model.createdAt.toDate() ?? Date(),
             updatedAt: model.updatedAt.toDate() ?? Date(),
-            participants: participantEntities
+            participants: participantEntities,
+            lastReadMessageId: model.lastChat?.id
         )
     }
 }

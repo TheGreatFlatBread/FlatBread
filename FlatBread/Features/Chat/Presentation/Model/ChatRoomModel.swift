@@ -12,7 +12,8 @@ struct ChatRoomModel: Identifiable, Hashable {
     let createdAt: String
     let updatedAt: String
     let participants: [ChatUserModel]
-    let lastChat: ChatMessageModel?
+    var lastChat: ChatMessageModel?
+    var unreadCount: Int = 0
 }
 
 enum MessageSendStatus {
