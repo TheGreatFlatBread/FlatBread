@@ -17,6 +17,7 @@ struct ShortVideoFeedCell: View {
     @Binding var shortVideo: ShortVideo
     @Binding var currentVideo: ShortVideo?
     @Binding var myProfile: ShortVideoProfile?
+    @Binding var isLongPressing: Bool
     
     // UI 상태 관리 (낙관적 UI용)
     @State private var localIsLiked: Bool = false
@@ -27,6 +28,8 @@ struct ShortVideoFeedCell: View {
     @State private var playerLooper: NSObjectProtocol?
     @State private var isBuffering: Bool = false
     @State private var showCommentSheet: Bool = false
+    @State private var isPaused: Bool = false
+    @State private var isVideoInfoHidden: Bool = false
     @State private var showingAlert: Bool = false
     @State private var alertMessage: String = ""
     @State private var statusObserver: NSKeyValueObservation?
@@ -34,6 +37,7 @@ struct ShortVideoFeedCell: View {
     
     private let playerManager = PlayerManager.shared
     let networkService = NetworkServiceFactory.shared.makeNetworkService()
+    let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
     
     /// 이 뷰가 지금 화면에 보이고 있는지 여부
     var isVisible: Bool {
@@ -53,18 +57,76 @@ struct ShortVideoFeedCell: View {
                 }
             }
             
+            ZStack {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .allowsHitTesting(!isLongPressing)
+                    .onTapGesture { _ in
+                        togglePlayPause()
+                    }
+                
+                HStack(spacing: 0) {
+                    // 왼쪽 사이드 Long Press
+                    SideLongPressArea(
+                        isPressing: $isLongPressing,
+                        onPressingChanged: { handleSpeedControl(isPressing: $0) },
+                        onTapGesture: { togglePlayPause() }
+                    )
+                    .frame(width: 120)
+                    
+                    Spacer()
+                    
+                    // 오른쪽 사이드 Long Press
+                    SideLongPressArea(
+                        isPressing: $isLongPressing,
+                        onPressingChanged: { handleSpeedControl(isPressing: $0) },
+                        onTapGesture: { togglePlayPause() }
+                    )
+                    .frame(width: 120)
+                }
+                
+                if isPaused {
+                    Image(systemName: isPaused ? "pause.fill" : "play.fill")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 50, height: 50)
+                        .foregroundColor(.white.opacity(0.8))
+                        .padding(20)
+                        .background(.black.opacity(0.4))
+                        .clipShape(Circle())
+                        .transition(.opacity)
+                        .allowsHitTesting(false)
+                }
+            }
+            
+            VStack(spacing: 5) {
+                Image(systemName: "forward.fill")
+                Text("2x Speed")
+                    .font(.system(size: 14))
+                    .bold()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(.black.opacity(0.6))
+            .cornerRadius(20)
+            .foregroundStyle(.white)
+            .position(x: UIScreen.main.bounds.midX, y: 100)
+            .opacity(isLongPressing ? 1.0 : 0.0)
+            
             if isBuffering {
                 ProgressView()
                     .progressViewStyle(CircularProgressViewStyle())
                     .tint(.white)
                     .scaleEffect(1.5)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .allowsHitTesting(false)
             }
             
             LinearGradient(colors: [.clear, .black.opacity(0.9)],
                            startPoint: .init(x: 0.5, y: 0.7),
                            endPoint: .init(x: 0.5, y: 0.9))
                 .allowsHitTesting(false)
+                .opacity(isVideoInfoHidden ? 0.0 : 1.0)
             
             HStack(alignment: .bottom, spacing: 14) {
                 VStack(alignment: .leading, spacing: 10) {
@@ -131,8 +193,10 @@ struct ShortVideoFeedCell: View {
             }
             .padding(.horizontal)
             .padding(.bottom, bottomInset + 20)
+            .opacity(isVideoInfoHidden ? 0.0 : 1.0)
         }
         .onAppear {
+            feedbackGenerator.prepare()
             setupPlayer(with: shortVideo)
             syncLikeState()
             updateVideoInfo()
@@ -151,6 +215,14 @@ struct ShortVideoFeedCell: View {
         .onChange(of: shortVideo.likes) { oldValue, newValue in
             syncLikeState()
         }
+        .onChange(of: isLongPressing, { _, newValue in
+            withAnimation {
+                isVideoInfoHidden = newValue
+            }
+            if newValue {
+                feedbackGenerator.impactOccurred(intensity: 0.5)
+            }
+        })
         .sheet(isPresented: $showCommentSheet) {
             ShortVideoCommentView(videoID: shortVideo.id)
                 .adaptiveCommentSheetStyle
@@ -163,6 +235,24 @@ struct ShortVideoFeedCell: View {
         } message: {
             Text(alertMessage)
         }
+    }
+    
+    private func togglePlayPause() {
+        if player?.timeControlStatus == .playing {
+            player?.pause()
+            isPaused = true
+        } else {
+            player?.play()
+            isPaused = false
+            player?.rate = 1.0
+        }
+    }
+    
+    private func handleSpeedControl(isPressing: Bool) {
+        guard player?.timeControlStatus != .paused else { return }
+        
+        isLongPressing = isPressing
+        player?.rate = isPressing ? 2.0 : 1.0
     }
     
     // MARK: - Like Logic
@@ -263,6 +353,7 @@ struct ShortVideoFeedCell: View {
         let player = playerManager.player(for: video)
         self.player = player
         
+        player.currentItem?.audioTimePitchAlgorithm = .timeDomain
         player.publisher(for: \.timeControlStatus)
             .removeDuplicates()
             .receive(on: RunLoop.main)
@@ -294,6 +385,7 @@ struct ShortVideoFeedCell: View {
         ) { _ in
             player.seek(to: .zero)
             player.play()
+            player.rate = isLongPressing ? 2.0 : 1.0
         }
         
         if isVisible {

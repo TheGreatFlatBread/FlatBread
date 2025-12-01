@@ -15,6 +15,7 @@ final class ShortVideoFeedViewModel: ObservableObject {
     @Published var currentVideo: ShortVideo?
     @Published var shortVideos: [ShortVideo] = []
     @Published var myProfile: ShortVideoProfile?
+    @Published var isLongPressing: Bool = false
     
     private let playerManager = PlayerManager.shared
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
