@@ -19,7 +19,8 @@ struct ShortVideoFeedView: View {
                         ShortVideoFeedCell(bottomInset: proxy.safeAreaInsets.bottom,
                                       shortVideo: video,
                                       currentVideo: $viewModel.currentVideo,
-                                      myProfile: $viewModel.myProfile)
+                                      myProfile: $viewModel.myProfile,
+                                           isLongPressing: $viewModel.isLongPressing)
                             .containerRelativeFrame([.horizontal, .vertical])
                             .id(video.wrappedValue)
                     }
@@ -27,6 +28,7 @@ struct ShortVideoFeedView: View {
                 .ignoresSafeArea()
                 .scrollTargetLayout()
             }
+            .scrollDisabled(viewModel.isLongPressing)
             .scrollTargetBehavior(.paging)
             .scrollPosition(id: $viewModel.currentVideo)
             .ignoresSafeArea()
