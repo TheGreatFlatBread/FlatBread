@@ -25,7 +25,7 @@ struct ShortVideoFeedCell: View {
     @State private var moimInfo: MoimSearchResultUIModel?
     @State private var player: AVPlayer?
     @State private var playerLooper: NSObjectProtocol?
-    @State private var isBuffering: Bool = true
+    @State private var isBuffering: Bool = false
     @State private var showCommentSheet: Bool = false
     @State private var showingAlert: Bool = false
     @State private var alertMessage: String = ""
@@ -263,14 +263,18 @@ struct ShortVideoFeedCell: View {
         let player = playerManager.player(for: video)
         self.player = player
         
-        isBuffering = (player.timeControlStatus != .playing)
-        
         player.publisher(for: \.timeControlStatus)
+            .removeDuplicates()
             .receive(on: RunLoop.main)
             .sink { status in
                 switch status {
                 case .waitingToPlayAtSpecifiedRate:
-                    self.isBuffering = true
+                    guard !isBuffering else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        if player.timeControlStatus == .waitingToPlayAtSpecifiedRate {
+                            self.isBuffering = true
+                        }
+                    }
                 case .playing, .paused:
                     self.isBuffering = false
                 @unknown default:
