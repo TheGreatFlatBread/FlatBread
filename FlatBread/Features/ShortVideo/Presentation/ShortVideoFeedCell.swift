@@ -61,7 +61,9 @@ struct ShortVideoFeedCell: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             
-            LinearGradient(colors: [.clear, .black.opacity(0.5)], startPoint: .center, endPoint: .bottom)
+            LinearGradient(colors: [.clear, .black.opacity(0.9)],
+                           startPoint: .init(x: 0.5, y: 0.7),
+                           endPoint: .init(x: 0.5, y: 0.9))
                 .allowsHitTesting(false)
             
             HStack(alignment: .bottom, spacing: 14) {
@@ -80,14 +82,15 @@ struct ShortVideoFeedCell: View {
                         .clipShape(RoundedRectangle(cornerRadius: 6))
                         
                         Text((moimInfo == nil) ? "--" : moimInfo?.title ?? "모임 이름 없음")
-                            .font(.system(size: 13)).bold()
+                            .font(.system(size: 15)).bold()
                             .lineLimit(2)
                     }
                     .frame(height: 50)
                     
                     Text(shortVideo.content.components(separatedBy: "#").first ?? "")
-                        .font(.system(size: 13))
+                        .font(.system(size: 14))
                         .lineLimit(3)
+                        .lineSpacing(3)
                     
                     HStack {
                         Image(systemName: "calendar")
@@ -150,9 +153,10 @@ struct ShortVideoFeedCell: View {
         }
         .sheet(isPresented: $showCommentSheet) {
             ShortVideoCommentView(videoID: shortVideo.id)
+                .adaptiveCommentSheetStyle
                 .presentationDetents([.fraction(0.7), .large])
-                .presentationCornerRadius(30)
                 .presentationDragIndicator(.visible)
+                .background(.white)
         }
         .alert("에러 발생", isPresented: $showingAlert) {
             Button("확인", role: .cancel) { return }

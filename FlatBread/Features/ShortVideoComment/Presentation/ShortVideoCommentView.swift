@@ -66,6 +66,7 @@ struct ShortVideoCommentView: View {
             
             inputBar
         }
+        .background(.white)
         .task {
             await viewModel.fetchComments()
             await viewModel.updateMyProfile()
@@ -154,13 +155,12 @@ struct ShortVideoCommentView: View {
                         Image(systemName: "arrow.up.circle.fill")
                             .resizable()
                             .frame(width: 32, height: 32)
-                            .foregroundColor(.blue)
+                            .foregroundColor(Color.juhwang)
                     }
                 }
             }
             .padding(.horizontal)
             .padding(.vertical, 12)
-            .background(Color(uiColor: .systemBackground))
         }
     }
 }
