@@ -34,7 +34,7 @@ struct LoginView: View {
                             .scaledToFit()
                             .frame(width: 80, height: 80)
 
-                        Text("FlatBread")
+                        Text("플랫브레드")
                             .font(.system(size: 32, weight: .bold))
                     }
                     .padding(.top, 60)
