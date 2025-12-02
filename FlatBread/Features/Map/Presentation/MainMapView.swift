@@ -30,7 +30,9 @@ struct MainMapView: View {
                     markers: $viewModel.markers,
                     focusingPlaceID: $viewModel.focusingPlaceID,
                     userLocation: $viewModel.userLocation,
-                    cameraUpdateTrigger: $viewModel.cameraUpdateTrigger
+                    cameraUpdateTrigger: $viewModel.cameraUpdateTrigger,
+                    zoomLevel: $viewModel.zoomLevel,
+                    viewModel: viewModel
                 )
                 .ignoresSafeArea(.all)
                 

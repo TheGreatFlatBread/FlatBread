@@ -27,8 +27,14 @@ class MainMapViewModel: ObservableObject {
     @Published var nearbyMoims: [MoimMapUIModel] = []
     @Published private var allMoimSearchResult: [MoimSearchResultUIModel] = []
     @Published var moimSearchResult: [MoimSearchResultUIModel] = []
-    @Published var markers: [MoimMarker] = []
+    @Published var markers: [NMFMarker] = []
+    @Published var zoomLevel: Double = 12.0
     @Published var cameraUpdateTrigger: UUID?
+
+    // 클러스터링 전의 원본 모임 마커들
+    private var moimMarkers: [MoimMarker] = []
+    // 클러스터링 매니저
+    private let clusteringManager = ClusteringManager()
 
     let locationManager = LocationManager()
 
@@ -93,8 +99,15 @@ class MainMapViewModel: ObservableObject {
                 interceptorType: .networkWithToken
             ).data
             nearbyMoims = fetchResults.compactMap(\.toMoimMapUIModel)
+
+            // 기존 마커 제거
             markers.forEach { $0.mapView = nil }
-            markers = fetchResults.map(\.asMoimMarker)
+
+            // 원본 모임 마커 생성 및 저장
+            moimMarkers = fetchResults.map(\.asMoimMarker)
+
+            // 초기에는 클러스터링 없이 원본 마커 표시
+            markers = moimMarkers
         } catch {
             print(error.localizedDescription)
         }
@@ -127,6 +140,39 @@ class MainMapViewModel: ObservableObject {
         print(#function, userLocation)
         coordinate = userLocation
         cameraUpdateTrigger = UUID()
+    }
+
+    /// 지도의 projection을 사용하여 마커 클러스터링 수행
+    /// - Parameter projection: 지도 좌표를 화면 좌표로 변환하는 projection
+    func updateClusteringMarkers(projection: NMFProjection) {
+        // 기존 마커들 제거
+        markers.forEach { $0.mapView = nil }
+
+        // 클러스터링 수행
+        let clusters = clusteringManager.cluster(
+            markers: moimMarkers,
+            zoomLevel: zoomLevel,
+            projection: projection
+        )
+
+        // 클러스터 결과를 마커로 변환
+        var newMarkers: [NMFMarker] = []
+
+        for cluster in clusters {
+            if cluster.count == 1 {
+                // 마커가 1개만 있으면 개별 마커로 표시
+                newMarkers.append(cluster.markers[0])
+            } else {
+                // 2개 이상이면 클러스터 마커로 표시
+                let clusterMarker = ClusterMarker(
+                    moimMarkers: cluster.markers,
+                    position: cluster.centerPosition
+                )
+                newMarkers.append(clusterMarker)
+            }
+        }
+
+        markers = newMarkers
     }
 
 }
