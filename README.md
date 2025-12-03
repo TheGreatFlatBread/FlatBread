@@ -129,36 +129,33 @@ FlatBread는 **MVVM (Model-View-ViewModel)과 Clean Architecture 원칙**을 따
 
 ### 아키텍처 패턴
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                         View (SwiftUI)                      │
-│  - 선언적 UI                                                  │
-│  - @StateObject, @ObservedObject, @Published 바인딩           │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                   ViewModel (ObservableObject)              │
-│  - Presentation Logic                                       │
-│  - @Published 속성                                           │
-│  - 서비스 의존성 주입                                           │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────┐
-│                      Services Layer                         │
-│  - Business Logic                                           │
-│  - NetworkService, ChatService, LocationManager 등           │
-└───────────────────────────┬─────────────────────────────────┘
-                            │
-                ┌───────────┴──────────┐
-                ▼                      ▼
-┌──────────────────────┐   ┌──────────────────────┐
-│   Network Layer      │   │  Persistence Layer   │
-│  - Alamofire         │   │  - Realm             │
-│  - Router Pattern    │   │  - UserDefaults      │
-│  - Interceptors      │   │  - Repository        │
-└──────────────────────┘   └──────────────────────┘
+```mermaid
+graph TD
+    %% 노드 스타일 정의
+    classDef default fill:#f9f9f9,stroke:#333,stroke-width:2px,rx:10,ry:10,color:#333,font-family:Arial,text-align:left;
+    classDef mainFlow fill:#e1f5fe,stroke:#0288d1;
+    classDef bottomLayer fill:#f3e5f5,stroke:#7b1fa2;
+
+    %% 노드 정의 및 내용
+    View["<b>View (SwiftUI)</b><br><br>• 선언적 UI<br>• @StateObject, @ObservedObject, @Published 바인딩"]:::mainFlow
+    ViewModel["<b>ViewModel (ObservableObject)</b><br><br>• Presentation Logic<br>• @Published 속성<br>• 서비스 의존성 주입"]:::mainFlow
+    Services["<b>Services Layer</b><br><br>• Business Logic<br>• NetworkService, ChatService, LocationManager 등"]:::mainFlow
+    
+    %% 하단 레이어 그룹화
+    subgraph BottomLayers [" "]
+        direction LR
+        Network["<b>Network Layer</b><br><br>• Alamofire<br>• Router Pattern<br>• Interceptors"]:::bottomLayer
+        Persistence["<b>Persistence Layer</b><br><br>• Realm<br>• UserDefaults<br>• Repository"]:::bottomLayer
+    end
+
+    %% 연결선 정의
+    View ==> ViewModel
+    ViewModel ==> Services
+    Services ==> Network
+    Services ==> Persistence
+
+    %% 연결선 스타일
+    linkStyle default stroke:#333,stroke-width:2px,fill:none;
 ```
 
 ### 디렉토리 구조
