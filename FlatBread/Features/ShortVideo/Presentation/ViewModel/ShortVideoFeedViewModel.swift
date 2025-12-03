@@ -28,11 +28,6 @@ final class ShortVideoFeedViewModel: ObservableObject {
     
     private var cancellables: Set<AnyCancellable> = []
     
-    private let prefetchPrevCount = 3
-    private let prefetchNextCount = 4
-    private let keepPrevCount = 7
-    private let keepNexCount = 7
-    
     init(videoServiceFactory: ShortVideoServiceFactory = .shared,
          networkServiceFactory: NetworkServiceFactory = NetworkServiceFactory.shared)
     {
@@ -53,27 +48,7 @@ final class ShortVideoFeedViewModel: ObservableObject {
     
     private func handleScrollChange(currentID: String) {
         guard let currentIndex = shortVideos.firstIndex(where: { $0.id == currentID }) else { return }
-        
-        print("스크롤 감지. Index: \(currentIndex)")
-        prefetcher.cancelPrefetch(videoID: currentID)
-        
-        let prefetchStart = max(0, currentIndex - prefetchPrevCount)
-        let prefetchEnd = min(shortVideos.count - 1, currentIndex + prefetchNextCount)
-        
-        for (index, video) in shortVideos.enumerated() {
-            if (prefetchStart <= index && index <= prefetchEnd) && (index != currentIndex) {
-                prefetcher.startPrefetch(video: video)
-            }
-        }
-        
-        let keepStart = max(0, currentIndex - keepPrevCount)
-        let keepEnd = min(shortVideos.count - 1, currentIndex + keepNexCount)
-        
-        for (index, video) in shortVideos.enumerated() {
-            if index < keepStart || index > keepEnd {
-                prefetcher.cancelAndRemoveCache(videoID: video.id)
-            }
-        }
+        prefetcher.updatePrefetchWindow(around: currentIndex, in: shortVideos)
     }
     
     func updateShortVideos() async {

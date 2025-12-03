@@ -15,6 +15,11 @@ final class ShortVideoPrefetcherImpl: ShortVideoPrefetcher {
     private let networkService: any AsyncNetworkService
     
     private var activeTasks: [String: Task<Void, Never>] = [:]
+    
+    private let prefetchPrevCount = 3
+    private let prefetchNextCount = 4
+    private let keepPrevCount = 7
+    private let keepNexCount = 7
     private let prefetchLimit: Int64 = 2 * 1024 * 1024 // 2MB
     
     init(cacheService: ShortVideoCacheService, networkService: AsyncNetworkService) {
@@ -22,7 +27,40 @@ final class ShortVideoPrefetcherImpl: ShortVideoPrefetcher {
         self.networkService = networkService
     }
     
-    func startPrefetch(video: ShortVideo) {
+    func updatePrefetchWindow(around currentIndex: Int, in fullList: [ShortVideo]) {
+        print("프리패치 윈도우 업데이트. Index: \(currentIndex)")
+        
+        let prefetchStart = max(0, currentIndex - prefetchPrevCount)
+        let prefetchEnd = min(fullList.count - 1, currentIndex + prefetchNextCount)
+        
+        for index in prefetchStart...prefetchEnd {
+            guard index != currentIndex else { continue }
+            let video = fullList[index]
+            self.startPrefetch(video: video)
+        }
+        
+        let keepStart = max(0, currentIndex - keepPrevCount)
+        let keepEnd = min(fullList.count - 1, currentIndex + keepNexCount)
+        
+        for (index, video) in fullList.enumerated() {
+            if index < keepStart || index > keepEnd {
+                self.cancelAndRemoveCache(videoID: video.id)
+            }
+        }
+    }
+    
+    func getPrefetchData(videoID: String) -> ShortVideoPrefetchCache? {
+        return cacheService.getCache(for: videoID)
+    }
+    
+    func getCachedSize(videoID: String) -> Int64 {
+        if let cache = cacheService.getCache(for: videoID) {
+            return Int64(cache.data.count)
+        }
+        return 0
+    }
+    
+    private func startPrefetch(video: ShortVideo) {
         let id = video.id
         
         if activeTasks[id] != nil { return }
@@ -76,24 +114,14 @@ final class ShortVideoPrefetcherImpl: ShortVideoPrefetcher {
         activeTasks[id] = task
     }
     
-    func cancelPrefetch(videoID: String) {
+    private func cancelPrefetch(videoID: String) {
         activeTasks[videoID]?.cancel()
         activeTasks[videoID] = nil
     }
     
-    func cancelAndRemoveCache(videoID: String) {
+    private func cancelAndRemoveCache(videoID: String) {
         cancelPrefetch(videoID: videoID)
         cacheService.removeCache(for: videoID)
     }
     
-    func getPrefetchData(videoID: String) -> ShortVideoPrefetchCache? {
-        return cacheService.getCache(for: videoID)
-    }
-    
-    func getCachedSize(videoID: String) -> Int64 {
-        if let cache = cacheService.getCache(for: videoID) {
-            return Int64(cache.data.count)
-        }
-        return 0
-    }
 }

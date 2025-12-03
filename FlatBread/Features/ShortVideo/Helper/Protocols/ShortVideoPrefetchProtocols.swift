@@ -24,11 +24,9 @@ protocol ShortVideoCacheService {
     func isCached(for id: String) -> Bool
 }
 
-/// 프리로더(Memory vs Disk)가 구현해야 할 프로토콜
+/// Prefetcher가 구현해야 할 프로토콜
 protocol ShortVideoPrefetcher: AnyObject {
-    func startPrefetch(video: ShortVideo)
-    func cancelPrefetch(videoID: String)
-    func cancelAndRemoveCache(videoID: String)
+    func updatePrefetchWindow(around currentIndex: Int, in fullList: [ShortVideo])
     func getPrefetchData(videoID: String) -> ShortVideoPrefetchCache?
     func getCachedSize(videoID: String) -> Int64
 }
