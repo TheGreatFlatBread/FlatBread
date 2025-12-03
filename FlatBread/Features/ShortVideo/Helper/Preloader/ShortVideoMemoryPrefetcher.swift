@@ -1,5 +1,5 @@
 //
-//  ShortVideoMemoryPreloader.swift
+//  ShortVideoMemoryPrefetcher.swift
 //  FlatBread
 //
 //  Created by 김민성 on 11/24/25.
@@ -7,16 +7,16 @@
 
 import Foundation
 
-final class ShortVideoMemoryPreloader: ShortVideoPreloader {
-    static let shared = ShortVideoMemoryPreloader()
+final class ShortVideoMemoryPrefetcher: ShortVideoPrefetcher {
+    static let shared = ShortVideoMemoryPrefetcher()
     
     private let cacheService: ShortVideoCacheService = ShortVideoMemoryCacheService.shared
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     
     private var activeTasks: [String: Task<Void, Never>] = [:]
-    private let preloadLimit: Int64 = 2 * 1024 * 1024
+    private let prefetchLimit: Int64 = 2 * 1024 * 1024
     
-    func startPreload(video: ShortVideo) {
+    func startPrefetch(video: ShortVideo) {
         let id = video.id
         
         if activeTasks[id] != nil { return }
@@ -28,13 +28,13 @@ final class ShortVideoMemoryPreloader: ShortVideoPreloader {
             let router = VideoDownloadRouter.streamVideo(
                 filePath: filePath,
                 lowerRange: 0,
-                upperRange: preloadLimit
+                upperRange: prefetchLimit
             )
             
             do {
                 let (response, data) = try await networkService.downloadVideo(router)
                 
-                guard let httpResponse = response, let preloadedData = data else { return }
+                guard let httpResponse = response, let prefetchedData = data else { return }
                 
                 // 메타데이터 파싱
                 let contentType = httpResponse.mimeType ?? "public.mpeg-4"
@@ -49,11 +49,11 @@ final class ShortVideoMemoryPreloader: ShortVideoPreloader {
                 }
                 
                 if totalLength > 0 {
-                    let cache = ShortVideoPreloadCache(
+                    let cache = ShortVideoPrefetchCache(
                         videoID: id,
                         totalLength: totalLength,
                         contentType: contentType,
-                        data: preloadedData
+                        data: prefetchedData
                     )
                     
                     // 캐시 저장
@@ -71,17 +71,17 @@ final class ShortVideoMemoryPreloader: ShortVideoPreloader {
         activeTasks[id] = task
     }
     
-    func cancelPreload(videoID: String) {
+    func cancelPrefetch(videoID: String) {
         activeTasks[videoID]?.cancel()
         activeTasks[videoID] = nil
     }
     
     func cancelAndRemoveCache(videoID: String) {
-        cancelPreload(videoID: videoID)
+        cancelPrefetch(videoID: videoID)
         cacheService.removeCache(for: videoID)
     }
     
-    func getPreloadData(videoID: String) -> ShortVideoPreloadCache? {
+    func getPrefetchData(videoID: String) -> ShortVideoPrefetchCache? {
         return cacheService.getCache(for: videoID)
     }
     

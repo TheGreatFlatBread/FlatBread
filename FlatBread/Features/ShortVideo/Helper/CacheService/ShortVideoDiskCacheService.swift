@@ -23,7 +23,7 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
         return cacheDirectory.appendingPathComponent("\(id).mp4")
     }
     
-    func saveCache(for id: String, cache: ShortVideoPreloadCache) {
+    func saveCache(for id: String, cache: ShortVideoPrefetchCache) {
         let fileURL = getFileURL(for: id)
         
         do {
@@ -35,7 +35,7 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
         }
     }
     
-    func getCache(for id: String) -> ShortVideoPreloadCache? {
+    func getCache(for id: String) -> ShortVideoPrefetchCache? {
         let fileURL = getFileURL(for: id)
         guard fileManager.fileExists(atPath: fileURL.path) else { return nil }
         
@@ -43,7 +43,7 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
         let totalLength = Int64(UserDefaults.standard.integer(forKey: "\(id)_totalLength"))
         let contentType = UserDefaults.standard.string(forKey: "\(id)_contentType") ?? "public.mpeg-4"
         
-        return ShortVideoPreloadCache(
+        return ShortVideoPrefetchCache(
             videoID: id,
             totalLength: totalLength,
             contentType: contentType,

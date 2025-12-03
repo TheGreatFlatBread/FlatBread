@@ -11,15 +11,15 @@ final class ShortVideoMemoryCacheService: ShortVideoCacheService {
     static let shared = ShortVideoMemoryCacheService()
     
     private let cacheLock = NSLock()
-    private var cacheList: [String: ShortVideoPreloadCache] = [:]
+    private var cacheList: [String: ShortVideoPrefetchCache] = [:]
     
-    func saveCache(for id: String, cache: ShortVideoPreloadCache) {
+    func saveCache(for id: String, cache: ShortVideoPrefetchCache) {
         cacheLock.lock()
         defer { cacheLock.unlock() }
         cacheList[id] = cache
     }
     
-    func getCache(for id: String) -> ShortVideoPreloadCache? {
+    func getCache(for id: String) -> ShortVideoPrefetchCache? {
         cacheLock.lock()
         defer { cacheLock.unlock() }
         return cacheList[id]
