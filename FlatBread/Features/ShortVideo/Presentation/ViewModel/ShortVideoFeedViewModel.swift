@@ -17,12 +17,15 @@ final class ShortVideoFeedViewModel: ObservableObject {
     @Published var myProfile: ShortVideoProfile?
     @Published var isLongPressing: Bool = false
     
-    private let playerManager = PlayerManager.shared
-    private let networkService = NetworkServiceFactory.shared.makeNetworkService()
+    // MARK: - Dependencies
+    let playerManager: PlayerManager
+    let networkService: any AsyncNetworkService
+    let prefetcher: any ShortVideoPrefetcher
+    private let videoServiceFactory: ShortVideoServiceFactory
+
     private var isLoading: Bool = false
     private var scrollCursor: String = ""
     
-    private let prefetch: any ShortVideoPrefetcher
     private var cancellables: Set<AnyCancellable> = []
     
     private let prefetchPrevCount = 3
@@ -30,8 +33,14 @@ final class ShortVideoFeedViewModel: ObservableObject {
     private let keepPrevCount = 7
     private let keepNexCount = 7
     
-    init(prefetcher: ShortVideoPrefetcher = ShortVideoMemoryPrefetcher.shared) {
-        self.prefetch = prefetcher
+    init(videoServiceFactory: ShortVideoServiceFactory = .shared,
+         networkServiceFactory: NetworkServiceFactory = NetworkServiceFactory.shared)
+    {
+        self.videoServiceFactory = videoServiceFactory
+        self.playerManager = videoServiceFactory.makePlayerManager()
+        self.networkService = networkServiceFactory.makeNetworkService()
+        self.prefetcher = videoServiceFactory.makeShortVideoPrefetcher(on: .memory)
+        
         self.getMyProfile()
         
         $currentVideo
@@ -46,14 +55,14 @@ final class ShortVideoFeedViewModel: ObservableObject {
         guard let currentIndex = shortVideos.firstIndex(where: { $0.id == currentID }) else { return }
         
         print("스크롤 감지. Index: \(currentIndex)")
-        prefetch.cancelPrefetch(videoID: currentID)
+        prefetcher.cancelPrefetch(videoID: currentID)
         
         let prefetchStart = max(0, currentIndex - prefetchPrevCount)
         let prefetchEnd = min(shortVideos.count - 1, currentIndex + prefetchNextCount)
         
         for (index, video) in shortVideos.enumerated() {
             if (prefetchStart <= index && index <= prefetchEnd) && (index != currentIndex) {
-                prefetch.startPrefetch(video: video)
+                prefetcher.startPrefetch(video: video)
             }
         }
         
@@ -62,7 +71,7 @@ final class ShortVideoFeedViewModel: ObservableObject {
         
         for (index, video) in shortVideos.enumerated() {
             if index < keepStart || index > keepEnd {
-                prefetch.cancelAndRemoveCache(videoID: video.id)
+                prefetcher.cancelAndRemoveCache(videoID: video.id)
             }
         }
     }
@@ -80,7 +89,7 @@ final class ShortVideoFeedViewModel: ObservableObject {
                 .request(router, responseType: PostListResponseDTO.self).data
                 .map { dto in
                     let video = dto.asShortVideoItem
-                    video.setPrefetcher(self.prefetch)
+                    video.setPrefetcher(self.prefetcher)
                     return video
                 }
             

@@ -13,7 +13,7 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
     private let fileManager = FileManager.default
     private let cacheDirectory: URL
     
-    init() {
+    private init() {
         let paths = fileManager.urls(for: .documentDirectory, in: .userDomainMask)
         cacheDirectory = paths[0].appendingPathComponent("ShortVideoCache")
         try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
@@ -30,8 +30,9 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
             try cache.data.write(to: fileURL)
             UserDefaults.standard.set(cache.totalLength, forKey: "\(id)_totalLength")
             UserDefaults.standard.set(cache.contentType, forKey: "\(id)_contentType")
+            print("💾 [Disk] 숏폼 프리페칭 캐시 저장 완료: \(id)")
         } catch {
-            print("❌ [DiskCache] 저장 실패: \(error)")
+            print("❌ [Disk] 숏폼 프리페칭 캐시 저장 실패: \(error)")
         }
     }
     
@@ -59,7 +60,7 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
         try? fileManager.removeItem(at: fileURL)
         UserDefaults.standard.removeObject(forKey: "\(id)_totalLength")
         UserDefaults.standard.removeObject(forKey: "\(id)_contentType")
-        print("\(id) 디스크에서 캐시 삭제됨")
+        print("🗑️ [Disk] 숏폼 프리페칭 캐시 삭제됨: \(id)")
     }
     
     func clearAll() {

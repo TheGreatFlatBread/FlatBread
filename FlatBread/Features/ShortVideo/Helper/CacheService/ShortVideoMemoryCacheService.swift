@@ -13,10 +13,13 @@ final class ShortVideoMemoryCacheService: ShortVideoCacheService {
     private let cacheLock = NSLock()
     private var cacheList: [String: ShortVideoPrefetchCache] = [:]
     
+    private init() {}
+    
     func saveCache(for id: String, cache: ShortVideoPrefetchCache) {
         cacheLock.lock()
         defer { cacheLock.unlock() }
         cacheList[id] = cache
+        print("💾 [Memory] 숏폼 프리페칭 캐시 저장 완료: \(id)")
     }
     
     func getCache(for id: String) -> ShortVideoPrefetchCache? {
@@ -30,7 +33,7 @@ final class ShortVideoMemoryCacheService: ShortVideoCacheService {
         defer { cacheLock.unlock() }
         if cacheList[id] != nil {
             cacheList.removeValue(forKey: id)
-            print("\(id) 메모리에서 캐시 삭제됨")
+            print("🗑️ [Memory] 숏폼 프리페칭 캐시 삭제됨: \(id)")
         }
     }
     
