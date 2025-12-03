@@ -6,7 +6,7 @@ FlatBread는 사용자가 관심사를 공유하는 사람들과 모임을 만�
 
 <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-11-30 at 16 58 32" src="https://github.com/user-attachments/assets/0a582068-23a7-4b90-bfb5-5a9d09d7333c" />
 <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-11-30 at 17 01 36" src="https://github.com/user-attachments/assets/9baa99a3-b0fc-4600-b190-4e107f1a3df0" />
-<img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-11-30 at 17 02 14" src="https://github.com/user-attachments/assets/658c1b6b-6252-450e-8cfe-216910bd6482" />
+<img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-11-30 at 17 02 14" src="https://github.com/user-attachments/assets/055e2571-2102-4d4a-9403-5bf4612d4663" />
 <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-11-30 at 17 02 25" src="https://github.com/user-attachments/assets/eccf4085-935d-453e-85a7-a0bfd3d5d7b1" />
 
 <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-11-30 at 17 09 40" src="https://github.com/user-attachments/assets/00e8b09b-04a8-4804-b7e1-9328f02ac33f" />
