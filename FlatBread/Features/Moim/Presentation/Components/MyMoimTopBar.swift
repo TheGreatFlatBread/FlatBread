@@ -2,7 +2,7 @@
 //  MyMoimTopBar.swift
 //  FlatBread
 //
-//  Created by Claude on 11/27/25.
+//  Created by 서준일 on 11/27/25.
 //
 
 import SwiftUI
