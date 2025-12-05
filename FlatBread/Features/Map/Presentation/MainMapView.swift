@@ -57,29 +57,32 @@ struct MainMapView: View {
                         .padding(.bottom, 8)
                     }
                     
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-                            ForEach(viewModel.nearbyMoims) { moim in
-                                MoimCardView(
-                                    moimModel: moim,
-                                    isFocusing: viewModel.focusingPlaceID == moim.id
-                                )
-                                .onTapGesture {
-                                    handleCardClick(moimID: moim.id)
+                    if viewModel.isCardListVisible {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(viewModel.visibleMoims) { moim in
+                                    MoimCardView(
+                                        moimModel: moim,
+                                        isFocusing: viewModel.focusingPlaceID == moim.id
+                                    )
+                                    .onTapGesture {
+                                        handleCardClick(moimID: moim.id)
+                                    }
+                                    .id(moim.id)
                                 }
-                                .id(moim.id)
+                            }
+                            .padding(.horizontal)
+                            .padding(.bottom, 30)
+                            .padding(.top, 1.5)
+                        }
+                        .background(.clear)
+                        .onChange(of: viewModel.scrollToMoimTrigger) { _, _ in
+                            guard let currentPlaceID = viewModel.focusingPlaceID else { return }
+                            withAnimation {
+                                scrollViewProxy.scrollTo(currentPlaceID, anchor: .center)
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.bottom, 30)
-                        .padding(.top, 1.5)
-                    }
-                    .background(.clear)
-                    .onChange(of: viewModel.focusingPlaceID) { _, newValue in
-                        guard let currentPlaceID  = newValue else { return }
-                        withAnimation {
-                            scrollViewProxy.scrollTo(currentPlaceID, anchor: .center)
-                        }
+                        .transition(.move(edge: .bottom))
                     }
                 }
                 .ignoresSafeArea(.keyboard, edges: .bottom)
@@ -173,11 +176,7 @@ struct MainMapView: View {
     }
     
     func handleCardClick(moimID: String) {
-        if let selectedPosition = viewModel.nearbyMoims.filter({ $0.id == moimID }).first {
-            viewModel.focusingPlaceID = moimID
-            viewModel.coordinate = selectedPosition.location
-        }
-        viewModel.focusingPlaceID = moimID
+        viewModel.moveCameraToMoim(moimID: moimID)
     }
 
     func handleMyLocationButtonTap() {
