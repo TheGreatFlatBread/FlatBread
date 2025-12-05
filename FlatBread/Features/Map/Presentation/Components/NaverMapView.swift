@@ -46,6 +46,12 @@ struct NaverMapView: UIViewRepresentable {
         naverMapView.addCameraDelegate(delegate: context.coordinator)
         let cameraUpdate = NMFCameraUpdate(scrollTo: cameraPosition)
         naverMapView.moveCamera(cameraUpdate)
+
+        // 지도 탭 제스처 추가
+        let tapGesture = UITapGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleMapTap(_:)))
+        tapGesture.delegate = context.coordinator
+        naverMapView.addGestureRecognizer(tapGesture)
+
         return naverMapView
     }
     
@@ -64,19 +70,25 @@ struct NaverMapView: UIViewRepresentable {
             marker.mapView = uiView
 
             // MoimMarker인 경우
-            if let moimMarker = marker as? MoimMarker {
-                marker.touchHandler = { overlay in
-                    guard let moimMarker = overlay as? MoimMarker else { return false }
+            if marker is MoimMarker {
+                marker.touchHandler = { [weak uiView] overlay in
+                    guard let moimMarker = overlay as? MoimMarker,
+                          let mapView = uiView else { return false }
+
                     self.cameraPosition = moimMarker.position
                     self.focusingPlaceID = moimMarker.id
+
+                    // 현재 화면에 보이는 마커들의 카드 리스트 표시
+                    self.viewModel.showCardListForVisibleMarkers(mapView: mapView)
+
                     return true
                 }
             }
             // ClusterMarker인 경우
-            else if let clusterMarker = marker as? ClusterMarker {
+            else if marker is ClusterMarker {
                 marker.touchHandler = { overlay in
                     guard let clusterMarker = overlay as? ClusterMarker else { return false }
-                    // 클러스터의 경계로 카메라 이동
+                    // 클러스터의 경계로 카메라 이동 (줌인)
                     let bounds = clusterMarker.calculateBounds()
                     let cameraUpdate = NMFCameraUpdate(fit: bounds, padding: 100)
                     cameraUpdate.animation = .easeIn
@@ -98,7 +110,7 @@ struct NaverMapView: UIViewRepresentable {
 
     // MARK: - Coordinator
 
-    class Coordinator: NSObject, NMFMapViewCameraDelegate {
+    class Coordinator: NSObject, NMFMapViewCameraDelegate, UIGestureRecognizerDelegate {
         var parent: NaverMapView
         private var lastZoomLevel: Double = 0
         private var clusteringWorkItem: DispatchWorkItem?
@@ -126,8 +138,8 @@ struct NaverMapView: UIViewRepresentable {
 
                     DispatchQueue.main.async {
                         self.parent.zoomLevel = currentZoom
-                        // 클러스터링 업데이트
-                        self.parent.viewModel.updateClusteringMarkers(projection: mapView.projection)
+                        // 클러스터링 업데이트 (화면에 보이는 마커만)
+                        self.parent.viewModel.updateClusteringMarkers(mapView: mapView, projection: mapView.projection)
                     }
                 }
 
@@ -136,6 +148,17 @@ struct NaverMapView: UIViewRepresentable {
                 // 0.3초 후에 실행 (debouncing)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
             }
+        }
+
+        // 지도 탭 핸들러
+        @objc func handleMapTap(_ gesture: UITapGestureRecognizer) {
+            // 카드 리스트 숨김
+            parent.viewModel.hideCardList()
+        }
+
+        // 제스처가 다른 제스처와 동시에 인식되도록 허용
+        func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+            return true
         }
     }
 
