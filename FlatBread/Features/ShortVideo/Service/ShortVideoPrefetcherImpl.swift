@@ -11,11 +11,22 @@ import Foundation
 
 final class ShortVideoPrefetcherImpl: ShortVideoPrefetcher {
     
-    private let cacheService: any ShortVideoCacheService
-    private let networkService: any AsyncNetworkService
+    // MARK: - Dependencies
+    private let cacheService: ShortVideoCacheService
+    private let networkService: AsyncNetworkService
     
-    private var activeTasks: [String: Task<Void, Never>] = [:]
+    // MARK: - Properties
+    private var activeOperations: [String: Operation] = [:]
     
+    private let prefetchQueue: OperationQueue = {
+        let queue = OperationQueue()
+        queue.name = "com.flatbread.shortvideo.prefetchQueue"
+        queue.maxConcurrentOperationCount = 2
+        queue.qualityOfService = .utility
+        return queue
+    }()
+    
+    // MARK: - Configuration
     private let prefetchPrevCount = 3
     private let prefetchNextCount = 4
     private let keepPrevCount = 7
@@ -28,24 +39,54 @@ final class ShortVideoPrefetcherImpl: ShortVideoPrefetcher {
     }
     
     func updatePrefetchWindow(around currentIndex: Int, in fullList: [ShortVideo]) {
-        print("프리패치 윈도우 업데이트. Index: \(currentIndex)")
+        let prefetchWindow = (currentIndex - prefetchPrevCount)...(currentIndex + prefetchNextCount)
+        let keepWindow = (currentIndex - keepPrevCount)...(currentIndex + keepNexCount)
+        let videoIdSet = Set(fullList.map(\.id))
         
-        let prefetchStart = max(0, currentIndex - prefetchPrevCount)
-        let prefetchEnd = min(fullList.count - 1, currentIndex + prefetchNextCount)
-        
-        for index in prefetchStart...prefetchEnd {
-            guard index != currentIndex else { continue }
-            let video = fullList[index]
-            self.startPrefetch(video: video)
+        // activeOperations의 취소 로직
+        for (videoID, operation) in activeOperations {
+            // 현재 비디오 배열에 존재하지 않는 비디오의 Operation은 취소
+            guard videoIdSet.contains(videoID) else {
+                operation.cancel()
+                activeOperations[videoID] = nil
+                continue
+            }
+            
+            if let index = fullList.firstIndex(where: { $0.id == videoID }) {
+                // 현재 작업 중이 operation이 prefetchWindow에 포함되지 않는다면 작업을 취소
+                if !prefetchWindow.contains(index) {
+                    operation.cancel()
+                    activeOperations[videoID] = nil
+                }
+                // activeOperations이 작업 중인 비디오의 index가 keepWindow에 포함되지 않는다면 캐시 삭제
+                if !keepWindow.contains(index) {
+                    cacheService.removeCache(for: videoID)
+                }
+            }
         }
         
-        let keepStart = max(0, currentIndex - keepPrevCount)
-        let keepEnd = min(fullList.count - 1, currentIndex + keepNexCount)
-        
-        for (index, video) in fullList.enumerated() {
-            if index < keepStart || index > keepEnd {
-                self.cancelAndRemoveCache(videoID: video.id)
+        // where 절은 0 미만, 최댓값 초과를 막는 로직
+        for index in prefetchWindow where fullList.indices.contains(index) {
+            if index == currentIndex { continue }
+            
+            let video = fullList[index]
+            
+            if cacheService.isCached(for: video.id) { continue }
+            if activeOperations[video.id] != nil { continue }
+            
+            let operation = createPrefetchOperation(for: video)
+            
+            let distance = abs(index - currentIndex)
+            if distance == 1 {
+                operation.queuePriority = .veryHigh
+            } else if distance <= 3 {
+                operation.queuePriority = .high
+            } else {
+                operation.queuePriority = .normal
             }
+            
+            activeOperations[video.id] = operation
+            prefetchQueue.addOperation(operation)
         }
     }
     
@@ -60,12 +101,12 @@ final class ShortVideoPrefetcherImpl: ShortVideoPrefetcher {
         return 0
     }
     
-    private func startPrefetch(video: ShortVideo) {
-        let id = video.id
+    // MARK: - Private Helper Methods
+    
+    private func createPrefetchOperation(for video: ShortVideo) -> Operation {
         
-        if activeTasks[id] != nil { return }
-        if cacheService.isCached(for: id) { return }
-        
+    }
+
         guard let filePath = video.files.first else { return }
         
         let task = Task {
