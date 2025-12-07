@@ -13,7 +13,7 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
     private let fileManager = FileManager.default
     private let cacheDirectory: URL
     
-    init() {
+    private init() {
         let paths = fileManager.urls(for: .documentDirectory, in: .userDomainMask)
         cacheDirectory = paths[0].appendingPathComponent("ShortVideoCache")
         try? fileManager.createDirectory(at: cacheDirectory, withIntermediateDirectories: true)
@@ -23,19 +23,20 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
         return cacheDirectory.appendingPathComponent("\(id).mp4")
     }
     
-    func saveCache(for id: String, cache: ShortVideoPreloadCache) {
+    func saveCache(for id: String, cache: ShortVideoPrefetchCache) {
         let fileURL = getFileURL(for: id)
         
         do {
             try cache.data.write(to: fileURL)
             UserDefaults.standard.set(cache.totalLength, forKey: "\(id)_totalLength")
             UserDefaults.standard.set(cache.contentType, forKey: "\(id)_contentType")
+            print("💾 [Disk] 숏폼 프리페칭 캐시 저장 완료: \(id)")
         } catch {
-            print("❌ [DiskCache] 저장 실패: \(error)")
+            print("❌ [Disk] 숏폼 프리페칭 캐시 저장 실패: \(error)")
         }
     }
     
-    func getCache(for id: String) -> ShortVideoPreloadCache? {
+    func getCache(for id: String) -> ShortVideoPrefetchCache? {
         let fileURL = getFileURL(for: id)
         guard fileManager.fileExists(atPath: fileURL.path) else { return nil }
         
@@ -43,7 +44,7 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
         let totalLength = Int64(UserDefaults.standard.integer(forKey: "\(id)_totalLength"))
         let contentType = UserDefaults.standard.string(forKey: "\(id)_contentType") ?? "public.mpeg-4"
         
-        return ShortVideoPreloadCache(
+        return ShortVideoPrefetchCache(
             videoID: id,
             totalLength: totalLength,
             contentType: contentType,
@@ -59,7 +60,7 @@ final class ShortVideoDiskCacheService: ShortVideoCacheService {
         try? fileManager.removeItem(at: fileURL)
         UserDefaults.standard.removeObject(forKey: "\(id)_totalLength")
         UserDefaults.standard.removeObject(forKey: "\(id)_contentType")
-        print("\(id) 디스크에서 캐시 삭제됨")
+        print("🗑️ [Disk] 숏폼 프리페칭 캐시 삭제됨: \(id)")
     }
     
     func clearAll() {

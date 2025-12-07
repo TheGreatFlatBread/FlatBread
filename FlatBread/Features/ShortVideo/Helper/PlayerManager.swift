@@ -9,6 +9,7 @@ import AVFoundation
 import Combine
 
 final class PlayerManager: ObservableObject {
+    
     static let shared = PlayerManager()
     
     // AVPlayer는 3개만 생성
@@ -17,7 +18,7 @@ final class PlayerManager: ObservableObject {
     // ShortVideo별 플레이어 기록 [ShortVideo.id : AVPlayer]
     private var activePlayers: [String: AVPlayer] = [:]
     
-    init() {
+    private init() {
         setupPool()
     }
     

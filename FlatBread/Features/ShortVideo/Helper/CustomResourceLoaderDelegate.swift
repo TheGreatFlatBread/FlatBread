@@ -8,7 +8,7 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
     weak var shortVideo: ShortVideo?
     var videoFilePath: String? = nil
     
-    var preloader: ShortVideoPreloader?
+    var prefetcher: ShortVideoPrefetcher?
     
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
     private var activeRequest: DataStreamRequest? // 현재 플레이어 재생용 요청
@@ -28,10 +28,10 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
             upperRange = lower + Int64(dataRequest.requestedLength) - 1
         }
         
-        let cachedSize = preloader?.getCachedSize(videoID: shortVideo.id) ?? 0
+        let cachedSize = prefetcher?.getCachedSize(videoID: shortVideo.id) ?? 0
         
         // ContentInfo 채우기
-        if let cache = preloader?.getPreloadData(videoID: shortVideo.id) {
+        if let cache = prefetcher?.getPrefetchData(videoID: shortVideo.id) {
             print("\(shortVideo.files.first!) 캐시가 발견되어 contentInfo를 채웁니다.")
             fillContentInfo(loadingRequest: loadingRequest, cache: cache)
         } else {
@@ -50,7 +50,7 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
 #endif
         
         // 캐시 조회
-        if let cache = preloader?.getPreloadData(videoID: shortVideo.id),
+        if let cache = prefetcher?.getPrefetchData(videoID: shortVideo.id),
            requestedOffset < cachedSize {
             
             print("💾 [Delegate] 캐시 히트: \(shortVideo.id)")
@@ -133,7 +133,7 @@ class CustomResourceLoaderDelegate: NSObject, AVAssetResourceLoaderDelegate {
 private extension CustomResourceLoaderDelegate {
     
     // 캐시를 사용하여 contentInfo를 채움.
-    func fillContentInfo(loadingRequest: AVAssetResourceLoadingRequest, cache: ShortVideoPreloadCache) {
+    func fillContentInfo(loadingRequest: AVAssetResourceLoadingRequest, cache: ShortVideoPrefetchCache) {
         guard let info = loadingRequest.contentInformationRequest else { return }
         info.contentType = cache.contentType
         info.contentLength = cache.totalLength
