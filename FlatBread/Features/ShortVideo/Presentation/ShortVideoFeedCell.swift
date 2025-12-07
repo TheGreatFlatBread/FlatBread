@@ -35,8 +35,11 @@ struct ShortVideoFeedCell: View {
     @State private var statusObserver: NSKeyValueObservation?
     @State private var cancellables: Set<AnyCancellable> = []
     
-    private let playerManager = PlayerManager.shared
-    let networkService = NetworkServiceFactory.shared.makeNetworkService()
+    // MARK: - Dependencies
+    let playerManager: PlayerManager
+    let networkService: AsyncNetworkService
+    let prefetcher: ShortVideoPrefetcher
+    
     let feedbackGenerator = UIImpactFeedbackGenerator(style: .light)
     
     /// 이 뷰가 지금 화면에 보이고 있는지 여부
@@ -320,11 +323,11 @@ struct ShortVideoFeedCell: View {
         Task {
             if let updatedVideo = try? await networkService.request(router, responseType: PostResponseDTO.self).asShortVideoItem {
                 await MainActor.run {
-                    // shortVideo 객체를 새 객체로 갈아끼울 때, 원래의 preloader를 이용해서 delegate의 preloader를 다시 세팅해 주어야 한다.
-                    // 만에 하나 없는 경우에는 메모리를 사용하도록 구현
-                    // 이러한 구조는 개선이 필요하긴 할 듯..
-                    let originalPreloader = self.shortVideo.resourceLoaderDelegate.preloader ?? ShortVideoMemoryPreloader.shared
-                    updatedVideo.setPreloader(originalPreloader)
+                    // shortVideo 객체를 새 객체로 갈아끼울 때,
+                    // 원래의 prefetcher를 이용해서 delegate의 prefetcher 다시 세팅 필요.
+                    // 만약 delegate에 prefetcher가 없다면, 외부에서 주입받은 prefetcher를 기본값으로 사용.
+                    let originalPrefetcher = shortVideo.resourceLoaderDelegate.prefetcher ?? prefetcher
+                    updatedVideo.setPrefetcher(originalPrefetcher)
                     self.shortVideo = updatedVideo
                     self.syncLikeState()
                 }

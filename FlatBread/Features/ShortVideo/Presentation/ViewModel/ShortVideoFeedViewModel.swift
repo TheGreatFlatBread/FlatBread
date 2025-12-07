@@ -17,21 +17,25 @@ final class ShortVideoFeedViewModel: ObservableObject {
     @Published var myProfile: ShortVideoProfile?
     @Published var isLongPressing: Bool = false
     
-    private let playerManager = PlayerManager.shared
-    private let networkService = NetworkServiceFactory.shared.makeNetworkService()
+    // MARK: - Dependencies
+    let playerManager: PlayerManager
+    let networkService: any AsyncNetworkService
+    let prefetcher: any ShortVideoPrefetcher
+    private let videoServiceFactory: ShortVideoServiceFactory
+
     private var isLoading: Bool = false
     private var scrollCursor: String = ""
     
-    private let preloader: any ShortVideoPreloader
     private var cancellables: Set<AnyCancellable> = []
     
-    private let preloadPrevCount = 3
-    private let preloadNextCount = 4
-    private let keepPrevCount = 7
-    private let keepNexCount = 7
-    
-    init(preloader: ShortVideoPreloader = ShortVideoMemoryPreloader.shared) {
-        self.preloader = preloader
+    init(videoServiceFactory: ShortVideoServiceFactory = .shared,
+         networkServiceFactory: NetworkServiceFactory = NetworkServiceFactory.shared)
+    {
+        self.videoServiceFactory = videoServiceFactory
+        self.playerManager = videoServiceFactory.makePlayerManager()
+        self.networkService = networkServiceFactory.makeNetworkService()
+        self.prefetcher = videoServiceFactory.makeShortVideoPrefetcher(on: .memory)
+        
         self.getMyProfile()
         
         $currentVideo
@@ -44,27 +48,7 @@ final class ShortVideoFeedViewModel: ObservableObject {
     
     private func handleScrollChange(currentID: String) {
         guard let currentIndex = shortVideos.firstIndex(where: { $0.id == currentID }) else { return }
-        
-        print("스크롤 감지. Index: \(currentIndex)")
-        preloader.cancelPreload(videoID: currentID)
-        
-        let preloadStart = max(0, currentIndex - preloadPrevCount)
-        let preloadEnd = min(shortVideos.count - 1, currentIndex + preloadNextCount)
-        
-        for (index, video) in shortVideos.enumerated() {
-            if (preloadStart <= index && index <= preloadEnd) && (index != currentIndex) {
-                preloader.startPreload(video: video)
-            }
-        }
-        
-        let keepStart = max(0, currentIndex - keepPrevCount)
-        let keepEnd = min(shortVideos.count - 1, currentIndex + keepNexCount)
-        
-        for (index, video) in shortVideos.enumerated() {
-            if index < keepStart || index > keepEnd {
-                preloader.cancelAndRemoveCache(videoID: video.id)
-            }
-        }
+        prefetcher.updatePrefetchWindow(around: currentIndex, in: shortVideos)
     }
     
     func updateShortVideos() async {
@@ -80,7 +64,7 @@ final class ShortVideoFeedViewModel: ObservableObject {
                 .request(router, responseType: PostListResponseDTO.self).data
                 .map { dto in
                     let video = dto.asShortVideoItem
-                    video.setPreloader(self.preloader)
+                    video.setPrefetcher(self.prefetcher)
                     return video
                 }
             

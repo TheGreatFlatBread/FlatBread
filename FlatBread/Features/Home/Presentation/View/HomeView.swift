@@ -21,7 +21,7 @@ struct HomeView: View {
             VStack(spacing: 0) {
                 // 최상단 커스텀 헤더
                 HomeTopBarView(
-                    title: "FlatBread", // 앱 로고 텍스트
+                    title: "플랫브레드", // 앱 로고 텍스트
                     onSearchTap: {
                         onFindNearby()
                         print("Search tapped")

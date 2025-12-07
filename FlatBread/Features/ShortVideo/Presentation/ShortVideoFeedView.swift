@@ -16,13 +16,18 @@ struct ShortVideoFeedView: View {
             ScrollView(.vertical, showsIndicators: false) {
                 LazyVStack(spacing: 0) {
                     ForEach($viewModel.shortVideos) { video in
-                        ShortVideoFeedCell(bottomInset: proxy.safeAreaInsets.bottom,
-                                      shortVideo: video,
-                                      currentVideo: $viewModel.currentVideo,
-                                      myProfile: $viewModel.myProfile,
-                                           isLongPressing: $viewModel.isLongPressing)
-                            .containerRelativeFrame([.horizontal, .vertical])
-                            .id(video.wrappedValue)
+                        ShortVideoFeedCell(
+                            bottomInset: proxy.safeAreaInsets.bottom,
+                            shortVideo: video,
+                            currentVideo: $viewModel.currentVideo,
+                            myProfile: $viewModel.myProfile,
+                            isLongPressing: $viewModel.isLongPressing,
+                            playerManager: viewModel.playerManager,
+                            networkService: viewModel.networkService,
+                            prefetcher: viewModel.prefetcher
+                        )
+                        .containerRelativeFrame([.horizontal, .vertical])
+                        .id(video.wrappedValue)
                     }
                 }
                 .ignoresSafeArea()
