@@ -74,7 +74,10 @@ final class ShortVideoPrefetcherImpl: ShortVideoPrefetcher {
             if cacheService.isCached(for: video.id) { continue }
             if activeOperations[video.id] != nil { continue }
             
-            let operation = createPrefetchOperation(for: video)
+            guard let operation = createPrefetchOperation(for: video) else {
+                print("[Prefetch] ShortVideo의 files가 비어있어서 Operation 생성 불가")
+                continue
+            }
             
             let distance = abs(index - currentIndex)
             if distance == 1 {
@@ -103,66 +106,95 @@ final class ShortVideoPrefetcherImpl: ShortVideoPrefetcher {
     
     // MARK: - Private Helper Methods
     
-    private func createPrefetchOperation(for video: ShortVideo) -> Operation {
-        
+    private func createPrefetchOperation(for video: ShortVideo) -> Operation? {
+        guard let filePath = video.files.first else { return nil }
+        let operation = PrefetchOperation(videoID: video.id, filePath: filePath, prefetcher: self)
+        operation.completionBlock = { [weak self] in
+            DispatchQueue.main.async {
+                self?.activeOperations[video.id] = nil
+            }
+        }
+        return operation
     }
-
-        guard let filePath = video.files.first else { return }
+    
+    fileprivate func performPrefetch(videoID: String, filePath: String) async {
+        let router = VideoDownloadRouter.streamVideo(
+            filePath: filePath,
+            lowerRange: 0,
+            upperRange: prefetchLimit
+        )
         
-        let task = Task {
-            let router = VideoDownloadRouter.streamVideo(
-                filePath: filePath,
-                lowerRange: 0,
-                upperRange: prefetchLimit
+        do {
+            try Task.checkCancellation()
+            let (response, data) = try await networkService.downloadVideo(router)
+            try Task.checkCancellation()
+            guard !Task.isCancelled, let httpResponse = response, let prefetchedData = data else { return }
+            
+            let contentType = httpResponse.mimeType ?? "public.mpeg-4"
+            var totalLength: Int64 = httpResponse.expectedContentLength
+            
+            if let rangeHeader = httpResponse.allHeaderFields["Content-Range"] as? String ??
+                                 httpResponse.allHeaderFields["content-range"] as? String,
+               let totalStr = rangeHeader.components(separatedBy: "/").last?.trimmingCharacters(in: .whitespaces),
+               let length = Int64(totalStr) {
+                totalLength = length
+            }
+            guard totalLength > 0 else { return }
+            let cache = ShortVideoPrefetchCache(
+                videoID: videoID,
+                totalLength: totalLength,
+                contentType: contentType,
+                data: prefetchedData
             )
             
-            do {
-                let (response, data) = try await networkService.downloadVideo(router)
-                
-                guard let httpResponse = response, let prefetchedData = data else { return }
-                
-                // 메타데이터 파싱
-                let contentType = httpResponse.mimeType ?? "public.mpeg-4"
-                var totalLength: Int64 = httpResponse.expectedContentLength
-                
-                if let rangeHeader = httpResponse.allHeaderFields["Content-Range"] as? String ??
-                                     httpResponse.allHeaderFields["content-range"] as? String {
-                    if let totalStr = rangeHeader.components(separatedBy: "/").last?.trimmingCharacters(in: .whitespaces),
-                       let length = Int64(totalStr) {
-                        totalLength = length
-                    }
-                }
-                
-                if totalLength > 0 {
-                    let cache = ShortVideoPrefetchCache(
-                        videoID: id,
-                        totalLength: totalLength,
-                        contentType: contentType,
-                        data: prefetchedData
-                    )
-                    
-                    // 캐시 저장
-                    cacheService.saveCache(for: id, cache: cache)
-                }
-                
-            } catch {
-                if !(error is CancellationError) {
-                    print("❌ [Prefetch] \(video.files.first!) 다운로드 실패: \(error)")
-                }
-            }
-            self.activeTasks[id] = nil
+            try Task.checkCancellation()
+            cacheService.saveCache(for: videoID, cache: cache)
+        } catch is CancellationError {
+            print("[Prefetch] 작업 취소됨(Task Cancelled): \(videoID)")
+        } catch {
+            print("[Prefetch] \(filePath) 다운로드 중 에러: \(error)")
         }
-        activeTasks[id] = task
     }
     
-    private func cancelPrefetch(videoID: String) {
-        activeTasks[videoID]?.cancel()
-        activeTasks[videoID] = nil
-    }
+}
+
+
+// MARK: - Nested Type (Operation)
+fileprivate extension ShortVideoPrefetcherImpl {
     
-    private func cancelAndRemoveCache(videoID: String) {
-        cancelPrefetch(videoID: videoID)
-        cacheService.removeCache(for: videoID)
+    /// 비동기 `Task`를 래핑 및 `Operation`의 생명주기와 `Task`의 취소를 동기화하기 위해 정의한 Operation
+    final class PrefetchOperation: Operation, @unchecked Sendable {
+        private var task: Task<Void, Never>?
+        private let videoID: String
+        private let filePath: String
+        
+        // `performPrefetch` 호출하기 위함...
+        // TODO: ShortVideoPrefetcherImpl 및 관련 프로토콜들에 Sendable 처리 필요
+        private weak var prefetcher: ShortVideoPrefetcherImpl?
+        
+        init(videoID: String, filePath: String, prefetcher: ShortVideoPrefetcherImpl) {
+            self.videoID = videoID
+            self.filePath = filePath
+            self.prefetcher = prefetcher
+            super.init()
+        }
+        
+        override func main() {
+            if isCancelled { return }
+            
+            // Task의 동작이 끝날 때까지 main 함수를 기다리기 위해 Semaphore 사용
+            let semaphore = DispatchSemaphore(value: 0)
+            self.task = Task {
+                await prefetcher?.performPrefetch(videoID: videoID, filePath: filePath)
+                semaphore.signal()
+            }
+            semaphore.wait()
+        }
+        
+        override func cancel() {
+            super.cancel()
+            task?.cancel()
+        }
     }
     
 }
