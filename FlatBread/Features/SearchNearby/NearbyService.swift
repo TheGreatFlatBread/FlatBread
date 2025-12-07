@@ -9,6 +9,7 @@ import Combine
 import Foundation
 import MultipeerConnectivity
 import SwiftUI
+import CryptoKit
 
 class NearbyService: NSObject, ObservableObject {
     
@@ -19,6 +20,7 @@ class NearbyService: NSObject, ObservableObject {
     
     private let serviceType = "nearby-chat"
     private let networkService = NetworkServiceFactory.shared.makeNetworkService()
+    private let identityService: IdentityServiceProvider
     
     // UI 상태
     @Published var state: NearbyServiceState = .initializing
@@ -44,6 +46,12 @@ class NearbyService: NSObject, ObservableObject {
     
     // 의도적인 연결 종료인지 확인하는 플래그 (에러 알림 방지)
     private var isDisconnectingIntentionally: Bool = false
+    
+    // MARK: - Initializer
+    init(identityService: IdentityServiceProvider = KeychainIdentityService()) {
+        self.identityService = identityService
+        super.init()
+    }
     
     // MARK: - Setup
     func setInitialState(userID: String) {
@@ -119,8 +127,9 @@ class NearbyService: NSObject, ObservableObject {
         // 기존 세션 정리
         session?.disconnect()
         
-        // 새 세션
-        let newSession = MCSession(peer: myMCPeerID!, securityIdentity: nil, encryptionPreference: .required)
+        // IdentityServiceProvider로 identity 가져오기
+        let identity = identityService.getIdentity()
+        let newSession = MCSession(peer: myMCPeerID!, securityIdentity: identity, encryptionPreference: .required)
         newSession.delegate = self
         self.session = newSession
         self.isDisconnectingIntentionally = false // 리셋
@@ -309,6 +318,24 @@ extension NearbyService: MCSessionDelegate {
                 self.state = .idle
             }
         }
+    }
+    
+    // 인증서 검증 로직(이 원래는 들어가야 함...지금은 우선 무조건 수락)
+    func session(_ session: MCSession, didReceiveCertificate certificate: [Any]?, fromPeer peerID: MCPeerID, certificateHandler: @escaping (Bool) -> Void) {
+        
+        // 인증서가 존재하는지만 확인
+        guard let certificateChain = certificate as? [SecCertificate],
+              let _ = certificateChain.first else {
+            print("[Security] 상대방이 인증서 없이 연결을 시도했습니다. 연결을 거부합니다.")
+            certificateHandler(false)
+            return
+        }
+        
+        // 무조건 수락
+        // 기획 의도(익명성/편의성)를 위해 사용자 검증 과정을 생략.
+        // encryptionPreference = .required 이므로, DTLS로 암호화되어 전송되긴 함
+        print("[Security] 익명 연결 허용: \(peerID.displayName)")
+        certificateHandler(true)
     }
     
     // 미사용된 필수 메서드
