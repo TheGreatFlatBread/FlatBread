@@ -15,6 +15,10 @@ FlatBread는 사용자가 관심사를 공유하는 사람들과 모임을 만�
 | 숏폼 동영상 | 숏폼 동영상 - 댓글 | 주변 유저 익명 검색 -1 | 주변 유저 익명 검색 - 2 |
 | <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-12-01 at 18 04 59" src="https://github.com/user-attachments/assets/1e07a66d-4e8e-4036-b0ca-6cbb3f60be35" /> | <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-11-30 at 22 12 05" src="https://github.com/user-attachments/assets/d0783b10-a015-4640-8e03-3c4b14953013" /> | <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-12-01 at 16 10 44" src="https://github.com/user-attachments/assets/f1c7abe8-b28d-470a-bdcb-ad44f46890db" /> | <img width="200" alt="Simulator Screenshot - iPhone 17 Pro - 2025-12-01 at 16 13 55" src="https://github.com/user-attachments/assets/a23d2929-90fc-4450-9edd-797d158035bd" />
 
+숏폼 비디오 동작
+
+https://github.com/user-attachments/assets/c802bfcc-2cd4-443b-9354-37c41562417b
+
 ## 목차
 
 - [주요 기능](#주요-기능)
