@@ -12,7 +12,10 @@ FlatBread 디자인 시스템은 토큰(Foundation)과 공통 컴포넌트(Compo
 ## Components
 
 - `FBButton`: 기본 액션 버튼 (`isLoading`, `isEnabled` 지원)
+- `FBFloatingActionButton`: 플로팅 원형 액션 버튼
+- `FBSectionHeader`: 섹션 타이틀 텍스트 (`large`, `regular`, `small`)
 - `FBTextField`, `FBSecureField`: 입력 필드 (포커스/검증 상태 지원)
+- `FBPlainTextField`, `FBTextEditorField`, `FBPriceField`: 라벨 없는 단일 입력/텍스트에디터/가격 입력
 
 ## Usage Rules
 

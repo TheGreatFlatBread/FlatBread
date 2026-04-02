@@ -18,9 +18,7 @@ struct CategorySectionCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("이런 모임 어때요?")
-                .font(.system(size: 22, weight: .bold))
-                .foregroundStyle(.primary)
+            FBSectionHeader(title: "이런 모임 어때요?", style: .large)
                 .padding(.horizontal, 4)
 
             ScrollView(.horizontal, showsIndicators: false) {
@@ -48,7 +46,7 @@ struct CategorySectionCard: View {
         .padding(.vertical, 16)
         .background {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(Color(.systemGray6))
+                .fill(FBColor.Background.input)
         }
         .overlay {
             RoundedRectangle(cornerRadius: 28, style: .continuous)
@@ -68,5 +66,5 @@ struct CategorySectionCard: View {
             )
         }
     }
-    .background(Color(.systemGray6))
+    .background(FBColor.Background.input)
 }

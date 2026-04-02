@@ -24,8 +24,8 @@ struct CategoryIconCard: View {
                     .frame(height: 32)
 
                 Text(title)
-                    .font(.system(size: 12, weight: .regular))
-                    .foregroundStyle(.primary)
+                    .font(FBTypography.captionSmall)
+                    .foregroundStyle(FBColor.Text.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.85)
             }
@@ -53,5 +53,5 @@ struct CategoryIconCard: View {
         tint: .red
     )
     .padding()
-    .background(Color(.systemGray6))
+    .background(FBColor.Background.input)
 }

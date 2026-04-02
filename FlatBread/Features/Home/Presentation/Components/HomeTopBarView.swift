@@ -16,8 +16,8 @@ struct HomeTopBarView: View {
         HStack {
             // 좌측 로고/텍스트
             Text(title)
-                .font(.system(size: 24, weight: .bold))
-                .foregroundStyle(.primary)
+                .font(FBTypography.brand)
+                .foregroundStyle(FBColor.Text.primary)
 
             Spacer()
 
@@ -27,7 +27,7 @@ struct HomeTopBarView: View {
             } label: {
                 Image(systemName: "iphone.gen3.radiowaves.left.and.right")
                     .font(.system(size: 20, weight: .regular))
-                    .foregroundStyle(Color.black)
+                    .foregroundStyle(FBColor.Text.primary)
                     .frame(width: 32, height: 32)
                     .contentShape(Rectangle())   // 탭 영역 확보
             }
@@ -35,11 +35,11 @@ struct HomeTopBarView: View {
         .padding(.horizontal, 16)
         .padding(.top, 8)
         .padding(.bottom, 12)
-        .background(Color(.systemBackground))
+        .background(FBColor.Background.primary)
     }
 }
 
 #Preview {
     HomeTopBarView(title: "FlatBread", onSearchTap: {})
-        .background(Color(.systemBackground))
+        .background(FBColor.Background.primary)
 }
