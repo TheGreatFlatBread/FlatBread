@@ -187,3 +187,32 @@ struct FBTextEditorField<Field: Hashable>: View {
         focused == field ? FBColor.Brand.primary : FBColor.Border.subtle
     }
 }
+
+struct FBPriceField<Field: Hashable>: View {
+    @Binding var text: String
+    let placeholder: String
+    @FocusState.Binding var focused: Field?
+    let field: Field
+    var currencySymbol: String = "₩"
+
+    var body: some View {
+        HStack(spacing: FBSpacing.xs) {
+            Text(currencySymbol)
+                .font(FBTypography.body.weight(.semibold))
+                .foregroundStyle(FBColor.Text.primary)
+
+            TextField(placeholder, text: $text)
+                .keyboardType(.numberPad)
+                .focused($focused, equals: field)
+        }
+        .padding(FBSpacing.sm)
+        .background(
+            RoundedRectangle(cornerRadius: FBRadius.lg, style: .continuous)
+                .stroke(borderColor, lineWidth: 1)
+        )
+    }
+
+    private var borderColor: Color {
+        focused == field ? FBColor.Brand.primary : FBColor.Border.subtle
+    }
+}

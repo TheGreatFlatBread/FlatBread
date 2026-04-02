@@ -220,21 +220,15 @@ struct CreateMoimView: View {
                         .tint(FBColor.Brand.primary)
                         
                         if !vm.isFree {
-                            HStack(spacing: 8) {
-                                Text("₩")
-                                    .font(FBTypography.body.weight(.semibold))
-                                TextField("금액 입력 (원)", text: $vm.priceText)
-                                    .keyboardType(.numberPad)
-                                    .onChange(of: vm.priceText) { _, _ in
-                                        vm.commitPriceFromText()
-                                    }
-                                    .focused($focusedField, equals: .price)
-                            }
-                            .padding(12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(FBColor.Border.subtle, lineWidth: 1)
+                            FBPriceField(
+                                text: $vm.priceText,
+                                placeholder: "금액 입력 (원)",
+                                focused: $focusedField,
+                                field: .price
                             )
+                            .onChange(of: vm.priceText) { _, _ in
+                                vm.commitPriceFromText()
+                            }
                         }
                     }
                     .padding(.horizontal, 16)
@@ -252,25 +246,22 @@ struct CreateMoimView: View {
             }
             
             // 하단 제출 버튼
-            Button {
+            FBButton(
+                title: "모임 만들기",
+                isLoading: vm.isUploading,
+                isEnabled: vm.canSubmit,
+                height: 52,
+                cornerRadius: FBRadius.lg
+            ) {
                 Task {
                     let success = await vm.submit() // 업로드 → URL 반영 → 생성
                     if success {
                         showSubmitSuccessAlert = true
                     }
                 }
-            } label: {
-                Text("모임 만들기")
-                    .font(FBTypography.button)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(vm.canSubmit ? FBColor.Brand.primary : FBColor.State.disabled)
-                    .foregroundStyle(vm.canSubmit ? FBColor.Text.inverse : FBColor.Text.secondary)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
             }
-            .disabled(!vm.canSubmit || vm.isUploading)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
             .background(FBColor.Background.primary)
         }
         .onTapGesture {

@@ -17,6 +17,8 @@ struct FBButton: View {
     let style: Style
     let isLoading: Bool
     let isEnabled: Bool
+    let height: CGFloat
+    let cornerRadius: CGFloat
     let action: () -> Void
 
     init(
@@ -24,12 +26,16 @@ struct FBButton: View {
         style: Style = .primary,
         isLoading: Bool = false,
         isEnabled: Bool = true,
+        height: CGFloat = 50,
+        cornerRadius: CGFloat = FBRadius.md,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.style = style
         self.isLoading = isLoading
         self.isEnabled = isEnabled
+        self.height = height
+        self.cornerRadius = cornerRadius
         self.action = action
     }
 
@@ -45,10 +51,10 @@ struct FBButton: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 50)
+            .frame(height: height)
             .background(backgroundColor)
             .foregroundStyle(foregroundColor)
-            .clipShape(RoundedRectangle(cornerRadius: FBRadius.md, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
         }
         .disabled(!isEnabled || isLoading)
     }
@@ -71,4 +77,3 @@ struct FBButton: View {
         }
     }
 }
-
