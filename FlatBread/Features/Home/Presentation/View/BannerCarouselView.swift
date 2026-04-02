@@ -62,7 +62,7 @@ struct BannerCarouselView: View {
 
             Text("\(currentIndex) / \(items.count)")
                 .font(.caption).bold()
-                .foregroundColor(.white)
+                .foregroundStyle(FBColor.Text.inverse)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
                 .background(.black.opacity(0.25), in: Capsule())
@@ -79,5 +79,5 @@ struct BannerCarouselView: View {
         items: HomeViewModel().banners,
         onTapBanner: { _ in }
     )
-    .background(Color(.systemGray6))
+    .background(FBColor.Background.input)
 }

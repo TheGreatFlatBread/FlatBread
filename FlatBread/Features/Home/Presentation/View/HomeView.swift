@@ -52,21 +52,12 @@ struct HomeView: View {
                 }
             }
             
-            Button(action: {
+            FBFloatingActionButton(systemImage: "plus") {
                 onTapCreateMoim()
-            }) {
-                Image(systemName: "plus")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
-                    .frame(width: 56, height: 56)
-                    .background(Color("juhwang"))
-                    .clipShape(Circle())
-                    .shadow(radius: 8)
             }
             .padding(.trailing, 20)
             .padding(.bottom, 24)
         }
-        .background(Color(.systemBackground))
+        .background(FBColor.Background.primary)
     }
 }
-

@@ -15,9 +15,7 @@ struct MoimGroupSectionView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             // 섹션 헤더
-            Text("활동이 활발한 모임")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(.primary)
+            FBSectionHeader(title: "활동이 활발한 모임", style: .regular)
                 .padding(.horizontal, 16)
             
             // 리스트
@@ -38,5 +36,5 @@ struct MoimGroupSectionView: View {
             items: HomeViewModel().moimGroups
         )
     }
-    .background(Color(.systemBackground))
+    .background(FBColor.Background.primary)
 }

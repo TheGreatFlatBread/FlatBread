@@ -18,7 +18,7 @@ struct BannerCardView: View {
                     url: item.imageURL,
                     displayMode: .thumbnail(CGSize(width: geo.size.width, height: geo.size.height)),
                     placeholder: {
-                        Color(.systemGray5)
+                        FBColor.Background.secondary
                             .overlay {
                                 ProgressView()
                             }
@@ -45,12 +45,12 @@ struct BannerCardView: View {
                 // 텍스트 영역
                 VStack(alignment: .leading, spacing: 6) {
                     Text(item.title)
-                        .font(.system(size: 20, weight: .bold))
+                        .font(FBTypography.cardTitle)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
 
                     Text(item.subtitle)
-                        .font(.system(size: 13, weight: .medium))
+                        .font(FBTypography.bodyMedium)
                         .lineLimit(3)
                         .opacity(0.8)
                 }
@@ -60,8 +60,7 @@ struct BannerCardView: View {
             .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         }
         .frame(height: 280)   // 카드 전체 높이
-        .background(Color(.systemGray5))
+        .background(FBColor.Background.secondary)
         .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
     }
 }
-

@@ -26,7 +26,7 @@ struct MoimGroupRowView: View {
                         .aspectRatio(contentMode: .fill)
                 }
                 .frame(width: 72, height: 72)
-                .background(Color(uiColor: .systemGray5))
+                .background(FBColor.Background.secondary)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 .overlay(
                     Group {
@@ -36,13 +36,13 @@ struct MoimGroupRowView: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item.title)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.primary)
+                        .font(FBTypography.bodySemibold)
+                        .foregroundStyle(FBColor.Text.primary)
                         .lineLimit(2)
                     
                     Text(item.subtitle)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.secondary)
+                        .font(FBTypography.bodySmall)
+                        .foregroundStyle(FBColor.Text.secondary)
                         .lineLimit(1)
                     
                     HStack(spacing: 6) {
@@ -50,8 +50,8 @@ struct MoimGroupRowView: View {
                         Circle().frame(width: 3, height: 3)
                         Text("멤버 \(item.memberCount)")
                     }
-                    .font(.system(size: 12))
-                    .foregroundStyle(.secondary)
+                    .font(FBTypography.captionSmall)
+                    .foregroundStyle(FBColor.Text.secondary)
                     .padding(.top, 4)
                 }
                 Spacer(minLength: 0)
