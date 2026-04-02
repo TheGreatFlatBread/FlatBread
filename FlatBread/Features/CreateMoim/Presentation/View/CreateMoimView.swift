@@ -115,15 +115,12 @@ struct CreateMoimView: View {
                         FBSectionHeader(title: "모임명")
                         
                         VStack(alignment: .leading, spacing: 4) {
-                            TextField("모임명이 짧을수록 이해하기 쉬워요.", text: vm.titleBinding)
-                                .textInputAutocapitalization(.never)
-                                .disableAutocorrection(true)
-                                .padding(14)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(FBColor.Border.subtle, lineWidth: 1)
-                                )
-                                .focused($focusedField, equals: .title)
+                            FBPlainTextField(
+                                text: vm.titleBinding,
+                                placeholder: "모임명이 짧을수록 이해하기 쉬워요.",
+                                focused: $focusedField,
+                                field: .title
+                            )
                             
                             HStack {
                                 Spacer()
@@ -194,25 +191,13 @@ struct CreateMoimView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         FBSectionHeader(title: "모임 소개")
                         
-                        ZStack(alignment: .topLeading) {
-                            TextEditor(text: vm.contentBinding)
-                                .frame(minHeight: 160, maxHeight: .infinity)
-                                .padding(10)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(FBColor.Border.subtle, lineWidth: 1)
-                                )
-                                .focused($focusedField, equals: .content)
-                            
-                            if (vm.dto.content ?? "").isEmpty {
-                                Text("활동 중심으로 모임을 소개해주세요. 소개를 잘 작성한 모임은 2배 많은 이웃이 가입해요.")
-                                    .foregroundStyle(FBColor.Text.secondary)
-                                    .font(.body)
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 14)
-                                    .allowsHitTesting(false)
-                            }
-                        }
+                        FBTextEditorField(
+                            text: vm.contentBinding,
+                            placeholder: "활동 중심으로 모임을 소개해주세요. 소개를 잘 작성한 모임은 2배 많은 이웃이 가입해요.",
+                            minHeight: 160,
+                            focused: $focusedField,
+                            field: .content
+                        )
                         
                         HStack {
                             Spacer()

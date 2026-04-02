@@ -124,3 +124,66 @@ struct FBSecureField<Field: Hashable>: View {
         }
     }
 }
+
+struct FBPlainTextField<Field: Hashable>: View {
+    @Binding var text: String
+    let placeholder: String
+    var keyboardType: UIKeyboardType = .default
+    @FocusState.Binding var focused: Field?
+    let field: Field
+    var horizontalPadding: CGFloat = 14
+    var verticalPadding: CGFloat = 14
+
+    var body: some View {
+        TextField(placeholder, text: $text)
+            .keyboardType(keyboardType)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+            .padding(.horizontal, horizontalPadding)
+            .padding(.vertical, verticalPadding)
+            .background(
+                RoundedRectangle(cornerRadius: FBRadius.lg, style: .continuous)
+                    .stroke(borderColor, lineWidth: 1)
+            )
+            .focused($focused, equals: field)
+    }
+
+    private var borderColor: Color {
+        focused == field ? FBColor.Brand.primary : FBColor.Border.subtle
+    }
+}
+
+struct FBTextEditorField<Field: Hashable>: View {
+    @Binding var text: String
+    let placeholder: String
+    var minHeight: CGFloat = 160
+    @FocusState.Binding var focused: Field?
+    let field: Field
+    var padding: CGFloat = 10
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            TextEditor(text: $text)
+                .frame(minHeight: minHeight, maxHeight: .infinity)
+                .padding(padding)
+                .background(
+                    RoundedRectangle(cornerRadius: FBRadius.lg, style: .continuous)
+                        .stroke(borderColor, lineWidth: 1)
+                )
+                .focused($focused, equals: field)
+
+            if text.isEmpty {
+                Text(placeholder)
+                    .foregroundStyle(FBColor.Text.secondary)
+                    .font(.body)
+                    .padding(.horizontal, padding + 4)
+                    .padding(.vertical, padding + 4)
+                    .allowsHitTesting(false)
+            }
+        }
+    }
+
+    private var borderColor: Color {
+        focused == field ? FBColor.Brand.primary : FBColor.Border.subtle
+    }
+}
