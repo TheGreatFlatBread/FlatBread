@@ -69,10 +69,10 @@ struct LoginView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Text("계정이 없으신가요?")
-                                .foregroundStyle(Color.black)
+                                .foregroundStyle(FBColor.Text.primary)
                                 .opacity(0.5)
                             Text("회원가입")
-                                .foregroundStyle(Color("juhwang"))
+                                .foregroundStyle(FBColor.Brand.primary)
                                 .fontWeight(.semibold)
                         }
                         .font(.system(size: 14))
@@ -158,29 +158,17 @@ struct LoginView: View {
             )
 
             // Login Button
-            Button {
+            FBButton(
+                title: "로그인",
+                isLoading: viewModel.isLoggingIn,
+                isEnabled: viewModel.canLogin
+            ) {
                 Task {
                     await viewModel.login()
                 }
-            } label: {
-                HStack {
-                    if viewModel.isLoggingIn {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Text("로그인")
-                            .font(.system(size: 16, weight: .semibold))
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                .frame(height: 50)
-                .background(viewModel.canLogin ? Color("juhwang") : Color.gray.opacity(0.3))
-                .foregroundStyle(.white)
-                .cornerRadius(10)
             }
-            .disabled(!viewModel.canLogin)
         }
-        .tint(Color("juhwang"))
+        .tint(FBColor.Brand.primary)
     }
 
 }
@@ -198,15 +186,15 @@ fileprivate struct CustomTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(FBTypography.label)
+                .foregroundStyle(FBColor.Text.secondary)
 
             TextField(placeholder, text: $text)
                 .keyboardType(keyboardType)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .padding()
-                .background(Color(.systemGray6))
+                .background(FBColor.Background.input)
                 .cornerRadius(10)
                 .overlay {
                     RoundedRectangle(cornerRadius: 10)
@@ -228,7 +216,7 @@ fileprivate struct CustomTextField: View {
 
     private var borderColor: Color {
         if focused == field {
-            return Color("juhwang")
+            return FBColor.Brand.primary
         } else if !validationMessage.isEmpty {
             return isValid ? .green : .red
         } else {
@@ -251,8 +239,8 @@ fileprivate struct CustomSecureField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(FBTypography.label)
+                .foregroundStyle(FBColor.Text.secondary)
 
             HStack {
                 if isPasswordVisible {
@@ -269,11 +257,11 @@ fileprivate struct CustomSecureField: View {
                     isPasswordVisible.toggle()
                 } label: {
                     Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(FBColor.Text.secondary)
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(FBColor.Background.input)
             .cornerRadius(10)
             .overlay {
                 RoundedRectangle(cornerRadius: 10)
@@ -295,7 +283,7 @@ fileprivate struct CustomSecureField: View {
 
     private var borderColor: Color {
         if focused == field {
-            return Color("juhwang")
+            return FBColor.Brand.primary
         } else if !validationMessage.isEmpty {
             return isValid ? .green : .red
         } else {

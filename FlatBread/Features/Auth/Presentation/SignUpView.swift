@@ -29,11 +29,11 @@ struct SignUpView: View {
             VStack(spacing: 24) {
                 VStack(spacing: 12) {
                     Text("회원가입")
-                        .font(.system(size: 28, weight: .bold))
+                        .font(FBTypography.heading)
 
                     Text("FlatBread와 함께 시작하세요")
-                        .font(.system(size: 16))
-                        .foregroundStyle(.secondary)
+                        .font(FBTypography.body)
+                        .foregroundStyle(FBColor.Text.secondary)
                 }
                 .padding(.top, 40)
 
@@ -65,12 +65,12 @@ struct SignUpView: View {
                                             .controlSize(.small)
                                     }
                                     Text("중복 확인")
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(FBTypography.label)
                                 }
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 8)
-                                .background(Color("juhwang").opacity(0.1))
-                                .foregroundStyle(Color("juhwang"))
+                                .background(FBColor.Brand.primary.opacity(0.1))
+                                .foregroundStyle(FBColor.Brand.primary)
                                 .cornerRadius(8)
                             }
                             .disabled(viewModel.isCheckingEmailDuplicate)
@@ -116,33 +116,21 @@ struct SignUpView: View {
                         viewModel.validateNickname()
                     }
 
-                    Button {
+                    FBButton(
+                        title: "회원가입",
+                        isLoading: viewModel.isSigningUp,
+                        isEnabled: viewModel.canSignUp
+                    ) {
                         Task {
                             await viewModel.signUp()
                         }
-                    } label: {
-                        HStack {
-                            if viewModel.isSigningUp {
-                                ProgressView()
-                                    .tint(.white)
-                            } else {
-                                Text("회원가입")
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(viewModel.canSignUp ? Color("juhwang") : Color.gray.opacity(0.3))
-                        .foregroundStyle(.white)
-                        .cornerRadius(10)
                     }
-                    .disabled(!viewModel.canSignUp)
                 }
                 .padding(.horizontal, 24)
 
                 Spacer(minLength: 40)
             }
-            .tint(Color("juhwang"))
+            .tint(FBColor.Brand.primary)
         }
         .scrollDismissesKeyboard(.interactively)
         .navigationBarTitleDisplayMode(.inline)
@@ -173,15 +161,15 @@ fileprivate struct CustomTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(FBTypography.label)
+                .foregroundStyle(FBColor.Text.secondary)
 
             TextField(placeholder, text: $text)
                 .keyboardType(keyboardType)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled()
                 .padding()
-                .background(Color(.systemGray6))
+                .background(FBColor.Background.input)
                 .cornerRadius(10)
                 .overlay {
                     RoundedRectangle(cornerRadius: 10)
@@ -203,7 +191,7 @@ fileprivate struct CustomTextField: View {
 
     private var borderColor: Color {
         if focused == field {
-            return Color("juhwang")
+            return FBColor.Brand.primary
         } else if !validationMessage.isEmpty {
             return isValid ? .green : .red
         } else {
@@ -225,8 +213,8 @@ fileprivate struct CustomSecureField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
+                .font(FBTypography.label)
+                .foregroundStyle(FBColor.Text.secondary)
 
             HStack {
                 if isPasswordVisible {
@@ -243,11 +231,11 @@ fileprivate struct CustomSecureField: View {
                     isPasswordVisible.toggle()
                 } label: {
                     Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(FBColor.Text.secondary)
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(FBColor.Background.input)
             .cornerRadius(10)
             .overlay {
                 RoundedRectangle(cornerRadius: 10)
@@ -269,7 +257,7 @@ fileprivate struct CustomSecureField: View {
 
     private var borderColor: Color {
         if focused == field {
-            return Color("juhwang")
+            return FBColor.Brand.primary
         } else if !validationMessage.isEmpty {
             return isValid ? .green : .red
         } else {
