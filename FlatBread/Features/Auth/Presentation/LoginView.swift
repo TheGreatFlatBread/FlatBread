@@ -35,7 +35,7 @@ struct LoginView: View {
                             .frame(width: 80, height: 80)
 
                         Text("플랫브레드")
-                            .font(.system(size: 32, weight: .bold))
+                            .font(FBTypography.title)
                     }
                     .padding(.top, 60)
 
@@ -50,7 +50,7 @@ struct LoginView: View {
                             .frame(height: 1)
                         Text("또는")
                             .font(.caption)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(FBColor.Text.secondary)
                             .padding(.horizontal, 12)
                         Rectangle()
                             .fill(Color.gray.opacity(0.3))
@@ -75,7 +75,7 @@ struct LoginView: View {
                                 .foregroundStyle(FBColor.Brand.primary)
                                 .fontWeight(.semibold)
                         }
-                        .font(.system(size: 14))
+                        .font(FBTypography.label)
                     }
 
                     Spacer(minLength: 40)
@@ -134,7 +134,7 @@ struct LoginView: View {
     private var loginContent: some View {
         VStack(spacing: 16) {
             // Email
-            CustomTextField(
+            FBTextField(
                 title: "이메일",
                 text: $viewModel.email,
                 placeholder: "example@email.com",
@@ -149,7 +149,7 @@ struct LoginView: View {
             }
 
             // Password
-            CustomSecureField(
+            FBSecureField(
                 title: "비밀번호",
                 text: $viewModel.password,
                 placeholder: "비밀번호를 입력하세요",
@@ -169,126 +169,6 @@ struct LoginView: View {
             }
         }
         .tint(FBColor.Brand.primary)
-    }
-
-}
-
-fileprivate struct CustomTextField: View {
-    let title: String
-    @Binding var text: String
-    let placeholder: String
-    var keyboardType: UIKeyboardType = .default
-    var validationMessage: String = ""
-    var isValid: Bool = false
-    @FocusState.Binding var focused: LoginView.Field?
-    let field: LoginView.Field
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(FBTypography.label)
-                .foregroundStyle(FBColor.Text.secondary)
-
-            TextField(placeholder, text: $text)
-                .keyboardType(keyboardType)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .padding()
-                .background(FBColor.Background.input)
-                .cornerRadius(10)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(borderColor, lineWidth: 1.5)
-                }
-                .focused($focused, equals: field)
-
-            if !validationMessage.isEmpty {
-                HStack(spacing: 4) {
-                    Image(systemName: isValid ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                        .font(.caption)
-                    Text(validationMessage)
-                        .font(.caption)
-                }
-                .foregroundStyle(isValid ? .green : .red)
-            }
-        }
-    }
-
-    private var borderColor: Color {
-        if focused == field {
-            return FBColor.Brand.primary
-        } else if !validationMessage.isEmpty {
-            return isValid ? .green : .red
-        } else {
-            return .clear
-        }
-    }
-}
-
-// MARK: - Custom Secure Field
-fileprivate struct CustomSecureField: View {
-    let title: String
-    @Binding var text: String
-    let placeholder: String
-    var validationMessage: String = ""
-    var isValid: Bool = false
-    @FocusState.Binding var focused: LoginView.Field?
-    let field: LoginView.Field
-    @State private var isPasswordVisible: Bool = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(FBTypography.label)
-                .foregroundStyle(FBColor.Text.secondary)
-
-            HStack {
-                if isPasswordVisible {
-                    TextField(placeholder, text: $text)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                } else {
-                    SecureField(placeholder, text: $text)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                }
-
-                Button {
-                    isPasswordVisible.toggle()
-                } label: {
-                    Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
-                        .foregroundStyle(FBColor.Text.secondary)
-                }
-            }
-            .padding()
-            .background(FBColor.Background.input)
-            .cornerRadius(10)
-            .overlay {
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(borderColor, lineWidth: 1.5)
-            }
-            .focused($focused, equals: field)
-
-            if !validationMessage.isEmpty {
-                HStack(spacing: 4) {
-                    Image(systemName: isValid ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                        .font(.caption)
-                    Text(validationMessage)
-                        .font(.caption)
-                }
-                .foregroundStyle(isValid ? .green : .red)
-            }
-        }
-    }
-
-    private var borderColor: Color {
-        if focused == field {
-            return FBColor.Brand.primary
-        } else if !validationMessage.isEmpty {
-            return isValid ? .green : .red
-        } else {
-            return .clear
-        }
     }
 }
 

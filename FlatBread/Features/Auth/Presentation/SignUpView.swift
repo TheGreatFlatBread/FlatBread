@@ -39,7 +39,7 @@ struct SignUpView: View {
 
                 VStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
-                        CustomTextField(
+                        FBTextField(
                             title: "이메일",
                             text: $viewModel.email,
                             placeholder: "example@email.com",
@@ -71,13 +71,13 @@ struct SignUpView: View {
                                 .padding(.vertical, 8)
                                 .background(FBColor.Brand.primary.opacity(0.1))
                                 .foregroundStyle(FBColor.Brand.primary)
-                                .cornerRadius(8)
+                                .cornerRadius(FBRadius.sm)
                             }
                             .disabled(viewModel.isCheckingEmailDuplicate)
                         }
                     }
 
-                    CustomSecureField(
+                    FBSecureField(
                         title: "비밀번호",
                         text: $viewModel.password,
                         placeholder: "8자 이상, 영문+숫자+특수문자",
@@ -90,7 +90,7 @@ struct SignUpView: View {
                         viewModel.validatePassword()
                     }
 
-                    CustomSecureField(
+                    FBSecureField(
                         title: "비밀번호 확인",
                         text: $viewModel.passwordConfirm,
                         placeholder: "비밀번호를 다시 입력하세요",
@@ -103,7 +103,7 @@ struct SignUpView: View {
                         viewModel.validatePasswordConfirm()
                     }
 
-                    CustomTextField(
+                    FBTextField(
                         title: "닉네임",
                         text: $viewModel.nickname,
                         placeholder: "1~10자",
@@ -144,124 +144,6 @@ struct SignUpView: View {
                 onSignUpSuccess()
                 dismiss()
             }
-        }
-    }
-}
-
-fileprivate struct CustomTextField: View {
-    let title: String
-    @Binding var text: String
-    let placeholder: String
-    var keyboardType: UIKeyboardType = .default
-    var validationMessage: String = ""
-    var isValid: Bool = false
-    @FocusState.Binding var focused: SignUpView.Field?
-    let field: SignUpView.Field
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(FBTypography.label)
-                .foregroundStyle(FBColor.Text.secondary)
-
-            TextField(placeholder, text: $text)
-                .keyboardType(keyboardType)
-                .textInputAutocapitalization(.never)
-                .autocorrectionDisabled()
-                .padding()
-                .background(FBColor.Background.input)
-                .cornerRadius(10)
-                .overlay {
-                    RoundedRectangle(cornerRadius: 10)
-                        .stroke(borderColor, lineWidth: 1.5)
-                }
-                .focused($focused, equals: field)
-
-            if !validationMessage.isEmpty {
-                HStack(spacing: 4) {
-                    Image(systemName: isValid ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                        .font(.caption)
-                    Text(validationMessage)
-                        .font(.caption)
-                }
-                .foregroundStyle(isValid ? .green : .red)
-            }
-        }
-    }
-
-    private var borderColor: Color {
-        if focused == field {
-            return FBColor.Brand.primary
-        } else if !validationMessage.isEmpty {
-            return isValid ? .green : .red
-        } else {
-            return .clear
-        }
-    }
-}
-
-fileprivate struct CustomSecureField: View {
-    let title: String
-    @Binding var text: String
-    let placeholder: String
-    var validationMessage: String = ""
-    var isValid: Bool = false
-    @FocusState.Binding var focused: SignUpView.Field?
-    let field: SignUpView.Field
-    @State private var isPasswordVisible: Bool = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(FBTypography.label)
-                .foregroundStyle(FBColor.Text.secondary)
-
-            HStack {
-                if isPasswordVisible {
-                    TextField(placeholder, text: $text)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                } else {
-                    SecureField(placeholder, text: $text)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                }
-
-                Button {
-                    isPasswordVisible.toggle()
-                } label: {
-                    Image(systemName: isPasswordVisible ? "eye.slash.fill" : "eye.fill")
-                        .foregroundStyle(FBColor.Text.secondary)
-                }
-            }
-            .padding()
-            .background(FBColor.Background.input)
-            .cornerRadius(10)
-            .overlay {
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(borderColor, lineWidth: 1.5)
-            }
-            .focused($focused, equals: field)
-
-            if !validationMessage.isEmpty {
-                HStack(spacing: 4) {
-                    Image(systemName: isValid ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                        .font(.caption)
-                    Text(validationMessage)
-                        .font(.caption)
-                }
-                .foregroundStyle(isValid ? .green : .red)
-            }
-        }
-    }
-
-    private var borderColor: Color {
-        if focused == field {
-            return FBColor.Brand.primary
-        } else if !validationMessage.isEmpty {
-            return isValid ? .green : .red
-        } else {
-            return .clear
         }
     }
 }
