@@ -19,7 +19,7 @@ struct CategoryIconCard: View {
         } label: {
             VStack(spacing: 8) {
                 Image(systemName: systemImage)
-                    .font(.system(size: 24, weight: .semibold))
+                    .font(FBTypography.iconLarge)
                     .foregroundStyle(tint)
                     .frame(height: 32)
 
@@ -31,15 +31,16 @@ struct CategoryIconCard: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: 84)
-            .background {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(.white)
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(.black.opacity(0.05), lineWidth: 1)
-            }
-            .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+            .fbCardStyle(
+                cornerRadius: FBRadius.xl,
+                fill: .white,
+                border: .black.opacity(0.05),
+                borderWidth: 1,
+                shadowColor: .black.opacity(0.05),
+                shadowRadius: 8,
+                shadowX: 0,
+                shadowY: 2
+            )
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(title))

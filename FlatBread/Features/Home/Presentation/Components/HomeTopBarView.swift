@@ -26,7 +26,7 @@ struct HomeTopBarView: View {
                 onSearchTap?()
             } label: {
                 Image(systemName: "iphone.gen3.radiowaves.left.and.right")
-                    .font(.system(size: 20, weight: .regular))
+                    .font(FBTypography.iconMedium)
                     .foregroundStyle(FBColor.Text.primary)
                     .frame(width: 32, height: 32)
                     .contentShape(Rectangle())   // 탭 영역 확보

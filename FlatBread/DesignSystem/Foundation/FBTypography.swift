@@ -18,6 +18,8 @@ enum FBTypography {
     static let bodySemibold = Font.system(size: 15, weight: .semibold)
     static let bodySmall = Font.system(size: 13, weight: .regular)
     static let captionSmall = Font.system(size: 12, weight: .regular)
+    static let iconLarge = Font.system(size: 24, weight: .semibold)
+    static let iconMedium = Font.system(size: 20, weight: .regular)
     static let body = Font.system(size: 16)
     static let label = Font.system(size: 14, weight: .medium)
     static let button = Font.system(size: 16, weight: .semibold)

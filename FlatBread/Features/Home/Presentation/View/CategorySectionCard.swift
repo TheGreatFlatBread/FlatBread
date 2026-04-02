@@ -44,15 +44,16 @@ struct CategorySectionCard: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 16)
-        .background {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .fill(FBColor.Background.input)
-        }
-        .overlay {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(.black.opacity(0.04), lineWidth: 1)
-        }
-        .shadow(color: .black.opacity(0.08), radius: 16, x: 0, y: 6)
+        .fbCardStyle(
+            cornerRadius: 28,
+            fill: FBColor.Background.input,
+            border: .black.opacity(0.04),
+            borderWidth: 1,
+            shadowColor: .black.opacity(0.08),
+            shadowRadius: 16,
+            shadowX: 0,
+            shadowY: 6
+        )
         .padding(.horizontal, 12)
     }
 }
