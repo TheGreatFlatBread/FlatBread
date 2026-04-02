@@ -15,18 +15,18 @@ struct ChipButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.system(size: 14, weight: .semibold))
+                .font(FBTypography.label.weight(.semibold))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 8)
                 .background(
                     Capsule(style: .continuous)
-                        .fill(isSelected ? Color("juhwang") : Color(.systemGray6))
+                        .fill(isSelected ? FBColor.Brand.primary : FBColor.Background.input)
                 )
                 .overlay(
                     Capsule(style: .continuous)
-                        .stroke(isSelected ? Color("juhwang") : Color(.systemGray4), lineWidth: 1)
+                        .stroke(isSelected ? FBColor.Brand.primary : FBColor.Border.subtle, lineWidth: 1)
                 )
-                .foregroundStyle(isSelected ? .white : .primary)
+                .foregroundStyle(isSelected ? FBColor.Text.inverse : FBColor.Text.primary)
         }
         .buttonStyle(.plain)
     }
@@ -42,5 +42,5 @@ struct ChipButton: View {
         }
         .padding(16)
     }
-    .background(Color(.systemBackground))
+    .background(FBColor.Background.primary)
 }

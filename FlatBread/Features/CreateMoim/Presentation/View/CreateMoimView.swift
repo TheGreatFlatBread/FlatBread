@@ -31,7 +31,7 @@ struct CreateMoimView: View {
         VStack(spacing: 0) {
             HStack {
                 Text("어떤 모임을 만들까요?")
-                    .font(.system(size: 28, weight: .bold))
+                    .font(FBTypography.heading)
                 Spacer()
             }
             .padding(.horizontal, 16)
@@ -42,8 +42,7 @@ struct CreateMoimView: View {
                     
                     // MARK: - 모임 대표 사진
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("모임 대표 사진")
-                            .font(.headline)
+                        FBSectionHeader(title: "모임 대표 사진")
                         
                         ZStack {
                             // 프리뷰
@@ -60,7 +59,7 @@ struct CreateMoimView: View {
                                 // 플레이스홀더
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                                     .stroke(style: StrokeStyle(lineWidth: 1, dash: [6]))
-                                    .foregroundStyle(Color(.systemGray4))
+                                    .foregroundStyle(FBColor.Border.subtle)
                                     .frame(height: 180)
                                     .overlay {
                                         VStack(spacing: 8) {
@@ -68,7 +67,7 @@ struct CreateMoimView: View {
                                                 .font(.system(size: 26, weight: .semibold))
                                             Text("대표 이미지를 선택해 주세요")
                                                 .font(.subheadline)
-                                                .foregroundStyle(.secondary)
+                                                .foregroundStyle(FBColor.Text.secondary)
                                         }
                                     }
                             }
@@ -79,12 +78,12 @@ struct CreateMoimView: View {
                                      matching: .images,
                                      photoLibrary: .shared()) {
                             Label("사진 선택", systemImage: "photo.fill.on.rectangle.fill")
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(FBTypography.label.weight(.semibold))
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 10)
                                 .background(
                                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .fill(Color(.systemGray6))
+                                        .fill(FBColor.Background.input)
                                 )
                         }
                                      .onChange(of: pickerItem) { _, newItem in
@@ -105,7 +104,7 @@ struct CreateMoimView: View {
                                 ProgressView()
                                 Text("이미지 업로드 중…")
                                     .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(FBColor.Text.secondary)
                             }
                         }
                     }
@@ -113,8 +112,7 @@ struct CreateMoimView: View {
                     
                     // MARK: - 모임명
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("모임명")
-                            .font(.headline)
+                        FBSectionHeader(title: "모임명")
                         
                         VStack(alignment: .leading, spacing: 4) {
                             TextField("모임명이 짧을수록 이해하기 쉬워요.", text: vm.titleBinding)
@@ -123,7 +121,7 @@ struct CreateMoimView: View {
                                 .padding(14)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                        .stroke(FBColor.Border.subtle, lineWidth: 1)
                                 )
                                 .focused($focusedField, equals: .title)
                             
@@ -131,7 +129,7 @@ struct CreateMoimView: View {
                                 Spacer()
                                 Text("\(vm.dto.title?.count ?? 0)/\(vm.titleLimit)")
                                     .font(.footnote)
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(FBColor.Text.secondary)
                             }
                         }
                     }
@@ -139,8 +137,7 @@ struct CreateMoimView: View {
                     
                     // MARK: - 카테고리
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("카테고리")
-                            .font(.headline)
+                        FBSectionHeader(title: "카테고리")
                         
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 8) {
@@ -158,8 +155,7 @@ struct CreateMoimView: View {
                     
                     // MARK: - 활동 지역
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("활동 지역")
-                            .font(.headline)
+                        FBSectionHeader(title: "활동 지역")
                         MapPickerView(coordinate: Binding(
                             get: { CLLocationCoordinate2D(latitude: vm.dto.latitude, longitude: vm.dto.longitude) },
                             set: { vm.updateCoordinate($0) }
@@ -168,7 +164,7 @@ struct CreateMoimView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("시/군/구")
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(FBColor.Text.secondary)
                             
                             Button {
                                 isRegionPickerPresented = true
@@ -180,12 +176,12 @@ struct CreateMoimView: View {
                                     Spacer()
                                     Image(systemName: "chevron.right")
                                         .font(.footnote)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(FBColor.Text.secondary)
                                 }
                                 .padding(12)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                        .stroke(FBColor.Border.subtle, lineWidth: 1)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -196,8 +192,7 @@ struct CreateMoimView: View {
                     
                     // MARK: - 모임 소개
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("모임 소개")
-                            .font(.headline)
+                        FBSectionHeader(title: "모임 소개")
                         
                         ZStack(alignment: .topLeading) {
                             TextEditor(text: vm.contentBinding)
@@ -205,13 +200,13 @@ struct CreateMoimView: View {
                                 .padding(10)
                                 .background(
                                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                        .stroke(FBColor.Border.subtle, lineWidth: 1)
                                 )
                                 .focused($focusedField, equals: .content)
                             
                             if (vm.dto.content ?? "").isEmpty {
                                 Text("활동 중심으로 모임을 소개해주세요. 소개를 잘 작성한 모임은 2배 많은 이웃이 가입해요.")
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(FBColor.Text.secondary)
                                     .font(.body)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 14)
@@ -223,27 +218,26 @@ struct CreateMoimView: View {
                             Spacer()
                             Text("\(vm.dto.content?.count ?? 0)/\(vm.contentLimit)")
                                 .font(.footnote)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(FBColor.Text.secondary)
                         }
                     }
                     .padding(.horizontal, 16)
                     
                     // MARK: - 입장료 설정
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("입장료 설정")
-                            .font(.headline)
+                        FBSectionHeader(title: "입장료 설정")
                         
                         Toggle("무료", isOn: Binding(
                             get: { vm.isFree },
                             set: { vm.toggleFree($0) }
                         ))
                         .toggleStyle(.switch)
-                        .tint(Color("juhwang"))
+                        .tint(FBColor.Brand.primary)
                         
                         if !vm.isFree {
                             HStack(spacing: 8) {
                                 Text("₩")
-                                    .font(.system(size: 18, weight: .semibold))
+                                    .font(FBTypography.body.weight(.semibold))
                                 TextField("금액 입력 (원)", text: $vm.priceText)
                                     .keyboardType(.numberPad)
                                     .onChange(of: vm.priceText) { _, _ in
@@ -254,7 +248,7 @@ struct CreateMoimView: View {
                             .padding(12)
                             .background(
                                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .stroke(Color(.systemGray4), lineWidth: 1)
+                                    .stroke(FBColor.Border.subtle, lineWidth: 1)
                             )
                         }
                     }
@@ -282,22 +276,22 @@ struct CreateMoimView: View {
                 }
             } label: {
                 Text("모임 만들기")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(FBTypography.button)
                     .frame(maxWidth: .infinity)
                     .frame(height: 52)
-                    .background(vm.canSubmit ? Color("juhwang") : Color(.systemGray5))
-                    .foregroundStyle(vm.canSubmit ? .white : .secondary)
+                    .background(vm.canSubmit ? FBColor.Brand.primary : FBColor.State.disabled)
+                    .foregroundStyle(vm.canSubmit ? FBColor.Text.inverse : FBColor.Text.secondary)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
             }
             .disabled(!vm.canSubmit || vm.isUploading)
-            .background(Color(.systemBackground))
+            .background(FBColor.Background.primary)
         }
         .onTapGesture {
             focusedField = nil
         }
-        .background(Color(.systemBackground))
+        .background(FBColor.Background.primary)
         .alert(
             "모임 생성 실패",
             isPresented: Binding(
